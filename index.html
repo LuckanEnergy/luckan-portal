@@ -941,11 +941,9 @@ input:checked+.slider::before{transform:translateX(18px);}
     <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
       <div class="sw" style="flex:1;min-width:200px"><input type="text" id="deb-srch" placeholder="Search by client or company…" oninput="rDebtors()"></div>
       <select id="deb-filter" onchange="rDebtors()" style="width:160px;padding:8px 11px;font-size:12px">
-        <option value="">All Debtors</option>
-        <option value="high">High Risk (60+ days)</option>
-        <option value="med">Medium (30–59 days)</option>
-        <option value="low">Recent (0–29 days)</option>
-      </select>
+        <option value="all">All Debtors</option>
+        <option value="unpaid">Unpaid Only</option>
+        <option value="paid">Fully Paid</option></select>
       <select id="deb-pay-filter" onchange="rDebtors()" style="width:150px;padding:8px 11px;font-size:12px">
         <option value="">All Payment Status</option>
         <option value="unpaid">Has Unpaid Orders</option>
