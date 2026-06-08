@@ -1911,6 +1911,7 @@ function goPage(page,el){
     setTimeout(function(){document.getElementById("lock-input").focus();},200);
     return;
   }
+  localStorage.setItem('le_last_page', page);
   activatePage(page,el);
 }
 
@@ -3870,6 +3871,12 @@ function startPortal() {
                   loadAR(function(){
                     rDash();
                     setSyncStatus('synced','Live ✓');
+                    // Restore last visited page
+                    var lastPage = localStorage.getItem('le_last_page');
+                    if(lastPage && lastPage !== 'dashboard') {
+                      var navEl = document.getElementById('nav-'+lastPage);
+                      goPage(lastPage, navEl);
+                    }
                   });
                 });
               });
