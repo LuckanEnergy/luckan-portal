@@ -4251,7 +4251,10 @@ function toggleOrderPayment(debtorId, orderId) {
 function delDebtor(id) {
   if (!confirm("Remove this debtor account?")) return;
   DB = DB.filter(function(x){ return x.id !== id; });
-  sv(); rDebtors();
+  delDB_supa(id);
+  sv();
+  rDebtors();
+  rDash();
 }
 
 // Helpers
