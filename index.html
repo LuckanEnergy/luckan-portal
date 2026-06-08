@@ -2269,8 +2269,8 @@ function clearOrds(type){
 }
 function delOrd(type,id){
   if(!confirm("Delete order "+id+"?"))return;
-  if(type==="fuel")FO=FO.filter(function(x){return x.id!==id;});
-  else LO=LO.filter(function(x){return x.id!==id;});
+  if(type==="fuel"){FO=FO.filter(function(x){return x.id!==id;});delFO_supa(id);}
+  else{LO=LO.filter(function(x){return x.id!==id;});delLO_supa(id);}
   sv();rFuel();rLPG();rAll();rDash();
 }
 function delDoc(id){if(!confirm("Delete document?"))return;DO=DO.filter(function(d){return d.id!==id;});sv();rDocs();updStats();}
