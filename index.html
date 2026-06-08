@@ -4207,31 +4207,30 @@ function quickPayOrder(sel) {
   var did = sel.getAttribute('data-did');
   var oid = sel.getAttribute('data-oid');
   var newStatus = sel.value;
-  if (!did || !oid) { console.error('quickPayOrder: missing did or oid'); return; }
-  var d = DB.find(function(x){ return x.id === did; });
-  if (!d) { console.error('quickPayOrder: debtor not found', did); return; }
-  var o = (d.orders||[]).find(function(x){ return x.orderId === oid; });
-  if (!o) { console.error('quickPayOrder: order not found', oid); return; }
+  if(!did||!oid){ return; }
+  var d = DB.find(function(x){ return x.id===did; });
+  if(!d){ return; }
+  var o = (d.orders||[]).find(function(x){ return x.orderId===oid; });
+  if(!o){ return; }
 
+  // Update payment status
   o.paymentStatus = newStatus;
-  if(newStatus === 'paid' && !o.date) {
-    o.date = new Date().toISOString().split('T')[0];
-  }
+  if(!o.date) o.date = new Date().toISOString().split('T')[0];
+
+  // Save to both Supabase and localStorage
   saveDB_supa(d);
-  sv();
+  localStorage.setItem('le_db', JSON.stringify(DB));
 
-  if (newStatus === "paid") {
-    addAct(oid + " paid — moved to Sales Report", "✅", "tl");
-    // Show quick toast
-    var toast = document.createElement('div');
-    toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#16a34a;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,0.2)';
-    toast.textContent = '✅ ' + oid + ' marked as paid';
-    document.body.appendChild(toast);
-    setTimeout(function(){ toast.remove(); }, 3000);
-  } else {
-    addAct(oid + " marked as unpaid", "💰", "pk");
-  }
+  // Toast
+  var toast = document.createElement('div');
+  toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:'+(newStatus==='paid'?'#16a34a':'#d97706')+';color:#fff;padding:10px 22px;border-radius:20px;font-size:13px;font-weight:700;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,0.25)';
+  toast.textContent = newStatus==='paid' ? '✅ '+oid+' — moved to Sales Report' : '↩ '+oid+' marked unpaid';
+  document.body.appendChild(toast);
+  setTimeout(function(){ if(toast.parentNode) toast.parentNode.removeChild(toast); }, 3000);
 
+  addAct(oid+(newStatus==='paid'?' paid — Sales Report':' marked unpaid'), newStatus==='paid'?'✅':'💰', newStatus==='paid'?'tl':'pk');
+
+  // Refresh all affected views
   rDebtors();
   rRpt();
   rDash();
