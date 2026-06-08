@@ -2660,7 +2660,7 @@ function rRpt(){
       rows.push({id:o.orderId,type:isLPG?"lpg":"fuel",date:o.date||"",client:o.client||d.company,detail:o.description||"",value:parseFloat(o.amount)||0,status:"paid"});
     });
   });
-  rows=rows.filter(function(o){return(!from||o.date>=from)&&(!to||o.date<=to);});
+  rows=rows.filter(function(o){return(!from||!o.date||o.date>=from)&&(!to||!o.date||o.date<=to);});
   var totalRev=rows.reduce(function(s,o){return s+(o.value||0);},0);
   var fuelRows=rows.filter(function(o){return o.type==="fuel";});
   var rate=100;
@@ -4214,6 +4214,9 @@ function quickPayOrder(sel) {
   if (!o) { console.error('quickPayOrder: order not found', oid); return; }
 
   o.paymentStatus = newStatus;
+  if(newStatus === 'paid' && !o.date) {
+    o.date = new Date().toISOString().split('T')[0];
+  }
   saveDB_supa(d);
   sv();
 
