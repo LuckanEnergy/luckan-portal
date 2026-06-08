@@ -1120,17 +1120,21 @@ input:checked+.slider::before{transform:translateX(18px);}
         </div>
       </div>
 
-      <!-- GITHUB AUTO-DEPLOY -->
+      <!-- NETLIFY AUTO-DEPLOY -->
       <div class="set-card">
-        <div class="set-card-h"><span style="font-size:17px">🚀</span><span class="set-card-title">AUTO-DEPLOY</span></div>
+        <div class="set-card-h"><span style="font-size:17px">🚀</span><span class="set-card-title">NETLIFY DEPLOY</span></div>
         <div class="set-card-b">
           <div class="fm">
-            <label>GitHub Token</label>
-            <input type="password" id="cfg-gh-token" placeholder="ghp_..." autocomplete="off" style="font-family:monospace;font-size:12px">
+            <label>Netlify Token</label>
+            <input type="password" id="cfg-netlify-token" placeholder="nfp_..." autocomplete="off" style="font-family:monospace;font-size:12px">
           </div>
-          <div style="font-size:11px;color:var(--mu);margin-bottom:10px">Repo: <strong>LuckanEnergy/luckan-portal</strong> · Connects to Netlify auto-deploy</div>
-          <div id="gh-token-status" style="font-size:12px;min-height:18px;margin-bottom:8px"></div>
-          <button class="btn btn-p" style="width:100%" onclick="saveGHToken()">💾 Save Token</button>
+          <div class="fm" style="margin-top:8px">
+            <label>Site ID</label>
+            <input type="text" id="cfg-netlify-site" placeholder="e.g. abc123def" autocomplete="off" style="font-family:monospace;font-size:12px">
+          </div>
+          <div style="font-size:11px;color:var(--mu);margin-bottom:10px">Find Site ID: Netlify → your site → Site configuration → Site ID</div>
+          <div id="netlify-cfg-status" style="font-size:12px;min-height:18px;margin-bottom:8px"></div>
+          <button class="btn btn-p" style="width:100%" onclick="saveNetlifyConfig()">💾 Save</button>
         </div>
       </div>
 
@@ -3683,12 +3687,7 @@ function saveApiKey() {
 
 function loadGHCfgUI() {
   loadGHConfig();
-  var el = document.getElementById('cfg-gh-token');
-  if (el && GH_TOKEN) {
-    el.value = GH_TOKEN;
-    var st = document.getElementById('gh-token-status');
-    if(st) st.innerHTML = '<span style="color:var(--tl2)">✅ Token loaded</span>';
-  }
+  loadNetlifyCfgUI();
 }
 
 function loadApiKeyCfg() {
@@ -3769,6 +3768,8 @@ function viewDebtor(did) {
 
 // ── GITHUB AUTO-DEPLOY ──
 var GH_TOKEN = localStorage.getItem('le_gh_token') || '';
+var NETLIFY_TOKEN = localStorage.getItem('le_netlify_token') || '';
+var NETLIFY_SITE_ID = localStorage.getItem('le_netlify_site') || '';
 var GH_REPO  = 'LuckanEnergy/luckan-portal';
 var GH_FILE  = 'index.html';
 var GH_SHA   = '';  // updated after each push
@@ -3826,6 +3827,61 @@ function pushToGitHub(onDone) {
     setSyncStatus('error', 'Push error');
     if(onDone) onDone('error');
   });
+}
+
+// ── NETLIFY AUTO-DEPLOY ──
+function deployToNetlify() {
+  NETLIFY_TOKEN = localStorage.getItem('le_netlify_token') || '';
+  NETLIFY_SITE_ID = localStorage.getItem('le_netlify_site') || '';
+  if (!NETLIFY_TOKEN || !NETLIFY_SITE_ID) {
+    alert('Netlify token and site ID not set. Go to Settings → 🚀 Auto-Deploy.');
+    return;
+  }
+  setSyncStatus('saving', 'Deploying…');
+
+  // Get sites list to verify
+  fetch('https://api.netlify.com/api/v1/sites/' + NETLIFY_SITE_ID + '/deploys', {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + NETLIFY_TOKEN,
+      'Content-Type': 'application/zip'
+    }
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    if (d.id) {
+      setSyncStatus('synced', 'Deployed ✓');
+      addAct('Deployed to Netlify', '🚀', 'tl');
+    } else {
+      setSyncStatus('error', 'Deploy failed');
+      console.error('Netlify deploy error:', d);
+    }
+  })
+  .catch(function(e){
+    setSyncStatus('error', 'Deploy error');
+    console.error(e);
+  });
+}
+
+function saveNetlifyConfig() {
+  var token = document.getElementById('cfg-netlify-token').value.trim();
+  var site  = document.getElementById('cfg-netlify-site').value.trim();
+  if (!token || !site) { alert('Enter both token and site ID'); return; }
+  localStorage.setItem('le_netlify_token', token);
+  localStorage.setItem('le_netlify_site', site);
+  NETLIFY_TOKEN = token;
+  NETLIFY_SITE_ID = site;
+  var st = document.getElementById('netlify-cfg-status');
+  if(st) { st.innerHTML = '<span style="color:var(--tl2)">✅ Saved</span>'; setTimeout(function(){ st.innerHTML=''; }, 3000); }
+}
+
+function loadNetlifyCfgUI() {
+  var t = localStorage.getItem('le_netlify_token') || '';
+  var s = localStorage.getItem('le_netlify_site') || '';
+  var te = document.getElementById('cfg-netlify-token');
+  var se = document.getElementById('cfg-netlify-site');
+  if(te && t) te.value = t;
+  if(se && s) se.value = s;
 }
 
 function toggleSB(){
