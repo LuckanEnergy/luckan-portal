@@ -3767,7 +3767,7 @@ function viewDebtor(did) {
 
 
 // ── GITHUB AUTO-DEPLOY ──
-var GH_TOKEN = '';
+var GH_TOKEN = localStorage.getItem('le_gh_token') || '';
 var GH_REPO  = 'LuckanEnergy/luckan-portal';
 var GH_FILE  = 'index.html';
 var GH_SHA   = '';  // updated after each push
