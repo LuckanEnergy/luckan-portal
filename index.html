@@ -1120,6 +1120,20 @@ input:checked+.slider::before{transform:translateX(18px);}
         </div>
       </div>
 
+      <!-- GITHUB AUTO-DEPLOY -->
+      <div class="set-card">
+        <div class="set-card-h"><span style="font-size:17px">🚀</span><span class="set-card-title">AUTO-DEPLOY</span></div>
+        <div class="set-card-b">
+          <div class="fm">
+            <label>GitHub Token</label>
+            <input type="password" id="cfg-gh-token" placeholder="ghp_..." autocomplete="off" style="font-family:monospace;font-size:12px">
+          </div>
+          <div style="font-size:11px;color:var(--mu);margin-bottom:10px">Repo: <strong>LuckanEnergy/luckan-portal</strong> · Connects to Netlify auto-deploy</div>
+          <div id="gh-token-status" style="font-size:12px;min-height:18px;margin-bottom:8px"></div>
+          <button class="btn btn-p" style="width:100%" onclick="saveGHToken()">💾 Save Token</button>
+        </div>
+      </div>
+
       <div class="set-card">
         <div class="set-card-h"><span style="font-size:17px">👤</span><span class="set-card-title">PROFILE</span></div>
         <div class="set-card-b">
@@ -1918,7 +1932,7 @@ function activatePage(page,el){
   if(page==="debtors")rDebtors();
   if(page==="documents"){CUR_FOLD=null;rDocs();}
   if(page==="sales-report"){initRpt();rRpt();}
-  if(page==="settings"){rLockItems();loadCFG();loadGistConfig();loadApiKeyCfg();}
+  if(page==="settings"){rLockItems();loadCFG();loadGistConfig();loadApiKeyCfg();loadGHCfgUI();}
   document.getElementById("sb").classList.remove("open");
 }
 
@@ -3646,6 +3660,14 @@ function xlMarkdownToHtml(text) {
 }
 
 // ── API KEY MANAGEMENT ──
+function saveGHToken() {
+  var token = document.getElementById('cfg-gh-token').value.trim();
+  if (!token) { alert('Please enter your GitHub token'); return; }
+  saveGHConfig(token);
+  document.getElementById('gh-token-status').innerHTML = '<span style="color:var(--tl2)">✅ Token saved</span>';
+  setTimeout(function(){ document.getElementById('gh-token-status').innerHTML = ''; }, 3000);
+}
+
 function saveApiKey() {
   var key = document.getElementById('cfg-api-key').value.trim();
   if (!key) { alert('Please enter an API key'); return; }
@@ -3656,6 +3678,16 @@ function saveApiKey() {
   localStorage.setItem('le_anthropic_key', key);
   document.getElementById('api-key-status').innerHTML = '<span style="color:var(--tl2)">✅ API key saved</span>';
   setTimeout(function(){ document.getElementById('api-key-status').innerHTML = ''; }, 3000);
+}
+
+function loadGHCfgUI() {
+  loadGHConfig();
+  var el = document.getElementById('cfg-gh-token');
+  if (el && GH_TOKEN) {
+    el.value = GH_TOKEN;
+    var st = document.getElementById('gh-token-status');
+    if(st) st.innerHTML = '<span style="color:var(--tl2)">✅ Token loaded</span>';
+  }
 }
 
 function loadApiKeyCfg() {
@@ -3733,6 +3765,67 @@ function viewDebtor(did) {
 }
 
 
+
+// ── GITHUB AUTO-DEPLOY ──
+var GH_TOKEN = '';
+var GH_REPO  = 'LuckanEnergy/luckan-portal';
+var GH_FILE  = 'index.html';
+var GH_SHA   = '';  // updated after each push
+
+function loadGHConfig() {
+  GH_TOKEN = localStorage.getItem('le_gh_token') || '';
+  GH_SHA   = localStorage.getItem('le_gh_sha')   || '';
+}
+
+function saveGHConfig(token) {
+  localStorage.setItem('le_gh_token', token);
+  GH_TOKEN = token;
+}
+
+function pushToGitHub(onDone) {
+  if (!GH_TOKEN) { if(onDone) onDone('no_token'); return; }
+  setSyncStatus('saving', 'Pushing…');
+
+  // Get current SHA first
+  fetch('https://api.github.com/repos/' + GH_REPO + '/contents/' + GH_FILE, {
+    headers: { 'Authorization': 'token ' + GH_TOKEN, 'User-Agent': 'luckan-portal' }
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(meta) {
+    var sha = meta.sha || GH_SHA;
+    // Get current page HTML
+    var content = btoa(unescape(encodeURIComponent(document.documentElement.outerHTML)));
+    return fetch('https://api.github.com/repos/' + GH_REPO + '/contents/' + GH_FILE, {
+      method: 'PUT',
+      headers: {
+        'Authorization': 'token ' + GH_TOKEN,
+        'Content-Type': 'application/json',
+        'User-Agent': 'luckan-portal'
+      },
+      body: JSON.stringify({
+        message: 'Auto-deploy: ' + new Date().toISOString().slice(0,16).replace('T',' '),
+        content: content,
+        sha: sha
+      })
+    });
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(result) {
+    if (result.content && result.content.sha) {
+      localStorage.setItem('le_gh_sha', result.content.sha);
+      GH_SHA = result.content.sha;
+      setSyncStatus('synced', 'Deployed ✓');
+      if(onDone) onDone('ok');
+    } else {
+      setSyncStatus('error', 'Push failed');
+      if(onDone) onDone('error');
+    }
+  })
+  .catch(function(e) {
+    setSyncStatus('error', 'Push error');
+    if(onDone) onDone('error');
+  });
+}
 
 function toggleSB(){
   var sb=document.getElementById("sb");
