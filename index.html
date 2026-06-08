@@ -4282,77 +4282,69 @@ function debtorUnpaidOrders(d) {
 }
 
 function rDebtors() {
-  var q  = (document.getElementById('deb-srch')||{}).value||''; q=q.toLowerCase();
-  var rf = (document.getElementById('deb-filter')||{}).value||'';
+  var q = (document.getElementById('deb-srch')||{}).value||''; q=q.toLowerCase();
   var rows = DB.filter(function(d){
-    var mq=!q||d.name.toLowerCase().includes(q)||d.company.toLowerCase().includes(q);
-    return mq&&(!rf||debtorRisk(d)===rf);
+    return !q||d.name.toLowerCase().includes(q)||d.company.toLowerCase().includes(q);
   });
-
   var totalOwe=DB.reduce(function(s,d){return s+debtorTotal(d);},0);
   var overdue=DB.filter(function(d){return debtorDays(d)>=30;}).length;
-  ['dk1','dk2','dk3','dk4'].forEach(function(id,i){
-    var el=document.getElementById(id);
-    if(!el)return;
-    el.textContent=[fR(totalOwe),DB.length,overdue,fR(DB.length?totalOwe/DB.length:0)][i];
-  });
+  var totalPaid=DB.reduce(function(s,d){return s+(d.orders||[]).reduce(function(a,o){return a+(o.paymentStatus==='paid'?parseFloat(o.amount)||0:0);},0);},0);
+  var e1=document.getElementById('dk1');if(e1)e1.textContent=fR(totalOwe);
+  var e2=document.getElementById('dk2');if(e2)e2.textContent=DB.length;
+  var e3=document.getElementById('dk3');if(e3)e3.textContent=overdue;
+  var e4=document.getElementById('dk4');if(e4)e4.textContent=fR(totalPaid);
 
   var sorted=rows.slice().sort(function(a,b){return debtorTotal(b)-debtorTotal(a);});
-
-  var listHTML=sorted.map(function(d){
-    var risk=debtorRisk(d);
-    var tot=debtorTotal(d);
-    var days=debtorDays(d);
-    var rc=risk==='high'?'#ef4444':risk==='med'?'#d97706':'var(--tl2)';
-    var rb=risk==='high'?'rgba(239,68,68,0.06)':risk==='med'?'rgba(245,158,11,0.06)':'rgba(20,184,166,0.06)';
+  var html2=sorted.map(function(d){
+    var rc=debtorRisk(d)==='high'?'#ef4444':debtorRisk(d)==='med'?'#d97706':'var(--tl2)';
     var ini=d.name.split(' ').map(function(w){return w[0]||'';}).join('').toUpperCase().slice(0,2);
-    var unpaid=(d.orders||[]).filter(function(o){return o.paymentStatus!=='paid';});
-
-    var orderRows=unpaid.map(function(o){
-      var did=d.id; var oid=o.orderId||'';
-      return '<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--bd);flex-wrap:wrap">'
-        +'<span style="font-size:11px;font-weight:700;color:var(--pk);font-family:monospace;min-width:90px">'+(oid||'—')+'</span>'
-        +'<span style="font-size:12px;color:var(--mu);flex:1;min-width:80px">'+(o.description||'—')+'</span>'
-        +'<span style="font-size:13px;font-weight:700;color:'+rc+';margin-right:4px">'+fR(parseFloat(o.amount)||0)+'</span>'
-        +'<select data-did="'+did+'" data-oid="'+oid+'" onchange="quickPayOrder(this)" style="font-size:11px;padding:3px 6px;border-radius:6px;border:1px solid var(--bd);background:var(--wh);cursor:pointer">'
-        +'<option value="unpaid" selected>&#128179; Unpaid</option>'
-        +'<option value="paid">&#9989; Mark Paid</option>'
-        +'</select>'
-        +'</div>';
-    }).join('');
-
-    return '<div style="background:var(--wh);border-radius:12px;border:1.5px solid var(--bd);margin-bottom:12px;overflow:hidden">'
-      +'<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:'+rb+'">'
-        +'<div style="display:flex;align-items:center;gap:10px">'
-          +'<div style="width:40px;height:40px;border-radius:50%;background:'+rc+';color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0">'+ini+'</div>'
-          +'<div>'
-            +'<div style="font-weight:700;font-size:14px">'+d.name+'</div>'
-            +'<div style="font-size:12px;color:var(--mu)">'+d.company+'</div>'
-          +'</div>'
-        +'</div>'
-        +'<div style="text-align:right">'
-          +'<div style="font-size:17px;font-weight:800;color:'+rc+'">'+fR(tot)+'</div>'
-          +'<div style="font-size:11px;color:var(--mu)">'+(days>0?days+' days overdue':risk==='high'?'High Risk':risk==='med'?'Moderate':'Current')+'</div>'
-        +'</div>'
-      +'</div>'
-      +(unpaid.length
-        ?'<div style="padding:0 14px 10px">'+orderRows+'</div>'
-        :'<div style="padding:12px 14px;font-size:12px;color:var(--tl2);text-align:center">&#9989; All orders paid</div>')
-      +'<div style="display:flex;gap:6px;padding:0 14px 12px">'
-        +'<button class="btn btn-s btn-sm" style="flex:1;font-size:11px" onclick="viewDebtor(\''+d.id+'\')">View</button>'
-        +'<button class="btn btn-t btn-sm" onclick="openDebtorModal(\''+d.id+'\')">&#9999;</button>'
-        +'<button class="btn btn-d btn-sm" onclick="delDebtor(\''+d.id+'\')">&#128465;</button>'
-      +'</div>'
-    +'</div>';
-  }).join('')||'<div style="text-align:center;color:var(--mu);padding:50px 0"><div style="font-size:40px;margin-bottom:12px">&#128176;</div><div>No outstanding debtors</div></div>';
+    var orders=d.orders||[];
+    var unpaidCount=orders.filter(function(o){return o.paymentStatus!=='paid';}).length;
+    var s='<div style="border:1px solid var(--bd);border-radius:8px;overflow:hidden;margin-bottom:8px">';
+    // Header
+    s+='<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--lt)">';
+    s+='<div style="width:34px;height:34px;border-radius:50%;background:'+rc+';color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0">'+ini+'</div>';
+    s+='<div style="flex:1"><div style="font-weight:700;font-size:13px">'+d.name+'</div><div style="font-size:11px;color:var(--mu)">'+d.company+'</div></div>';
+    s+='<div style="text-align:right;margin-right:8px"><div style="font-size:14px;font-weight:800;color:'+rc+'">'+fR(debtorTotal(d))+'</div><div style="font-size:10px;color:var(--mu)">'+unpaidCount+' unpaid</div></div>';
+    s+='<div style="display:flex;gap:3px">';
+    s+='<button class="btn btn-s btn-sm" style="font-size:11px" onclick="viewDebtor(''+d.id+'')">View</button>';
+    s+='<button class="btn btn-t btn-sm" onclick="openDebtorModal(''+d.id+'')">&#9999;</button>';
+    s+='<button class="btn btn-d btn-sm" onclick="delDebtor(''+d.id+'')">&#128465;</button>';
+    s+='</div></div>';
+    // Orders
+    if(orders.length===0){
+      s+='<div style="padding:8px 12px 8px 56px;font-size:12px;color:var(--mu)">No orders</div>';
+    } else {
+      orders.forEach(function(o){
+        var paid=o.paymentStatus==='paid';
+        var oid=o.orderId||'—';
+        s+='<div style="display:flex;align-items:center;gap:8px;padding:7px 12px 7px 56px;border-top:1px solid var(--bd);background:'+(paid?'rgba(20,184,166,0.04)':'var(--wh)')+';flex-wrap:wrap">';
+        s+='<span style="font-size:11px;font-weight:700;color:'+(paid?'var(--tl2)':'var(--pk)')+';font-family:monospace;min-width:88px">'+oid+'</span>';
+        s+='<span style="font-size:11px;color:var(--mu);flex:1;min-width:80px">'+(o.description||'—')+'</span>';
+        s+='<span style="font-size:12px;font-weight:700;min-width:65px;text-align:right">'+fR(parseFloat(o.amount)||0)+'</span>';
+        s+='<select data-did="'+d.id+'" data-oid="'+oid+'" onchange="quickPayOrder(this)" ';
+        s+='style="font-size:11px;padding:4px 7px;border-radius:6px;border:1.5px solid '+(paid?'var(--tl2)':'var(--bd)')+';background:'+(paid?'rgba(20,184,166,0.08)':'var(--wh)')+';color:'+(paid?'var(--tl2)':'var(--dk)')+';font-weight:600;cursor:pointer">';
+        if(paid){
+          s+='<option value="paid" selected>&#9989; Paid</option><option value="unpaid">&#8634; Unpaid</option>';
+        } else {
+          s+='<option value="unpaid" selected>&#128179; Unpaid</option><option value="paid">&#9989; Mark Paid</option>';
+        }
+        s+='</select></div>';
+      });
+    }
+    s+='</div>';
+    return s;
+  }).join('')||'<div style="text-align:center;color:var(--mu);padding:40px">No debtors</div>';
 
   var grid=document.getElementById('debtor-grid');
-  if(grid)grid.innerHTML=listHTML;
+  if(grid){grid.style.cssText='display:block;margin-top:8px';grid.innerHTML=html2;}
   var tbl=document.getElementById('debtor-table');
   if(tbl){var cd=tbl.closest('.cd');if(cd)cd.style.display='none';}
   var lbl=document.getElementById('deb-total-label');
   if(lbl)lbl.textContent=rows.length+' account(s)';
 }
+
+>
 </script>
 </body>
 </html>
