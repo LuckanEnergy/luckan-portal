@@ -2076,6 +2076,7 @@ function updSt(type,id,s){
     if(type==="fuel")FO=FO.filter(function(x){return x.id!==id;});
     else LO=LO.filter(function(x){return x.id!==id;});
     pushOrderToDebtors(o, type);
+    deductStockForOrder(o, type);
     sv();
     localStorage.setItem('le_db', JSON.stringify(DB));
     addAct(id+" delivered — moved to Debtors","✅","tl");
@@ -3925,6 +3926,47 @@ function buildPricingCell(c) {
     return '<span style="display:inline-block;background:var(--pkb);color:var(--pk);border-radius:4px;padding:1px 5px;margin:1px;font-size:10px;font-weight:600">'
       +(labels[k]||k)+' R'+parseFloat(pr[k]).toFixed(2)+'</span>';
   }).join('');
+}
+
+// ── STOCK DEDUCTION ON DELIVERY ──
+function deductStockForOrder(o, type) {
+  if (!STOCK || !STOCK.length) return;
+
+  var product = (o.product || '').toLowerCase();
+  var qty     = parseFloat(o.volume) || 0;
+  if (qty <= 0) return;
+
+  // Match order product to stock item
+  var stockItem = STOCK.find(function(s) {
+    var sn = s.name.toLowerCase();
+    if (type === 'fuel') {
+      if (product.includes('diesel') || product.includes('ago'))    return sn.includes('diesel') || sn.includes('ago');
+      if (product.includes('paraffin') || product.includes('ik'))   return sn.includes('paraffin') || sn.includes('ik');
+      if (product.includes('95'))                                     return sn.includes('95');
+      if (product.includes('93'))                                     return sn.includes('93');
+      if (product.includes('burner'))                                 return sn.includes('burner');
+      if (product.includes('marine') || product.includes('mgo'))     return sn.includes('marine') || sn.includes('mgo');
+    } else {
+      // LPG — match by cylinder size
+      if (product.includes('5kg'))  return sn.includes('5kg');
+      if (product.includes('9kg'))  return sn.includes('9kg');
+      if (product.includes('19kg')) return sn.includes('19kg');
+      if (product.includes('48kg')) return sn.includes('48kg');
+      if (product.includes('bulk')) return sn.includes('bulk');
+    }
+    return false;
+  });
+
+  if (!stockItem) {
+    console.warn('No stock match for product:', o.product);
+    return;
+  }
+
+  var before = parseFloat(stockItem.qty) || 0;
+  stockItem.qty = Math.max(0, before - qty);
+  saveSTOCK_supa(stockItem);
+  addAct(stockItem.name + ' reduced by ' + qty + ' ' + stockItem.unit + ' (order ' + o.id + ')', '📦', 'tl');
+  rStock();
 }
 
 function toggleSB(){
