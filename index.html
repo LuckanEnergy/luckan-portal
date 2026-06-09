@@ -1735,7 +1735,12 @@ function loadSettings(cb) {
 
 // ── SAVE functions (write to Supabase) ──
 function saveFO_supa(o) {
-  dbUpsert('fuel_orders',{id:o.id,client:o.client,product:o.product,volume:o.volume,price:o.price,value:o.value,status:o.status,date:o.date,notes:o.notes||'',truck:o.truck||'',location:o.location||'',invoice:o.invoice||null});
+  // Don't send invoice in the main save (too large, separate operation)
+  var payload = {id:o.id,client:o.client,product:o.product,volume:o.volume,price:o.price,value:o.value,status:o.status,date:o.date,notes:o.notes||'',truck:o.truck||'',location:o.location||''};
+  dbUpsert('fuel_orders', payload).then(function(r){
+    if(r && r[0] && r[0].id){ /* saved ok */ }
+    else { console.error('saveFO_supa failed:', JSON.stringify(r)); }
+  }).catch(function(e){ console.error('saveFO_supa error:', e); });
 }
 function saveLO_supa(o) {
   dbUpsert('lpg_orders',{id:o.id,client:o.client,size:o.size,qty:o.qty,price:o.price,value:o.value,status:o.status,date:o.date,notes:o.notes||''});
