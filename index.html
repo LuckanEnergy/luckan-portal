@@ -3139,6 +3139,7 @@ function rClients(){
       +'<td style="font-size:12px">'+(c.loc||"—")+"</td>"
       +'<td style="font-size:11px">'+buildPricingCell(c)+'</td>'
       +'<td><div style="display:flex;gap:4px">'
+      +'<button class="btn btn-t btn-sm" onclick="viewClient(\''+c.id+'\')">View</button>'
       +'<button class="btn btn-s btn-sm" onclick="openClientModal(\''+c.id+'\')">Edit</button>'
       +'<button class="btn btn-d btn-sm" onclick="delClient(\''+c.id+'\')">🗑</button>'
       +"</div></td></tr>";
@@ -4462,6 +4463,113 @@ function updateClientPricingFields() {
   });
 }
 
+// ── CLIENT ORDER HISTORY ──
+var CV_CLIENT_ID = null;
+
+function viewClient(cid) {
+  CV_CLIENT_ID = cid;
+  var c = CL.find(function(x){ return x.id===cid; });
+  if(!c) return;
+
+  // Set title and info
+  document.getElementById('cv-title').textContent = c.company + ' — Order History';
+  document.getElementById('cv-info').innerHTML =
+    '<span><strong>Contact:</strong> '+c.name+'</span>'
+    +'<span><strong>Phone:</strong> '+(c.phone||'—')+'</span>'
+    +'<span><strong>Email:</strong> '+(c.email||'—')+'</span>'
+    +'<span><strong>Type:</strong> '+(c.type||'—')+'</span>'
+    +'<span><strong>Tier:</strong> '+c.tier+'</span>';
+
+  // Default to last 90 days
+  setCVRange(90, false);
+  renderClientOrders();
+  document.getElementById('m-client-view').classList.add('open');
+}
+
+function setCVRange(days, render) {
+  var to = new Date();
+  var from = new Date();
+  if(days > 0) from.setDate(from.getDate() - days);
+  document.getElementById('cv-to').value = to.toISOString().split('T')[0];
+  document.getElementById('cv-from').value = days > 0 ? from.toISOString().split('T')[0] : '';
+  if(render !== false) renderClientOrders();
+}
+
+function renderClientOrders() {
+  if(!CV_CLIENT_ID) return;
+  var c = CL.find(function(x){ return x.id===CV_CLIENT_ID; });
+  if(!c) return;
+  var from = document.getElementById('cv-from').value;
+  var to   = document.getElementById('cv-to').value;
+
+  // Collect orders from FO, LO and paid orders in DB
+  var orders = [];
+
+  // Active fuel orders
+  FO.forEach(function(o){
+    if((o.client||'').toLowerCase().trim() === (c.company||'').toLowerCase().trim() ||
+       (o.client||'').toLowerCase().trim() === (c.name||'').toLowerCase().trim()) {
+      orders.push({id:o.id,date:o.date||'',product:o.product,volume:o.volume,price:o.price,value:o.value,status:o.status,type:'fuel'});
+    }
+  });
+
+  // Active LPG orders
+  LO.forEach(function(o){
+    if((o.client||'').toLowerCase().trim() === (c.company||'').toLowerCase().trim() ||
+       (o.client||'').toLowerCase().trim() === (c.name||'').toLowerCase().trim()) {
+      orders.push({id:o.id,date:o.date||'',product:o.product,volume:o.volume,price:o.price,value:o.value,status:o.status,type:'lpg'});
+    }
+  });
+
+  // Paid orders from Debtors
+  DB.forEach(function(d){
+    if(d.clientId===c.id || (d.company||'').toLowerCase()===c.company.toLowerCase()) {
+      (d.orders||[]).forEach(function(o){
+        orders.push({id:o.orderId||'—',date:o.date||'',product:o.description||'—',volume:0,price:0,value:parseFloat(o.amount)||0,status:o.paymentStatus==='paid'?'paid':'delivered',type:'debtor'});
+      });
+    }
+  });
+
+  // Apply date filter
+  if(from || to) {
+    orders = orders.filter(function(o){
+      if(!o.date) return true;
+      return (!from || o.date >= from) && (!to || o.date <= to);
+    });
+  }
+
+  // Sort newest first
+  orders.sort(function(a,b){ return (b.date||'').localeCompare(a.date||''); });
+
+  // KPIs
+  var totalVal = orders.reduce(function(s,o){ return s+o.value; }, 0);
+  var totalVol = orders.reduce(function(s,o){ return s+(parseFloat(o.volume)||0); }, 0);
+  document.getElementById('cv-k1').textContent = orders.length;
+  document.getElementById('cv-k2').textContent = fR(totalVal);
+  document.getElementById('cv-k3').textContent = totalVol.toLocaleString()+' L';
+
+  // Render table
+  var tbody = document.getElementById('cv-orders');
+  if(!orders.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--mu);padding:24px">No orders found in this period</td></tr>';
+    return;
+  }
+
+  var statusColors = {pending:'#d97706',processing:'var(--pk)',delivered:'var(--tl2)',paid:'#16a34a'};
+  tbody.innerHTML = orders.map(function(o){
+    var sc = statusColors[o.status] || 'var(--mu)';
+    return '<tr>'
+      +'<td style="font-weight:700;color:var(--pk);font-family:monospace;font-size:11px">'+o.id+'</td>'
+      +'<td style="font-size:12px;color:var(--mu)">'+o.date+'</td>'
+      +'<td style="font-size:12px">'+o.product+'</td>'
+      +'<td style="font-size:12px">'+(o.volume?o.volume.toLocaleString()+' L':'—')+'</td>'
+      +'<td style="font-size:12px">'+(o.price?fR(o.price)+'/L':'—')+'</td>'
+      +'<td style="font-weight:700;color:var(--pk)">'+fR(o.value)+'</td>'
+      +'<td><span style="font-size:11px;font-weight:600;color:'+sc+'">'+o.status+'</span></td>'
+      +'</tr>';
+  }).join('');
+}
+
 function toggleSB(){
   var sb=document.getElementById("sb");
   sb.classList.toggle("open");
@@ -4932,5 +5040,57 @@ function rDebtors() {
   if(lbl)lbl.textContent=rows.length+' account(s)';
 }
 </script>
+<!-- CLIENT VIEW MODAL -->
+<div class="mo" id="m-client-view">
+  <div class="mo-box" style="max-width:700px;width:95%">
+    <div class="mh">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="mac tl"></div>
+        <span class="mt2" id="cv-title">Client Orders</span>
+      </div>
+      <button class="xbtn" onclick="closeM('m-client-view')">✕</button>
+    </div>
+    <div style="padding:16px">
+      <!-- Client info strip -->
+      <div id="cv-info" style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px;padding:12px;background:var(--lt);border-radius:8px;font-size:12px"></div>
+      <!-- Date filter -->
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px">
+        <label style="font-size:12px;font-weight:600;color:var(--mu)">From</label>
+        <input type="date" id="cv-from" onchange="renderClientOrders()" style="padding:6px 10px;border:1.5px solid var(--bd);border-radius:7px;font-size:12px">
+        <label style="font-size:12px;font-weight:600;color:var(--mu)">To</label>
+        <input type="date" id="cv-to" onchange="renderClientOrders()" style="padding:6px 10px;border:1.5px solid var(--bd);border-radius:7px;font-size:12px">
+        <button class="btn btn-s btn-sm" onclick="setCVRange(30)">30 days</button>
+        <button class="btn btn-s btn-sm" onclick="setCVRange(90)">90 days</button>
+        <button class="btn btn-s btn-sm" onclick="setCVRange(365)">1 year</button>
+        <button class="btn btn-s btn-sm" onclick="setCVRange(0)">All</button>
+      </div>
+      <!-- Summary KPIs -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">
+        <div style="background:var(--pkb);border-radius:8px;padding:10px;text-align:center">
+          <div id="cv-k1" style="font-size:18px;font-weight:800;color:var(--pk)">0</div>
+          <div style="font-size:10px;color:var(--mu)">ORDERS</div>
+        </div>
+        <div style="background:rgba(20,184,166,0.08);border-radius:8px;padding:10px;text-align:center">
+          <div id="cv-k2" style="font-size:18px;font-weight:800;color:var(--tl2)">R 0</div>
+          <div style="font-size:10px;color:var(--mu)">TOTAL REVENUE</div>
+        </div>
+        <div style="background:rgba(245,158,11,0.08);border-radius:8px;padding:10px;text-align:center">
+          <div id="cv-k3" style="font-size:18px;font-weight:800;color:#d97706">0 L</div>
+          <div style="font-size:10px;color:var(--mu)">TOTAL VOLUME</div>
+        </div>
+      </div>
+      <!-- Orders table -->
+      <div style="overflow-x:auto;max-height:350px;overflow-y:auto">
+        <table>
+          <thead style="position:sticky;top:0;background:var(--wh);z-index:1">
+            <tr><th>Order ID</th><th>Date</th><th>Product</th><th>Volume</th><th>Price</th><th>Value</th><th>Status</th></tr>
+          </thead>
+          <tbody id="cv-orders"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
