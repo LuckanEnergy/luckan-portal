@@ -2904,7 +2904,9 @@ function calcOp(op){
 function calcEquals(show){
   if(show===undefined)show=true;
   if(cOp===null||cPrev===null)return;
-  var cur=parseFloat(cVal),res;
+  var pricing={};
+  ["diesel","paraffin","petrol95","petrol93","burner","lpg9","lpg19","lpg48"].forEach(function(k){var v=parseFloat((document.getElementById("cp-"+k)||{}).value||"");if(!isNaN(v)&&v>0)pricing[k]=v;});
+  var cr cur=parseFloat(cVal),res;,pricing:pricing};
   if(cOp==="+")res=cPrev+cur;
   else if(cOp==="-")res=cPrev-cur;
   else if(cOp==="*")res=cPrev*cur;
@@ -3042,12 +3044,41 @@ function acFilter(inputId,listId,orderType){
 function acSelect(inputId,listId,val){
   document.getElementById(inputId).value=val;
   document.getElementById(listId).classList.remove("open");
-  // Auto-fill location if available for fuel orders
-  var c=CL.find(function(x){return x.company===val;});
-  if(c&&c.loc){
-    if(inputId==="fc"&&document.getElementById("fl"))document.getElementById("fl").value=c.loc;
-    if(inputId==="lc"&&document.getElementById("ll"))document.getElementById("ll").value=c.loc;
+  var cl=CL.find(function(x){return x.company===val;});
+  if(!cl) return;
+  // Auto-fill location
+  if(cl.loc){
+    if(inputId==="fc"&&document.getElementById("fl"))document.getElementById("fl").value=cl.loc;
+    if(inputId==="lc"&&document.getElementById("ll"))document.getElementById("ll").value=cl.loc;
   }
+  // Auto-fill price from client pricing
+  var pr=cl.pricing||{};
+  if(inputId==="fc"){
+    var prod=document.getElementById("fp");
+    var pel=document.getElementById("fpr");
+    if(prod&&pel){
+      fillCPrice(prod.value,pr,pel);
+      prod.onchange=function(){fillCPrice(prod.value,pr,pel);};
+    }
+  }
+  if(inputId==="lc"){
+    var sz=document.getElementById("ls");
+    var lel=document.getElementById("lpr");
+    if(sz&&lel){
+      fillLPrice(sz.value,pr,lel);
+      sz.onchange=function(){fillLPrice(sz.value,pr,lel);};
+    }
+  }
+}
+function fillCPrice(prod,pr,el){
+  var p=(prod||"").toLowerCase();
+  var k=p.includes("diesel")||p.includes("ago")?"diesel":p.includes("paraffin")||p.includes("ik")?"paraffin":p.includes("95")?"petrol95":p.includes("93")?"petrol93":p.includes("burner")?"burner":null;
+  if(k&&pr[k])el.value=pr[k];
+}
+function fillLPrice(sz,pr,el){
+  var s=(sz||"").toLowerCase();
+  var k=s.includes("9kg")?"lpg9":s.includes("19kg")?"lpg19":s.includes("48kg")?"lpg48":null;
+  if(k&&pr[k])el.value=pr[k];
 }
 // ════════════════════════════════
 // ASSET REGISTER
