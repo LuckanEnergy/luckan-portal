@@ -4286,8 +4286,7 @@ function savePO(){
 function receivePO(id){
   var p = PO.find(function(x){return x.id===id;});
   if(!p)return;
-  if(!confirm('Mark '+p.id+' as RECEIVED?
-'+p.qty+' '+p.product+' will be added to stock.'))return;
+  if(!confirm('Mark '+p.id+' as RECEIVED? '+p.qty+' '+p.product+' will be added to stock.'))return;
 
   // Find matching stock item and increase qty
   var stockItem = (STOCK||[]).find(function(s){return s.name===p.product;});
