@@ -2520,6 +2520,7 @@ function rStockFuel(){
   var g=document.getElementById("stock-grid-fuel");
   if(g) g.innerHTML = items.length ? items.map(mkStockCard).join("") : '<div style="text-align:center;color:var(--mu);padding:32px">No fuel products. Click + Add Fuel Product.</div>';
   mkStockAlerts(items,"stock-alerts-fuel");
+  rStockTxLog("Fuel");
 }
 
 function rStockLPG(){
@@ -2530,6 +2531,7 @@ function rStockLPG(){
   var g=document.getElementById("stock-grid-lpg");
   if(g) g.innerHTML = items.length ? items.map(mkStockCard).join("") : '<div style="text-align:center;color:var(--mu);padding:32px">No LPG products. Click + Add LPG Product.</div>';
   mkStockAlerts(items,"stock-alerts-lpg");
+  rStockTxLog("LPG");
 }
 
 function rStock(){ rStockFuel(); rStockLPG(); }
@@ -4034,16 +4036,40 @@ function logStockTx(productId, productName, type, qty, opening, closing, ref) {
     time: new Date().toTimeString().slice(0,5),
     productId: productId,
     productName: productName,
-    type: type,       // 'delivery', 'restock', 'adjustment'
-    qty: qty,         // negative = out, positive = in
+    type: type,
+    qty: qty,
     opening: opening,
     closing: closing,
     ref: ref || ''
   };
   STOCK_TX.unshift(tx);
-  // Keep last 500 transactions
   if (STOCK_TX.length > 500) STOCK_TX = STOCK_TX.slice(0, 500);
   localStorage.setItem('le_stk_tx', JSON.stringify(STOCK_TX));
+  // Save to Supabase for persistence
+  dbUpsert('stock_transactions', {
+    id: tx.id,
+    date: tx.date,
+    time: tx.time,
+    product_id: tx.productId,
+    product_name: tx.productName,
+    type: tx.type,
+    qty: tx.qty,
+    opening: tx.opening,
+    closing: tx.closing,
+    ref: tx.ref
+  });
+}
+
+function loadStockTxFromSupabase(cb) {
+  dbGet('stock_transactions', 'order=date.desc,time.desc&limit=200').then(function(rows){
+    if(Array.isArray(rows)){
+      STOCK_TX = rows.map(function(r){
+        return {id:r.id,date:r.date,time:r.time,productId:r.product_id,productName:r.product_name,type:r.type,qty:r.qty,opening:r.opening,closing:r.closing,ref:r.ref||''};
+      });
+      localStorage.setItem('le_stk_tx', JSON.stringify(STOCK_TX));
+    }
+    if(cb) cb();
+  }).catch(function(e){ console.error('loadStockTx error:', e); if(cb) cb(); });
 }
 
 function loadStockTx() {
