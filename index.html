@@ -758,6 +758,21 @@ input:checked+.slider::before{transform:translateX(18px);}
       <div class="cd-hd"><span class="cd-ttl">⚠️ Low Fuel Stock</span></div>
       <div class="cd-bd" style="padding:0"><table><thead><tr><th>Product</th><th>Current Stock</th><th>Min Level</th><th>Value</th><th>Status</th></tr></thead><tbody id="stock-alerts-fuel"></tbody></table></div>
     </div>
+    <!-- Transaction Log Fuel -->
+    <div class="cd" style="margin-top:14px">
+      <div class="cd-hd" style="display:flex;justify-content:space-between;align-items:center">
+        <span class="cd-ttl">📋 Transaction Log</span>
+        <select id="stk-fuel-filter" onchange="rStockTxLog('Fuel')" style="font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--bd)">
+          <option value="">All Products</option>
+        </select>
+      </div>
+      <div class="cd-bd" style="padding:0;overflow-x:auto">
+        <table>
+          <thead><tr><th>Date</th><th>Product</th><th>Type</th><th>Qty Change</th><th>Opening Bal</th><th>Closing Bal</th><th>Reference</th></tr></thead>
+          <tbody id="stk-fuel-txlog"></tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
   <!-- LPG STOCK PAGE -->
@@ -779,6 +794,21 @@ input:checked+.slider::before{transform:translateX(18px);}
     <div class="cd" style="margin-top:14px">
       <div class="cd-hd"><span class="cd-ttl">⚠️ Low LPG Stock</span></div>
       <div class="cd-bd" style="padding:0"><table><thead><tr><th>Product</th><th>Current Stock</th><th>Min Level</th><th>Value</th><th>Status</th></tr></thead><tbody id="stock-alerts-lpg"></tbody></table></div>
+    </div>
+    <!-- Transaction Log LPG -->
+    <div class="cd" style="margin-top:14px">
+      <div class="cd-hd" style="display:flex;justify-content:space-between;align-items:center">
+        <span class="cd-ttl">📋 Transaction Log</span>
+        <select id="stk-lpg-filter" onchange="rStockTxLog('LPG')" style="font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--bd)">
+          <option value="">All Products</option>
+        </select>
+      </div>
+      <div class="cd-bd" style="padding:0;overflow-x:auto">
+        <table>
+          <thead><tr><th>Date</th><th>Product</th><th>Type</th><th>Qty Change</th><th>Opening Bal</th><th>Closing Bal</th><th>Reference</th></tr></thead>
+          <tbody id="stk-lpg-txlog"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 
@@ -3984,10 +4014,93 @@ function deductStockForOrder(o, type) {
   }
 
   var before = parseFloat(stockItem.qty) || 0;
-  stockItem.qty = Math.max(0, before - qty);
+  var after  = Math.max(0, before - qty);
+  stockItem.qty = after;
   saveSTOCK_supa(stockItem);
+  logStockTx(stockItem.id, stockItem.name, 'delivery', -qty, before, after, o.id);
   addAct(stockItem.name + ' reduced by ' + qty + ' ' + stockItem.unit + ' (order ' + o.id + ')', '📦', 'tl');
   rStock();
+}
+
+// ══════════════════════════════════════════════
+// STOCK TRANSACTION LOG
+// ══════════════════════════════════════════════
+var STOCK_TX = []; // in-memory transaction log
+
+function logStockTx(productId, productName, type, qty, opening, closing, ref) {
+  var tx = {
+    id: 'TX-' + Date.now(),
+    date: new Date().toISOString().split('T')[0],
+    time: new Date().toTimeString().slice(0,5),
+    productId: productId,
+    productName: productName,
+    type: type,       // 'delivery', 'restock', 'adjustment'
+    qty: qty,         // negative = out, positive = in
+    opening: opening,
+    closing: closing,
+    ref: ref || ''
+  };
+  STOCK_TX.unshift(tx);
+  // Keep last 500 transactions
+  if (STOCK_TX.length > 500) STOCK_TX = STOCK_TX.slice(0, 500);
+  localStorage.setItem('le_stk_tx', JSON.stringify(STOCK_TX));
+}
+
+function loadStockTx() {
+  try {
+    var saved = localStorage.getItem('le_stk_tx');
+    STOCK_TX = saved ? JSON.parse(saved) : [];
+  } catch(e) { STOCK_TX = []; }
+}
+
+function rStockTxLog(cat) {
+  var tbodyId = cat === 'Fuel' ? 'stk-fuel-txlog' : 'stk-lpg-txlog';
+  var filterId = cat === 'Fuel' ? 'stk-fuel-filter' : 'stk-lpg-filter';
+  var tbody = document.getElementById(tbodyId);
+  var filterEl = document.getElementById(filterId);
+  if (!tbody) return;
+
+  // Populate filter dropdown
+  var products = (STOCK || []).filter(function(s){ return s.cat === cat; });
+  if (filterEl) {
+    var curVal = filterEl.value;
+    filterEl.innerHTML = '<option value="">All Products</option>' +
+      products.map(function(s){
+        return '<option value="'+s.id+'"'+(curVal===s.id?' selected':'')+'>'+s.name+'</option>';
+      }).join('');
+  }
+
+  var filterVal = filterEl ? filterEl.value : '';
+  var txs = STOCK_TX.filter(function(tx){
+    var matchCat = products.some(function(s){ return s.id === tx.productId; });
+    var matchProd = !filterVal || tx.productId === filterVal;
+    return matchCat && matchProd;
+  });
+
+  if (txs.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--mu);padding:24px">No transactions recorded yet.<br><small>Transactions are logged when orders are delivered or stock is updated.</small></td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = txs.map(function(tx) {
+    var isOut = tx.qty < 0;
+    var qtyColor = isOut ? '#ef4444' : '#16a34a';
+    var typeLabel = tx.type === 'delivery' ? '📦 Delivery Out'
+      : tx.type === 'restock' ? '🔼 Restock In'
+      : '✏️ Adjustment';
+    var typeBg = tx.type === 'delivery' ? 'rgba(239,68,68,0.07)'
+      : tx.type === 'restock' ? 'rgba(22,163,74,0.07)'
+      : 'rgba(245,158,11,0.07)';
+    return '<tr style="background:'+typeBg+'">'
+      + '<td style="font-size:12px;color:var(--mu)">'+tx.date+' '+tx.time+'</td>'
+      + '<td style="font-weight:600;font-size:12px">'+tx.productName+'</td>'
+      + '<td style="font-size:12px">'+typeLabel+'</td>'
+      + '<td style="font-weight:700;color:'+qtyColor+';font-size:13px">'+(isOut?'':'+')+(tx.qty||0).toLocaleString()+' '+((STOCK||[]).find(function(s){return s.id===tx.productId;})||{unit:''}).unit+'</td>'
+      + '<td style="font-size:12px">'+(tx.opening||0).toLocaleString()+'</td>'
+      + '<td style="font-size:12px;font-weight:600">'+(tx.closing||0).toLocaleString()+'</td>'
+      + '<td style="font-size:11px;color:var(--mu)">'+tx.ref+'</td>'
+      + '</tr>';
+  }).join('');
 }
 
 function toggleSB(){
