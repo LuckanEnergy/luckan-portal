@@ -1741,7 +1741,7 @@ function saveLO_supa(o) {
   dbUpsert('lpg_orders',{id:o.id,client:o.client,size:o.size,qty:o.qty,price:o.price,value:o.value,status:o.status,date:o.date,notes:o.notes||''});
 }
 function saveCL_supa(c) {
-  dbUpsert('clients',{id:c.id,name:c.name,company:c.company,phone:c.phone||'',email:c.email||'',type:c.type,tier:c.tier||'1',loc:c.loc||'',notes:c.notes||''});
+  dbUpsert('clients',{id:c.id,name:c.name,company:c.company,phone:c.phone||'',email:c.email||'',type:c.type,tier:c.tier||'1',loc:c.loc||'',notes:c.notes||'',pricing:c.pricing||{}});
 }
 function saveDB_supa(d) {
   dbUpsert('debtors',{id:d.id,client_id:d.clientId||'',name:d.name,company:d.company,phone:d.phone||'',email:d.email||'',lim:d.limit||0,terms:d.terms||30,notes:d.notes||'',orders:d.orders||[]});
