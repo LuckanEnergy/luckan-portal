@@ -2077,6 +2077,9 @@ function updSt(type,id,s){
     else LO=LO.filter(function(x){return x.id!==id;});
     pushOrderToDebtors(o, type);
     deductStockForOrder(o, type);
+    // Delete from Supabase so it doesn't reappear on refresh
+    if(type==="fuel") delFO_supa(id);
+    else delLO_supa(id);
     sv();
     localStorage.setItem('le_db', JSON.stringify(DB));
     addAct(id+" delivered — moved to Debtors","✅","tl");
