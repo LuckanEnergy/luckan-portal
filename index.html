@@ -1906,19 +1906,30 @@ setDate();
 function refreshPage(){
   var btn=document.getElementById("refresh-btn");
   btn.classList.add("spin");
-  setTimeout(function(){
-    if(CUR_PAGE==="dashboard")rDash();
-    else if(CUR_PAGE==="fuel-orders"){rFuel();rQB("fuel");}
-    else if(CUR_PAGE==="lpg-orders"){rLPG();rQB("lpg");}
-    else if(CUR_PAGE==="all-orders")rAll();
-    else if(CUR_PAGE==="stock")rStock();
-    else if(CUR_PAGE==="assets")rAssets();
-    else if(CUR_PAGE==="clients")rClients();
-    else if(CUR_PAGE==="debtors")rDebtors();
-    else if(CUR_PAGE==="documents")rDocs();
-    else if(CUR_PAGE==="sales-report")rRpt();
+  // Pull fresh data from Supabase then rerender current page
+  var page = CUR_PAGE;
+  var done = function(){
     btn.classList.remove("spin");
-  },600);
+    if(page==="dashboard")rDash();
+    else if(page==="fuel-orders"){rFuel();rQB("fuel");}
+    else if(page==="lpg-orders"){rLPG();rQB("lpg");}
+    else if(page==="all-orders")rAll();
+    else if(page==="stock-fuel"||page==="stock-lpg"||page==="stock")rStock();
+    else if(page==="assets")rAssets();
+    else if(page==="clients")rClients();
+    else if(page==="debtors")rDebtors();
+    else if(page==="documents")rDocs();
+    else if(page==="sales-report")rRpt();
+  };
+  if(page==="fuel-orders") loadFO(done);
+  else if(page==="lpg-orders") loadLO(done);
+  else if(page==="all-orders") loadFO(function(){ loadLO(done); });
+  else if(page==="clients") loadCL(done);
+  else if(page==="debtors") loadDB(done);
+  else if(page==="stock-fuel"||page==="stock-lpg") loadSTOCK(done);
+  else if(page==="assets") loadAR(done);
+  else if(page==="sales-report") loadDB(done);
+  else done();
 }
 
 var navTitles={dashboard:"DASHBOARD","fuel-orders":"FUEL ORDERS","lpg-orders":"LPG ORDERS","all-orders":"ALL ORDERS",stock:"STOCK LEVELS",assets:"ASSET REGISTER",clients:"CLIENTS",documents:"DOCUMENTS","sales-report":"SALES REPORT",debtors:"DEBTORS",settings:"SETTINGS"};
