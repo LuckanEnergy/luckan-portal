@@ -2961,7 +2961,13 @@ function saveClient(){
   var ph=document.getElementById("c-phone").value.trim();
   if(!n||!co||!ph){alert("Contact Name, Company and Phone are required.");return;}
   var eid=document.getElementById("c-eid").value;
-  var c={id:eid||"CL-"+String(CL.length+1).padStart(3,"0"),name:n,company:co,phone:ph,email:document.getElementById("c-email").value.trim(),type:document.getElementById("c-type").value,tier:document.getElementById("c-tier").value||"1",loc:document.getElementById("c-loc").value.trim(),notes:document.getElementById("c-notes").value.trim()};
+  var pricing={};
+  ["diesel","paraffin","petrol95","petrol93","burner","lpg9","lpg19","lpg48"].forEach(function(k){
+    var el=document.getElementById("cp-"+k);
+    var v=el?parseFloat(el.value):NaN;
+    if(!isNaN(v)&&v>0) pricing[k]=v;
+  });
+  var c={id:eid||"CL-"+String(CL.length+1).padStart(3,"0"),name:n,company:co,phone:ph,email:document.getElementById("c-email").value.trim(),type:document.getElementById("c-type").value,tier:document.getElementById("c-tier").value||"1",loc:document.getElementById("c-loc").value.trim(),notes:document.getElementById("c-notes").value.trim(),pricing:pricing};
   if(eid){var i=CL.findIndex(function(x){return x.id===eid;});if(i>-1)CL[i]=c;}else CL.unshift(c);
   saveCL_supa(c);
   sv();closeM("mc");rClients();addAct((eid?"Updated":"Added")+" client: "+c.company,"👥","tl");
