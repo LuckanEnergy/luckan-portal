@@ -517,6 +517,7 @@ input:checked+.slider::before{transform:translateX(18px);}
     </div>
     <div><span class="nl">Orders</span>
       <div class="ni" id="nav-fuel-orders" onclick="goPage('fuel-orders',this)"><span class="ic">⛽</span>Fuel Orders<span class="lbadge" id="lb-fuel-orders"></span></div>
+      <div class="ni" id="nav-purchase-orders" onclick="goPage('purchase-orders',this)"><span class="ic">🛒</span>Purchase Orders<span class="lbadge" id="lb-po"></span></div>
       <div class="ni" id="nav-lpg-orders" onclick="goPage('lpg-orders',this)"><span class="ic">🔥</span>LPG Orders<span class="lbadge" id="lb-lpg-orders"></span></div>
       <div class="ni" id="nav-all-orders" onclick="goPage('all-orders',this)"><span class="ic">📋</span>All Orders<span class="lbadge" id="lb-all-orders"></span></div>
     </div>
@@ -912,6 +913,63 @@ input:checked+.slider::before{transform:translateX(18px);}
           <thead><tr><th>Company</th><th>Tier</th><th>Type</th><th>Phone</th><th>Email</th><th>Location</th><th>Pricing</th><th>Actions</th></tr></thead>
           <tbody id="client-table"></tbody>
         </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- PURCHASE ORDERS PAGE -->
+  <div class="pg" id="pg-purchase-orders">
+    <div class="sh">
+      <div><div class="st">🛒 PURCHASE <em>ORDERS</em></div><div class="ss">Supplier orders · Mark received to update stock</div></div>
+      <button class="btn btn-p" onclick="openPOModal()">+ New Purchase Order</button>
+    </div>
+    <!-- KPIs -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px">
+      <div class="kpi pk"><div class="kpi-v" id="po-k1">0</div><div class="kpi-l">Pending Orders</div></div>
+      <div class="kpi tl"><div class="kpi-v" id="po-k2">0</div><div class="kpi-l">Received</div></div>
+      <div class="kpi o"><div class="kpi-v" id="po-k3">R 0</div><div class="kpi-l">Total Value</div></div>
+    </div>
+    <!-- Table -->
+    <div class="cd">
+      <div class="cd-bd" style="padding:0;overflow-x:auto">
+        <table>
+          <thead><tr><th>PO Number</th><th>Date</th><th>Supplier</th><th>Product</th><th>Qty</th><th>Unit Cost</th><th>Total</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="po-table"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- PURCHASE ORDER MODAL -->
+  <div class="mo" id="mpo">
+    <div class="mo-box" style="max-width:520px;width:95%">
+      <div class="mh">
+        <div style="display:flex;align-items:center"><div class="mac pk"></div><span class="mt2">🛒 Purchase Order</span></div>
+        <button class="xbtn" onclick="closeM('mpo')">✕</button>
+      </div>
+      <div style="padding:16px;overflow-y:auto;max-height:70vh">
+        <input type="hidden" id="po-eid">
+        <div class="fg">
+          <div class="fm"><label>PO Date</label><input type="date" id="po-date"></div>
+          <div class="fm"><label>Supplier</label><input type="text" id="po-supplier" placeholder="Supplier name"></div>
+          <div class="fm"><label>Category</label>
+            <select id="po-cat" onchange="updatePOProducts()">
+              <option value="Fuel">Fuel</option>
+              <option value="LPG">LPG</option>
+            </select>
+          </div>
+          <div class="fm"><label>Product</label>
+            <select id="po-product"></select>
+          </div>
+          <div class="fm"><label>Quantity</label><input type="number" id="po-qty" placeholder="e.g. 10000" min="0" step="0.01"></div>
+          <div class="fm"><label>Unit Cost (R)</label><input type="number" id="po-cost" placeholder="e.g. 22.50" min="0" step="0.01"></div>
+          <div class="fm full"><label>Reference / Invoice No.</label><input type="text" id="po-ref" placeholder="Supplier invoice number"></div>
+          <div class="fm full"><label>Notes</label><textarea id="po-notes" placeholder="Any additional notes…" style="min-height:60px"></textarea></div>
+        </div>
+      </div>
+      <div class="mf2">
+        <button class="btn btn-s" onclick="closeM('mpo')">Cancel</button>
+        <button class="btn btn-p" onclick="savePO()">Save Order</button>
       </div>
     </div>
   </div>
@@ -1942,6 +2000,7 @@ function refreshPage(){
     btn.classList.remove("spin");
     if(page==="dashboard")rDash();
     else if(page==="fuel-orders"){rFuel();rQB("fuel");}
+  if(page==="purchase-orders"){rPO();}
     else if(page==="lpg-orders"){rLPG();rQB("lpg");}
     else if(page==="all-orders")rAll();
     else if(page==="stock-fuel"||page==="stock-lpg"||page==="stock")rStock();
@@ -1962,7 +2021,7 @@ function refreshPage(){
   else done();
 }
 
-var navTitles={dashboard:"DASHBOARD","fuel-orders":"FUEL ORDERS","lpg-orders":"LPG ORDERS","all-orders":"ALL ORDERS",stock:"STOCK LEVELS",assets:"ASSET REGISTER",clients:"CLIENTS",documents:"DOCUMENTS","sales-report":"SALES REPORT",debtors:"DEBTORS",settings:"SETTINGS"};
+var navTitles={dashboard:"DASHBOARD","fuel-orders":"FUEL ORDERS","purchase-orders":"PURCHASE ORDERS","lpg-orders":"LPG ORDERS","all-orders":"ALL ORDERS",stock:"STOCK LEVELS",assets:"ASSET REGISTER",clients:"CLIENTS",documents:"DOCUMENTS","sales-report":"SALES REPORT",debtors:"DEBTORS",settings:"SETTINGS"};
 
 function goPage(page,el){
   if(LOCKABLE.indexOf(page)>-1&&LOCKS[page]&&unlocked.indexOf(page)===-1){
@@ -1986,6 +2045,7 @@ function activatePage(page,el){
   document.getElementById("ttl").textContent=navTitles[page]||page.toUpperCase();
   if(page==="dashboard")rDash();
   if(page==="fuel-orders"){rFuel();rQB("fuel");}
+  if(page==="purchase-orders"){rPO();}
   if(page==="lpg-orders"){rLPG();rQB("lpg");}
   if(page==="all-orders")rAll();
   if(page==="stock-fuel"){rStockFuel();}
@@ -4127,6 +4187,170 @@ function rStockTxLog(cat) {
       + '<td style="font-size:11px;color:var(--mu)">'+tx.ref+'</td>'
       + '</tr>';
   }).join('');
+}
+
+// ══════════════════════════════════════════════
+// PURCHASE ORDERS
+// ══════════════════════════════════════════════
+var PO = [];
+
+function nxtPOId(){
+  var nums = PO.map(function(p){ return parseInt((p.id||'').replace('PO-','')||0); });
+  return 'PO-' + String((nums.length ? Math.max.apply(null,nums) : 0) + 1).padStart(3,'0');
+}
+
+function savePO_supa(p){
+  dbUpsert('purchase_orders',{id:p.id,date:p.date,supplier:p.supplier,cat:p.cat,product:p.product,qty:p.qty,cost:p.cost,total:p.total,ref:p.ref||'',notes:p.notes||'',status:p.status});
+}
+
+function delPO_supa(id){
+  fetch(SUPA_URL+'/rest/v1/purchase_orders?id=eq.'+id,{method:'DELETE',headers:dbHeaders()});
+}
+
+function loadPO(cb){
+  dbGet('purchase_orders','order=created_at.desc').then(function(rows){
+    if(Array.isArray(rows)){
+      PO=rows.map(function(r){return {id:r.id,date:r.date,supplier:r.supplier,cat:r.cat,product:r.product,qty:parseFloat(r.qty)||0,cost:parseFloat(r.cost)||0,total:parseFloat(r.total)||0,ref:r.ref||'',notes:r.notes||'',status:r.status||'pending'};});
+      localStorage.setItem('le_po',JSON.stringify(PO));
+    }
+    if(cb)cb();
+  }).catch(function(e){console.error('loadPO',e);if(cb)cb();});
+}
+
+function openPOModal(id){
+  var today = new Date().toISOString().split('T')[0];
+  if(id){
+    var p = PO.find(function(x){return x.id===id;});
+    if(!p)return;
+    document.getElementById('po-eid').value = p.id;
+    document.getElementById('po-date').value = p.date;
+    document.getElementById('po-supplier').value = p.supplier;
+    document.getElementById('po-cat').value = p.cat;
+    updatePOProducts();
+    document.getElementById('po-product').value = p.product;
+    document.getElementById('po-qty').value = p.qty;
+    document.getElementById('po-cost').value = p.cost;
+    document.getElementById('po-ref').value = p.ref||'';
+    document.getElementById('po-notes').value = p.notes||'';
+  } else {
+    document.getElementById('po-eid').value = '';
+    document.getElementById('po-date').value = today;
+    document.getElementById('po-supplier').value = '';
+    document.getElementById('po-cat').value = 'Fuel';
+    document.getElementById('po-qty').value = '';
+    document.getElementById('po-cost').value = '';
+    document.getElementById('po-ref').value = '';
+    document.getElementById('po-notes').value = '';
+    updatePOProducts();
+  }
+  document.getElementById('mpo').classList.add('open');
+}
+
+function updatePOProducts(){
+  var cat = document.getElementById('po-cat').value;
+  var sel = document.getElementById('po-product');
+  var items = (STOCK||[]).filter(function(s){return s.cat===cat;});
+  sel.innerHTML = items.map(function(s){
+    return '<option value="'+s.name+'">'+s.name+'</option>';
+  }).join('');
+}
+
+function savePO(){
+  var supplier = document.getElementById('po-supplier').value.trim();
+  var qty = parseFloat(document.getElementById('po-qty').value);
+  var cost = parseFloat(document.getElementById('po-cost').value);
+  if(!supplier||!qty||!cost){alert('Supplier, Quantity and Unit Cost are required.');return;}
+  var eid = document.getElementById('po-eid').value;
+  var p = {
+    id: eid || nxtPOId(),
+    date: document.getElementById('po-date').value,
+    supplier: supplier,
+    cat: document.getElementById('po-cat').value,
+    product: document.getElementById('po-product').value,
+    qty: qty,
+    cost: cost,
+    total: qty * cost,
+    ref: document.getElementById('po-ref').value.trim(),
+    notes: document.getElementById('po-notes').value.trim(),
+    status: 'pending'
+  };
+  if(eid){ var i=PO.findIndex(function(x){return x.id===eid;}); if(i>-1)PO[i]=p; }
+  else PO.unshift(p);
+  savePO_supa(p);
+  sv();
+  closeM('mpo');
+  rPO();
+  addAct('Purchase Order '+p.id+' — '+p.product+' from '+p.supplier,'🛒','tl');
+}
+
+function receivePO(id){
+  var p = PO.find(function(x){return x.id===id;});
+  if(!p)return;
+  if(!confirm('Mark '+p.id+' as RECEIVED?
+'+p.qty+' '+p.product+' will be added to stock.'))return;
+
+  // Find matching stock item and increase qty
+  var stockItem = (STOCK||[]).find(function(s){return s.name===p.product;});
+  if(stockItem){
+    var before = parseFloat(stockItem.qty)||0;
+    var after  = before + p.qty;
+    stockItem.qty = after;
+    saveSTOCK_supa(stockItem);
+    logStockTx(stockItem.id, stockItem.name, 'restock', p.qty, before, after, p.id);
+    addAct(p.product+' restocked +'+p.qty+' ('+p.id+')','📦','tl');
+  } else {
+    alert('No matching stock item found for "'+p.product+'". Please update stock manually.');
+  }
+
+  // Mark PO as received
+  p.status = 'received';
+  p.receivedDate = new Date().toISOString().split('T')[0];
+  savePO_supa(p);
+  sv();
+  rPO();
+  rStock();
+}
+
+function deletePO(id){
+  if(!confirm('Delete this purchase order?'))return;
+  PO = PO.filter(function(x){return x.id!==id;});
+  delPO_supa(id);
+  sv();
+  rPO();
+}
+
+function rPO(){
+  var pending  = PO.filter(function(p){return p.status==='pending';}).length;
+  var received = PO.filter(function(p){return p.status==='received';}).length;
+  var total    = PO.reduce(function(s,p){return s+p.total;},0);
+  var k1=document.getElementById('po-k1'); if(k1)k1.textContent=pending;
+  var k2=document.getElementById('po-k2'); if(k2)k2.textContent=received;
+  var k3=document.getElementById('po-k3'); if(k3)k3.textContent=fR(total);
+  var lb=document.getElementById('lb-po'); if(lb)lb.textContent=pending?pending:'';
+
+  var tbody=document.getElementById('po-table');
+  if(!tbody)return;
+  tbody.innerHTML = PO.length ? PO.map(function(p){
+    var isPending = p.status==='pending';
+    var statusBadge = isPending
+      ? '<span style="background:rgba(245,158,11,0.1);color:#d97706;border:1px solid rgba(245,158,11,0.3);border-radius:6px;padding:2px 8px;font-size:11px;font-weight:600">⏳ Pending</span>'
+      : '<span style="background:rgba(20,184,166,0.1);color:var(--tl2);border:1px solid rgba(20,184,166,0.3);border-radius:6px;padding:2px 8px;font-size:11px;font-weight:600">✅ Received</span>';
+    return '<tr>'
+      +'<td style="font-weight:700;color:var(--pk);font-family:monospace">'+p.id+'</td>'
+      +'<td style="font-size:12px;color:var(--mu)">'+p.date+'</td>'
+      +'<td style="font-weight:600">'+p.supplier+'</td>'
+      +'<td>'+p.product+'</td>'
+      +'<td style="font-weight:600">'+p.qty.toLocaleString()+' '+(((STOCK||[]).find(function(s){return s.name===p.product;})||{unit:''}).unit)+'</td>'
+      +'<td>'+fR(p.cost)+'/unit</td>'
+      +'<td style="font-weight:700;color:var(--pk)">'+fR(p.total)+'</td>'
+      +'<td>'+statusBadge+'</td>'
+      +'<td><div style="display:flex;gap:4px">'
+        +(isPending?'<button class="btn btn-p btn-sm" onclick="receivePO(&quot;'+p.id+'&quot;)">✅ Receive</button>':'')
+        +'<button class="btn btn-t btn-sm" onclick="openPOModal(&quot;'+p.id+'&quot;)">✏</button>'
+        +'<button class="btn btn-d btn-sm" onclick="deletePO(&quot;'+p.id+'&quot;)">🗑</button>'
+      +'</div></td>'
+      +'</tr>';
+  }).join('') : '<tr><td colspan="9" style="text-align:center;color:var(--mu);padding:32px"><div style="font-size:32px;margin-bottom:8px">🛒</div><div>No purchase orders yet</div></td></tr>';
 }
 
 function toggleSB(){
