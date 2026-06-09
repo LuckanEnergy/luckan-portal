@@ -1691,7 +1691,7 @@ function loadLO(cb) {
 }
 function loadCL(cb) {
   dbGet('clients','order=created_at.desc').then(function(rows){
-    if(Array.isArray(rows)){ CL=rows.map(function(r){ return {id:r.id,name:r.name,company:r.company,phone:r.phone,email:r.email,type:r.type,tier:r.tier,loc:r.loc,notes:r.notes}; }); localStorage.setItem('le_cl',JSON.stringify(CL)); }
+    if(Array.isArray(rows)){ CL=rows.map(function(r){ return {id:r.id,name:r.name,company:r.company,phone:r.phone,email:r.email,type:r.type,tier:r.tier,loc:r.loc,notes:r.notes,pricing:r.pricing||{}}; }); localStorage.setItem('le_cl',JSON.stringify(CL)); }
     if(cb)cb();
   }).catch(function(e){console.error('loadCL',e);if(cb)cb();});
 }
@@ -1728,7 +1728,7 @@ function saveLO_supa(o) {
   dbUpsert('lpg_orders',{id:o.id,client:o.client,size:o.size,qty:o.qty,price:o.price,value:o.value,status:o.status,date:o.date,notes:o.notes||''});
 }
 function saveCL_supa(c) {
-  dbUpsert('clients',{id:c.id,name:c.name,company:c.company,phone:c.phone||'',email:c.email||'',type:c.type,tier:c.tier||'1',loc:c.loc||'',notes:c.notes||''});
+  dbUpsert('clients',{id:c.id,name:c.name,company:c.company,phone:c.phone||'',email:c.email||'',type:c.type,tier:c.tier||'1',loc:c.loc||'',notes:c.notes||'',pricing:c.pricing||{}});
 }
 function saveDB_supa(d) {
   dbUpsert('debtors',{id:d.id,client_id:d.clientId||'',name:d.name,company:d.company,phone:d.phone||'',email:d.email||'',lim:d.limit||0,terms:d.terms||30,notes:d.notes||'',orders:d.orders||[]});
