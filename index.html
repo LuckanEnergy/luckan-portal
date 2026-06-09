@@ -1704,7 +1704,7 @@ function loadLO(cb) {
 }
 function loadCL(cb) {
   dbGet('clients','order=created_at.desc').then(function(rows){
-    if(Array.isArray(rows)){ CL=rows.map(function(r){ return {id:r.id,name:r.name,company:r.company,phone:r.phone,email:r.email,type:r.type,tier:r.tier,loc:r.loc,notes:r.notes}; }); localStorage.setItem('le_cl',JSON.stringify(CL)); }
+    if(Array.isArray(rows)){ CL=rows.map(function(r){ return {id:r.id,name:r.name,company:r.company,phone:r.phone,email:r.email,type:r.type,tier:r.tier,loc:r.loc,notes:r.notes,pricing:r.pricing||{}}; }); localStorage.setItem('le_cl',JSON.stringify(CL)); }
     if(cb)cb();
   }).catch(function(e){console.error('loadCL',e);if(cb)cb();});
 }
