@@ -879,7 +879,7 @@ input:checked+.slider::before{transform:translateX(18px);}
       <div class="cd-hd"><span class="cd-ttl">📋 All Clients</span><span id="client-count" style="font-size:12px;color:var(--mu)"></span></div>
       <div class="cd-bd" style="padding:0">
         <table>
-          <thead><tr><th>Company</th><th>Tier</th><th>Type</th><th>Phone</th><th>Email</th><th>Location</th><th>Actions</th></tr></thead>
+          <thead><tr><th>Company</th><th>Tier</th><th>Type</th><th>Phone</th><th>Email</th><th>Location</th><th>Pricing</th><th>Actions</th></tr></thead>
           <tbody id="client-table"></tbody>
         </table>
       </div>
@@ -3018,6 +3018,7 @@ function rClients(){
       +'<td style="font-size:12px">'+(c.phone||"—")+"</td>"
       +'<td style="font-size:12px">'+(c.email||"—")+"</td>"
       +'<td style="font-size:12px">'+(c.loc||"—")+"</td>"
+      +'<td style="font-size:11px">'+buildPricingCell(c)+'</td>'
       +'<td><div style="display:flex;gap:4px">'
       +'<button class="btn btn-s btn-sm" onclick="openClientModal(\''+c.id+'\')">Edit</button>'
       +'<button class="btn btn-d btn-sm" onclick="delClient(\''+c.id+'\')">🗑</button>'
@@ -3906,6 +3907,18 @@ function loadNetlifyCfgUI() {
   var se = document.getElementById('cfg-netlify-site');
   if(te && t) te.value = t;
   if(se && s) se.value = s;
+}
+
+// Build a compact pricing display for the clients table
+function buildPricingCell(c) {
+  var pr = c.pricing || {};
+  var keys = Object.keys(pr);
+  if(keys.length === 0) return '<span style="color:var(--mu)">—</span>';
+  var labels = {diesel:'Diesel',paraffin:'Paraffin',petrol95:'95',petrol93:'93',burner:'Burner',lpg9:'9kg',lpg19:'19kg',lpg48:'48kg'};
+  return keys.map(function(k){
+    return '<span style="display:inline-block;background:var(--pkb);color:var(--pk);border-radius:4px;padding:1px 5px;margin:1px;font-size:10px;font-weight:600">'
+      +(labels[k]||k)+' R'+parseFloat(pr[k]).toFixed(2)+'</span>';
+  }).join('');
 }
 
 function toggleSB(){
