@@ -963,7 +963,7 @@ input:checked+.slider::before{transform:translateX(18px);}
           </div>
           <div class="fm"><label>Quantity</label><input type="number" id="po-qty" placeholder="e.g. 10000" min="0" step="0.01"></div>
           <div class="fm"><label>Unit Cost (R)</label><input type="number" id="po-cost" placeholder="e.g. 22.50" min="0" step="0.01"></div>
-          <div class="fm full"><label>Reference / Invoice No.</label><input type="text" id="po-ref" placeholder="Supplier invoice number"></div>
+          <div class="fm full"><label>Invoice Number (used as PO number)</label><input type="text" id="po-ref" placeholder="e.g. INV-2026-001" required></div>
           <div class="fm full"><label>Notes</label><textarea id="po-notes" placeholder="Any additional notes…" style="min-height:60px"></textarea></div>
         </div>
       </div>
@@ -4259,10 +4259,12 @@ function savePO(){
   var supplier = document.getElementById('po-supplier').value.trim();
   var qty = parseFloat(document.getElementById('po-qty').value);
   var cost = parseFloat(document.getElementById('po-cost').value);
-  if(!supplier||!qty||!cost){alert('Supplier, Quantity and Unit Cost are required.');return;}
+  var ref2=document.getElementById('po-ref').value.trim();
+  if(!supplier||!qty||!cost||!ref2){alert('Supplier, Invoice Number, Quantity and Unit Cost are required.');return;}
   var eid = document.getElementById('po-eid').value;
+  var ref = document.getElementById('po-ref').value.trim();
   var p = {
-    id: eid || nxtPOId(),
+    id: eid || (ref || nxtPOId()),
     date: document.getElementById('po-date').value,
     supplier: supplier,
     cat: document.getElementById('po-cat').value,
@@ -4270,7 +4272,7 @@ function savePO(){
     qty: qty,
     cost: cost,
     total: qty * cost,
-    ref: document.getElementById('po-ref').value.trim(),
+    ref: ref,
     notes: document.getElementById('po-notes').value.trim(),
     status: 'pending'
   };
