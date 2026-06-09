@@ -4033,12 +4033,105 @@ function loadNetlifyCfgUI() {
 function buildPricingCell(c) {
   var pr = c.pricing || {};
   var keys = Object.keys(pr);
-  if(keys.length === 0) return '<span style="color:var(--mu)">—</span>';
   var labels = {diesel:'Diesel',paraffin:'Paraffin',petrol95:'95',petrol93:'93',burner:'Burner',lpg9:'9kg',lpg19:'19kg',lpg48:'48kg'};
-  return keys.map(function(k){
-    return '<span style="display:inline-block;background:var(--pkb);color:var(--pk);border-radius:4px;padding:1px 5px;margin:1px;font-size:10px;font-weight:600">'
+  var badges = keys.map(function(k){
+    return '<span onclick="editClientPrice(&quot;'+c.id+'&quot;,&quot;'+k+'&quot;,'+parseFloat(pr[k])+')" '
+      +'title="Click to edit" '
+      +'style="display:inline-block;background:var(--pkb);color:var(--pk);border-radius:4px;padding:1px 5px;margin:1px;font-size:10px;font-weight:600;cursor:pointer">'
       +(labels[k]||k)+' R'+parseFloat(pr[k]).toFixed(2)+'</span>';
   }).join('');
+  var addBtn = '<span onclick="editClientPrice(&quot;'+c.id+'&quot;,null,null)" '
+    +'title="Add price" '
+    +'style="display:inline-block;background:var(--lt);color:var(--mu);border-radius:4px;padding:1px 5px;margin:1px;font-size:10px;cursor:pointer;border:1px dashed var(--bd)">+</span>';
+  return badges + addBtn;
+}
+
+function editClientPrice(cid, key, currentVal) {
+  var c = CL.find(function(x){ return x.id===cid; });
+  if(!c) return;
+  var labels = {diesel:'Diesel R/L',paraffin:'Paraffin R/L',petrol95:'Petrol 95 R/L',petrol93:'Petrol 93 R/L',burner:'Burner Fuel R/L',lpg9:'LPG 9kg R/unit',lpg19:'LPG 19kg R/unit',lpg48:'LPG 48kg R/unit'};
+  var allKeys = Object.keys(labels);
+
+  // Build a small popup with all pricing fields for this client
+  var existing = c.pricing || {};
+
+  // Use a modal-style popup
+  var overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:9000;display:flex;align-items:center;justify-content:center';
+
+  var box = document.createElement('div');
+  box.style.cssText = 'background:var(--wh);border-radius:14px;padding:20px;width:320px;max-width:95vw;box-shadow:0 8px 32px rgba(0,0,0,0.2)';
+
+  var title = document.createElement('div');
+  title.style.cssText = 'font-size:14px;font-weight:700;margin-bottom:4px';
+  title.textContent = '💰 Edit Pricing — ' + c.company;
+
+  var note = document.createElement('div');
+  note.style.cssText = 'font-size:11px;color:var(--mu);margin-bottom:14px';
+  note.textContent = 'Changes apply to future orders only. Past orders keep their prices.';
+
+  var fields = document.createElement('div');
+  fields.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px';
+
+  allKeys.forEach(function(k){
+    var wrap = document.createElement('div');
+    var lbl = document.createElement('label');
+    lbl.style.cssText = 'font-size:10px;font-weight:600;color:var(--mu);display:block;margin-bottom:2px';
+    lbl.textContent = labels[k];
+    var inp = document.createElement('input');
+    inp.type = 'number';
+    inp.id = 'qp-'+k;
+    inp.step = '0.01';
+    inp.min = '0';
+    inp.placeholder = 'e.g. 22.50';
+    inp.style.cssText = 'width:100%;padding:6px 8px;border:1.5px solid var(--bd);border-radius:6px;font-size:12px';
+    if(existing[k]) inp.value = existing[k];
+    wrap.appendChild(lbl);
+    wrap.appendChild(inp);
+    fields.appendChild(wrap);
+  });
+
+  var btns = document.createElement('div');
+  btns.style.cssText = 'display:flex;gap:8px';
+
+  var cancelBtn = document.createElement('button');
+  cancelBtn.className = 'btn btn-s';
+  cancelBtn.style.flex = '1';
+  cancelBtn.textContent = 'Cancel';
+  cancelBtn.onclick = function(){ document.body.removeChild(overlay); };
+
+  var saveBtn = document.createElement('button');
+  saveBtn.className = 'btn btn-p';
+  saveBtn.style.flex = '1';
+  saveBtn.textContent = '💾 Save Pricing';
+  saveBtn.onclick = function(){
+    var newPricing = {};
+    allKeys.forEach(function(k){
+      var v = parseFloat(document.getElementById('qp-'+k).value);
+      if(!isNaN(v) && v > 0) newPricing[k] = v;
+    });
+    c.pricing = newPricing;
+    saveCL_supa(c);
+    sv();
+    document.body.removeChild(overlay);
+    rClients();
+    addAct('Updated pricing for '+c.company, '💰', 'tl');
+  };
+
+  btns.appendChild(cancelBtn);
+  btns.appendChild(saveBtn);
+  box.appendChild(title);
+  box.appendChild(note);
+  box.appendChild(fields);
+  box.appendChild(btns);
+  overlay.appendChild(box);
+  overlay.onclick = function(e){ if(e.target===overlay) document.body.removeChild(overlay); };
+  document.body.appendChild(overlay);
+  // Focus first field or the key field
+  setTimeout(function(){
+    var focusEl = key ? document.getElementById('qp-'+key) : document.getElementById('qp-diesel');
+    if(focusEl) focusEl.focus();
+  }, 50);
 }
 
 // ── STOCK DEDUCTION ON DELIVERY ──
