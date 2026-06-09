@@ -2064,6 +2064,7 @@ function updSt(type,id,s){
     else LO=LO.filter(function(x){return x.id!==id;});
     pushOrderToDebtors(o, type);
     sv();
+    localStorage.setItem('le_db', JSON.stringify(DB));
     addAct(id+" delivered — moved to Debtors","✅","tl");
     if(type==="fuel"){rFuel();rQB("fuel");}else{rLPG();rQB("lpg");}
     rAll();rDash();
@@ -2113,10 +2114,11 @@ function pushOrderToDebtors(o, type){
       debtor.orders = debtor.orders||[];
       debtor.orders.unshift(orderRow);
     }
+    saveDB_supa(debtor);
   } else {
     // Auto-create a debtor account for this client
     var newDebtor = {
-      id: "DB-"+String(DB.length+1).padStart(3,"0"),
+      id: "DB-"+String(Date.now()),
       clientId: "",
       name: o.client,
       company: o.client,
@@ -2141,6 +2143,7 @@ function pushOrderToDebtors(o, type){
       newDebtor.email=cl.email||"";
     }
     DB.unshift(newDebtor);
+    saveDB_supa(newDebtor);
   }
 }
 
