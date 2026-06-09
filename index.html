@@ -1385,6 +1385,20 @@ input:checked+.slider::before{transform:translateX(18px);}
         <div class="fm"><label>Delivery Location</label><input type="text" id="c-loc" placeholder="e.g. Wynberg, Cape Town"></div>
         <div class="fm full"><label>Notes</label><textarea id="c-notes" placeholder="Any special requirements or notes…" style="min-height:60px"></textarea></div>
       </div>
+      <div style="border-top:1px solid var(--bd);padding:14px 0 4px">
+        <div style="font-size:11px;font-weight:700;color:var(--mu);letter-spacing:.5px;margin-bottom:10px">💰 CUSTOM PRICING (R per litre / unit)</div>
+        <div class="fg">
+          <div class="fm"><label>Diesel R/L</label><input type="number" id="cp-diesel" placeholder="e.g. 22.50" step="0.01" min="0"></div>
+          <div class="fm"><label>Paraffin R/L</label><input type="number" id="cp-paraffin" placeholder="e.g. 18.00" step="0.01" min="0"></div>
+          <div class="fm"><label>Petrol 95 R/L</label><input type="number" id="cp-petrol95" placeholder="e.g. 24.00" step="0.01" min="0"></div>
+          <div class="fm"><label>Petrol 93 R/L</label><input type="number" id="cp-petrol93" placeholder="e.g. 23.50" step="0.01" min="0"></div>
+          <div class="fm"><label>Burner Fuel R/L</label><input type="number" id="cp-burner" placeholder="e.g. 16.00" step="0.01" min="0"></div>
+          <div class="fm"><label>LPG 9kg R/unit</label><input type="number" id="cp-lpg9" placeholder="e.g. 180.00" step="0.01" min="0"></div>
+          <div class="fm"><label>LPG 19kg R/unit</label><input type="number" id="cp-lpg19" placeholder="e.g. 350.00" step="0.01" min="0"></div>
+          <div class="fm"><label>LPG 48kg R/unit</label><input type="number" id="cp-lpg48" placeholder="e.g. 850.00" step="0.01" min="0"></div>
+        </div>
+        <div style="font-size:11px;color:var(--mu);margin-top:4px">Leave blank to use default prices</div>
+      </div>
     </div>
     <div class="mf2"><button class="btn btn-s" onclick="closeM('mc')">Cancel</button><button class="btn btn-p" onclick="saveClient()">Save Client</button></div>
   </div>
@@ -2931,7 +2945,7 @@ function openClientModal(id){
   }else{
     document.getElementById("c-eid").value="";
     document.getElementById("mc-title").textContent="👥 Add Client";
-    ["c-name","c-company","c-phone","c-email","c-loc","c-notes"].forEach(function(id2){document.getElementById(id2).value="";});
+    ["c-name","c-company","c-phone","c-email","c-loc","c-notes","cp-diesel","cp-paraffin","cp-petrol95","cp-petrol93","cp-burner","cp-lpg9","cp-lpg19","cp-lpg48"].forEach(function(id2){var el=document.getElementById(id2);if(el)el.value="";});
     document.getElementById("c-type").value="both";
     document.getElementById("c-tier").value="1";
   }
