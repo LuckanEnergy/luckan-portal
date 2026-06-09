@@ -1385,20 +1385,6 @@ input:checked+.slider::before{transform:translateX(18px);}
         <div class="fm"><label>Delivery Location</label><input type="text" id="c-loc" placeholder="e.g. Wynberg, Cape Town"></div>
         <div class="fm full"><label>Notes</label><textarea id="c-notes" placeholder="Any special requirements or notes…" style="min-height:60px"></textarea></div>
       </div>
-      <div style="border-top:1px solid var(--bd);padding:14px 0 4px">
-        <div style="font-size:11px;font-weight:700;color:var(--mu);letter-spacing:.5px;margin-bottom:10px">💰 CUSTOM PRICING (R per litre / unit)</div>
-        <div class="fg">
-          <div class="fm"><label>Diesel R/L</label><input type="number" id="cp-diesel" placeholder="e.g. 22.50" step="0.01" min="0"></div>
-          <div class="fm"><label>Paraffin R/L</label><input type="number" id="cp-paraffin" placeholder="e.g. 18.00" step="0.01" min="0"></div>
-          <div class="fm"><label>Petrol 95 R/L</label><input type="number" id="cp-petrol95" placeholder="e.g. 24.00" step="0.01" min="0"></div>
-          <div class="fm"><label>Petrol 93 R/L</label><input type="number" id="cp-petrol93" placeholder="e.g. 23.50" step="0.01" min="0"></div>
-          <div class="fm"><label>Burner Fuel R/L</label><input type="number" id="cp-burner" placeholder="e.g. 16.00" step="0.01" min="0"></div>
-          <div class="fm"><label>LPG 9kg R/unit</label><input type="number" id="cp-lpg9" placeholder="e.g. 180.00" step="0.01" min="0"></div>
-          <div class="fm"><label>LPG 19kg R/unit</label><input type="number" id="cp-lpg19" placeholder="e.g. 350.00" step="0.01" min="0"></div>
-          <div class="fm"><label>LPG 48kg R/unit</label><input type="number" id="cp-lpg48" placeholder="e.g. 850.00" step="0.01" min="0"></div>
-        </div>
-        <div style="font-size:11px;color:var(--mu);margin-top:4px">Leave blank to use default prices</div>
-      </div>
     </div>
     <div class="mf2"><button class="btn btn-s" onclick="closeM('mc')">Cancel</button><button class="btn btn-p" onclick="saveClient()">Save Client</button></div>
   </div>
@@ -1705,7 +1691,7 @@ function loadLO(cb) {
 }
 function loadCL(cb) {
   dbGet('clients','order=created_at.desc').then(function(rows){
-    if(Array.isArray(rows)){ CL=rows.map(function(r){ return {id:r.id,name:r.name,company:r.company,phone:r.phone,email:r.email,type:r.type,tier:r.tier,loc:r.loc,notes:r.notes,pricing:r.pricing||{}}; }); localStorage.setItem('le_cl',JSON.stringify(CL)); }
+    if(Array.isArray(rows)){ CL=rows.map(function(r){ return {id:r.id,name:r.name,company:r.company,phone:r.phone,email:r.email,type:r.type,tier:r.tier,loc:r.loc,notes:r.notes}; }); localStorage.setItem('le_cl',JSON.stringify(CL)); }
     if(cb)cb();
   }).catch(function(e){console.error('loadCL',e);if(cb)cb();});
 }
@@ -1742,7 +1728,7 @@ function saveLO_supa(o) {
   dbUpsert('lpg_orders',{id:o.id,client:o.client,size:o.size,qty:o.qty,price:o.price,value:o.value,status:o.status,date:o.date,notes:o.notes||''});
 }
 function saveCL_supa(c) {
-  dbUpsert('clients',{id:c.id,name:c.name,company:c.company,phone:c.phone||'',email:c.email||'',type:c.type,tier:c.tier||'1',loc:c.loc||'',notes:c.notes||'',pricing:c.pricing||{}});
+  dbUpsert('clients',{id:c.id,name:c.name,company:c.company,phone:c.phone||'',email:c.email||'',type:c.type,tier:c.tier||'1',loc:c.loc||'',notes:c.notes||''});
 }
 function saveDB_supa(d) {
   dbUpsert('debtors',{id:d.id,client_id:d.clientId||'',name:d.name,company:d.company,phone:d.phone||'',email:d.email||'',lim:d.limit||0,terms:d.terms||30,notes:d.notes||'',orders:d.orders||[]});
@@ -2942,10 +2928,15 @@ function openClientModal(id){
     document.getElementById("c-tier").value=c.tier||"1";
     document.getElementById("c-loc").value=c.loc||"";
     document.getElementById("c-notes").value=c.notes||"";
+    var pr=c.pricing||{};
+    ["diesel","paraffin","petrol95","petrol93","burner","lpg9","lpg19","lpg48"].forEach(function(k){
+      var el=document.getElementById("cp-"+k);
+      if(el)el.value=pr[k]||"";
+    });
   }else{
     document.getElementById("c-eid").value="";
     document.getElementById("mc-title").textContent="👥 Add Client";
-    ["c-name","c-company","c-phone","c-email","c-loc","c-notes","cp-diesel","cp-paraffin","cp-petrol95","cp-petrol93","cp-burner","cp-lpg9","cp-lpg19","cp-lpg48"].forEach(function(id2){var el=document.getElementById(id2);if(el)el.value="";});
+    ["c-name","c-company","c-phone","c-email","c-loc","c-notes","cp-diesel","cp-paraffin","cp-petrol95","cp-petrol93","cp-burner","cp-lpg9","cp-lpg19","cp-lpg48"].forEach(function(id2){var e=document.getElementById(id2);if(e)e.value="";});
     document.getElementById("c-type").value="both";
     document.getElementById("c-tier").value="1";
   }
@@ -2957,12 +2948,7 @@ function saveClient(){
   var ph=document.getElementById("c-phone").value.trim();
   if(!n||!co||!ph){alert("Contact Name, Company and Phone are required.");return;}
   var eid=document.getElementById("c-eid").value;
-  var pricing={};
-  ["diesel","paraffin","petrol95","petrol93","burner","lpg9","lpg19","lpg48"].forEach(function(k){
-    var v=parseFloat((document.getElementById("cp-"+k)||{}).value||"");
-    if(!isNaN(v)&&v>0)pricing[k]=v;
-  });
-  var c={id:eid||"CL-"+String(CL.length+1).padStart(3,"0"),name:n,company:co,phone:ph,email:document.getElementById("c-email").value.trim(),type:document.getElementById("c-type").value,tier:document.getElementById("c-tier").value||"1",loc:document.getElementById("c-loc").value.trim(),notes:document.getElementById("c-notes").value.trim()},pricing:pricing};
+  var c={id:eid||"CL-"+String(CL.length+1).padStart(3,"0"),name:n,company:co,phone:ph,email:document.getElementById("c-email").value.trim(),type:document.getElementById("c-type").value,tier:document.getElementById("c-tier").value||"1",loc:document.getElementById("c-loc").value.trim(),notes:document.getElementById("c-notes").value.trim()};
   if(eid){var i=CL.findIndex(function(x){return x.id===eid;});if(i>-1)CL[i]=c;}else CL.unshift(c);
   saveCL_supa(c);
   sv();closeM("mc");rClients();addAct((eid?"Updated":"Added")+" client: "+c.company,"👥","tl");
@@ -3048,41 +3034,16 @@ function acSelect(inputId,listId,val){
   document.getElementById(inputId).value=val;
   document.getElementById(listId).classList.remove("open");
   var cl=CL.find(function(x){return x.company===val;});
-  if(!cl) return;
-  // Auto-fill location
+  if(!cl)return;
   if(cl.loc){
     if(inputId==="fc"&&document.getElementById("fl"))document.getElementById("fl").value=cl.loc;
     if(inputId==="lc"&&document.getElementById("ll"))document.getElementById("ll").value=cl.loc;
   }
-  // Auto-fill price from client pricing
   var pr=cl.pricing||{};
-  if(inputId==="fc"){
-    var prod=document.getElementById("fp");
-    var pel=document.getElementById("fpr");
-    if(prod&&pel){
-      fillCPrice(prod.value,pr,pel);
-      prod.onchange=function(){fillCPrice(prod.value,pr,pel);};
-    }
-  }
-  if(inputId==="lc"){
-    var sz=document.getElementById("ls");
-    var lel=document.getElementById("lpr");
-    if(sz&&lel){
-      fillLPrice(sz.value,pr,lel);
-      sz.onchange=function(){fillLPrice(sz.value,pr,lel);};
-    }
-  }
-}
-function fillCPrice(prod,pr,el){
-  var p=(prod||"").toLowerCase();
-  var k=p.includes("diesel")||p.includes("ago")?"diesel":p.includes("paraffin")||p.includes("ik")?"paraffin":p.includes("95")?"petrol95":p.includes("93")?"petrol93":p.includes("burner")?"burner":null;
-  if(k&&pr[k])el.value=pr[k];
-}
-function fillLPrice(sz,pr,el){
-  var s=(sz||"").toLowerCase();
-  var k=s.includes("9kg")?"lpg9":s.includes("19kg")?"lpg19":s.includes("48kg")?"lpg48":null;
-  if(k&&pr[k])el.value=pr[k];
-}
+  if(inputId==="fc"){var prod=document.getElementById("fp");var pel=document.getElementById("fpr");if(prod&&pel){fillCPrice(prod.value,pr,pel);prod.onchange=function(){fillCPrice(prod.value,pr,pel);};}}
+  if(inputId==="lc"){var sz=document.getElementById("ls");var lel=document.getElementById("lpr");if(sz&&lel){fillLPrice(sz.value,pr,lel);sz.onchange=function(){fillLPrice(sz.value,pr,lel);};}}}
+function fillCPrice(prod,pr,el){var p=(prod||"").toLowerCase();var k=p.includes("diesel")||p.includes("ago")?"diesel":p.includes("paraffin")||p.includes("ik")?"paraffin":p.includes("95")?"petrol95":p.includes("93")?"petrol93":p.includes("burner")?"burner":null;if(k&&pr[k])el.value=pr[k];}
+function fillLPrice(sz,pr,el){var s=(sz||"").toLowerCase();var k=s.includes("9kg")?"lpg9":s.includes("19kg")?"lpg19":s.includes("48kg")?"lpg48":null;if(k&&pr[k])el.value=pr[k];}
 // ════════════════════════════════
 // ASSET REGISTER
 // ════════════════════════════════
