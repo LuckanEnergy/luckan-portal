@@ -2904,9 +2904,7 @@ function calcOp(op){
 function calcEquals(show){
   if(show===undefined)show=true;
   if(cOp===null||cPrev===null)return;
-  var pricing={};
-  ["diesel","paraffin","petrol95","petrol93","burner","lpg9","lpg19","lpg48"].forEach(function(k){var v=parseFloat((document.getElementById("cp-"+k)||{}).value||"");if(!isNaN(v)&&v>0)pricing[k]=v;});
-  var cr cur=parseFloat(cVal),res;,pricing:pricing};
+  var cur=parseFloat(cVal),res;
   if(cOp==="+")res=cPrev+cur;
   else if(cOp==="-")res=cPrev-cur;
   else if(cOp==="*")res=cPrev*cur;
