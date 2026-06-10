@@ -5099,6 +5099,20 @@ function rDebtors() {
   </div>
 </div>
 
+<!-- General purpose modal (used by viewDebtor) -->
+<div id="gen-modal" class="modal" style="display:none">
+  <div class="mbox" style="max-width:520px;width:92%">
+    <div class="mh">
+      <span class="mt2" id="gen-modal-title">Details</span>
+      <button class="xbtn" onclick="document.getElementById('gen-modal').style.display='none'">✕</button>
+    </div>
+    <div class="mb" id="gen-modal-body" style="max-height:70vh;overflow-y:auto"></div>
+    <div class="mf2">
+      <button class="btn btn-s" onclick="document.getElementById('gen-modal').style.display='none'">Close</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
 
