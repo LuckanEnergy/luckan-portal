@@ -3913,7 +3913,7 @@ function viewDebtor(did) {
   // Show in a modal
   document.getElementById('gen-modal-title').textContent = d.name + ' — Account';
   document.getElementById('gen-modal-body').innerHTML = html2;
-  document.getElementById('gen-modal').style.display = 'flex';
+  document.getElementById('gen-modal').classList.add('open');
 }
 
 
@@ -5100,15 +5100,15 @@ function rDebtors() {
 </div>
 
 <!-- General purpose modal (used by viewDebtor) -->
-<div id="gen-modal" class="modal" style="display:none">
+<div id="gen-modal" class="mo">
   <div class="mbox" style="max-width:520px;width:92%">
     <div class="mh">
       <span class="mt2" id="gen-modal-title">Details</span>
-      <button class="xbtn" onclick="document.getElementById('gen-modal').style.display='none'">✕</button>
+      <button class="xbtn" onclick="closeM('gen-modal')">✕</button>
     </div>
     <div class="mb" id="gen-modal-body" style="max-height:70vh;overflow-y:auto"></div>
     <div class="mf2">
-      <button class="btn btn-s" onclick="document.getElementById('gen-modal').style.display='none'">Close</button>
+      <button class="btn btn-s" onclick="closeM('gen-modal')">Close</button>
     </div>
   </div>
 </div>
