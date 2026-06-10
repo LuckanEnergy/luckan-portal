@@ -3087,7 +3087,7 @@ function saveClient(){
     var v=el?parseFloat(el.value):NaN;
     if(!isNaN(v)&&v>0) pricing[k]=v;
   });
-  var c={id:eid||"CL-"+String(CL.length+1).padStart(3,"0"),name:n,company:co,phone:ph,email:document.getElementById("c-email").value.trim(),type:document.getElementById("c-type").value,tier:document.getElementById("c-tier").value||"1",loc:document.getElementById("c-loc").value.trim(),notes:document.getElementById("c-notes").value.trim(),pricing:pricing};
+  var c={id:eid||"CL-"+Date.now(),name:n,company:co,phone:ph,email:document.getElementById("c-email").value.trim(),type:document.getElementById("c-type").value,tier:document.getElementById("c-tier").value||"1",loc:document.getElementById("c-loc").value.trim(),notes:document.getElementById("c-notes").value.trim(),pricing:pricing};
   if(eid){var i=CL.findIndex(function(x){return x.id===eid;});if(i>-1)CL[i]=c;}else CL.unshift(c);
   saveCL_supa(c);
   sv();closeM("mc");rClients();addAct((eid?"Updated":"Added")+" client: "+c.company,"👥","tl");
@@ -5101,3 +5101,4 @@ function rDebtors() {
 
 </body>
 </html>
+
