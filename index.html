@@ -1726,7 +1726,14 @@ function dbHeaders() {
 function dbGet(table, params) {
   var url = SUPA_URL + '/rest/v1/' + table + '?select=*';
   if(params) url += '&' + params;
-  return fetch(url, { headers: dbHeaders() }).then(function(r){ return r.json(); });
+  var getHeaders = {
+    'apikey': SUPA_KEY,
+    'Authorization': 'Bearer ' + SUPA_KEY,
+    'Content-Type': 'application/json',
+    'Range-Unit': 'items',
+    'Range': '0-999'
+  };
+  return fetch(url, { headers: getHeaders }).then(function(r){ return r.json(); });
 }
 
 function dbUpsert(table, data) {
