@@ -4703,6 +4703,52 @@ setTimeout(function(){
   });
 }, 300);
 
+// ── AUTO BACKUP (once per day) ──
+setTimeout(function(){
+  try {
+    var lastBackup = localStorage.getItem('le_last_backup') || '';
+    var today = new Date().toISOString().slice(0,10);
+    if(lastBackup === today) return; // already backed up today
+    autoBackupToExcel();
+  } catch(e){ console.error('Auto backup error:', e); }
+}, 3000); // wait 3s for data to load first
+
+function autoBackupToExcel() {
+  var tables = [
+    { name: 'Clients',        loader: function(cb){ dbGet('clients','order=created_at.desc').then(cb); } },
+    { name: 'Fuel Orders',    loader: function(cb){ dbGet('fuel_orders','order=date.desc').then(cb); } },
+    { name: 'LPG Orders',     loader: function(cb){ dbGet('lpg_orders','order=date.desc').then(cb); } },
+    { name: 'Debtors',        loader: function(cb){ dbGet('debtors','order=created_at.desc').then(cb); } },
+    { name: 'Purchase Orders',loader: function(cb){ dbGet('purchase_orders','order=date.desc').then(cb); } },
+    { name: 'Stock Levels',   loader: function(cb){ dbGet('stock','order=name.asc').then(cb); } },
+    { name: 'Stock Transactions', loader: function(cb){ dbGet('stock_transactions','order=date.desc,time.desc&limit=500').then(cb); } }
+  ];
+
+  var wb = XLSX.utils.book_new();
+  var remaining = tables.length;
+
+  tables.forEach(function(t) {
+    t.loader(function(rows) {
+      try {
+        var data = Array.isArray(rows) ? rows : [];
+        var ws = XLSX.utils.json_to_sheet(data.length ? data : [{ note: 'No data' }]);
+        XLSX.utils.book_append_sheet(wb, ws, t.name);
+      } catch(e) { console.error('Backup sheet error:', t.name, e); }
+      remaining--;
+      if(remaining === 0) {
+        var today = new Date().toISOString().slice(0,10);
+        var filename = 'LuckanEnergy-Backup-' + today + '.xlsx';
+        XLSX.writeFile(wb, filename);
+        localStorage.setItem('le_last_backup', today);
+        addAct('Auto backup downloaded: ' + filename, '💾', 'tl');
+      }
+    }).catch(function(e){
+      console.error('Backup load error:', t.name, e);
+      remaining--;
+    });
+  });
+}
+
 // Realtime updates handled by Supabase subscription
 
 // ══════════════════════════════════════════
