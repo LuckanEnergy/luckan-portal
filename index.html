@@ -2369,17 +2369,15 @@ function updSt(type,id,s){
   if(s==="delivered"){
     if(!confirm("Mark "+id+" as Delivered?\nIt will move to Debtors as an unpaid invoice."))return;
     o.status="delivered";
-    if(type==="fuel")FO=FO.filter(function(x){return x.id!==id;});
-    else LO=LO.filter(function(x){return x.id!==id;});
+    // Keep in FO/LO for transaction log — update status in Supabase
+    if(type==="fuel") saveFO_supa(o);
+    else saveLO_supa(o);
     pushOrderToDebtors(o, type);
     deductStockForOrder(o, type);
-    // Delete from Supabase so it doesn't reappear on refresh
-    if(type==="fuel") delFO_supa(id);
-    else delLO_supa(id);
     sv();
     localStorage.setItem('le_db', JSON.stringify(DB));
     addAct(id+" delivered — moved to Debtors","✅","tl");
-    if(type==="fuel"){rFuel();rQB("fuel");}else{rLPG();rQB("lpg");}
+    if(type==="fuel"){rFuel();}else{rLPG();}
     rAll();rDash();
     return;
   }
@@ -2467,9 +2465,10 @@ function saveFuel(){
   var eid=document.getElementById("f-eid").value;
   var o={id:eid||nxtId("LE-F-"),date:document.getElementById("fd").value,client:c,product:document.getElementById("fp").value,volume:v,price:p,value:v*p,location:document.getElementById("fl").value,status:document.getElementById("fst").value,truck:document.getElementById("ftr").value,ref:document.getElementById("f-ref").value.trim(),notes:document.getElementById("fn").value,invoice:fAttachData||null};
   if(o.status==="delivered"){
-    if(eid)FO=FO.filter(function(x){return x.id!==eid;});
+    if(eid){var i=FO.findIndex(function(x){return x.id===eid;});if(i>-1)FO[i]=o;}else FO.unshift(o);
+    saveFO_supa(o);
     pushOrderToDebtors(o,"fuel");
-    addAct((eid?"Edited":"New")+" fuel order "+o.id+" — moved to Debtors","⛽","tl");
+    addAct((eid?"Edited":"New")+" fuel order "+o.id+" — delivered, moved to Debtors","⛽","tl");
   }else{
     if(eid){var i=FO.findIndex(function(x){return x.id===eid;});if(i>-1)FO[i]=o;}else FO.unshift(o);
     saveFO_supa(o);
@@ -2496,9 +2495,10 @@ function saveLPG(){
   var eid=document.getElementById("l-eid").value;
   var o={id:eid||nxtId("LE-G-"),date:document.getElementById("ld").value,client:c,size:document.getElementById("lsz").value,qty:q,price:p,value:q*p,location:document.getElementById("ll").value,status:document.getElementById("lst").value,phone:document.getElementById("lp").value,ref:document.getElementById("l-ref").value.trim(),notes:document.getElementById("ln").value};
   if(o.status==="delivered"){
-    if(eid)LO=LO.filter(function(x){return x.id!==eid;});
+    if(eid){var i=LO.findIndex(function(x){return x.id===eid;});if(i>-1)LO[i]=o;}else LO.unshift(o);
+    saveLO_supa(o);
     pushOrderToDebtors(o,"lpg");
-    addAct((eid?"Edited":"New")+" LPG order "+o.id+" — moved to Debtors","🔥","pk");
+    addAct((eid?"Edited":"New")+" LPG order "+o.id+" — delivered, moved to Debtors","🔥","pk");
   }else{
     if(eid){var i=LO.findIndex(function(x){return x.id===eid;});if(i>-1)LO[i]=o;}else LO.unshift(o);
     saveLO_supa(o);
