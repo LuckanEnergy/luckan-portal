@@ -2539,6 +2539,7 @@ function updStats(){
 }
 function rDash(){
   updStats();
+  rDashPipeline();
   var all=FO.filter(function(o){return o.status!=="delivered";}).map(function(o){return Object.assign({},o,{tp:"fuel"});})
     .concat(LO.filter(function(o){return o.status!=="delivered";}).map(function(o){return Object.assign({},o,{tp:"lpg"});}));
   all.sort(function(a,b){return b.date.localeCompare(a.date);});
