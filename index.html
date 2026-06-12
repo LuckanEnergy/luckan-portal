@@ -429,7 +429,7 @@ input:checked+.slider::before{transform:translateX(18px);}
 .dash-tab{padding:6px 18px;border-radius:7px;cursor:pointer;font-size:12px;font-weight:500;transition:all .18s;color:var(--mu);}
 .dash-tab.active{background:var(--wh);color:var(--pk);font-weight:600;box-shadow:var(--sh);}
 .dash-tab:hover:not(.active){color:var(--dk);}
-.dash-panel{display:none;}.dash-panel.active{display:block;}
+.dash-panel{display:none;}.dash-panel.active{display:block;}.active-ftab{background:var(--pk)!important;color:#fff!important;border-color:var(--pk)!important;}
 /* CLIENT AUTOCOMPLETE */
 .client-ac-wrap{position:relative;}
 .client-ac-list{position:absolute;top:100%;left:0;right:0;background:var(--wh);border:1.5px solid var(--pkd);border-radius:8px;box-shadow:var(--sh2);z-index:999;max-height:200px;overflow-y:auto;display:none;}
@@ -589,27 +589,13 @@ input:checked+.slider::before{transform:translateX(18px);}
         <div class="sc cp2"><div class="sc-ic">🔥</div><div class="sc-lb">LPG Orders</div><div class="sc-vl" id="s2">0</div><div class="sc-sb">Cylinders &amp; bulk gas</div></div>
         <div class="sc ct2"><div class="sc-ic">📁</div><div class="sc-lb">Documents</div><div class="sc-vl" id="s3">0</div><div class="sc-sb">Stored in portal</div></div>
       </div>
-      <div class="g3">
-        <div>
-          <div class="cd">
-            <div class="cd-hd"><span class="cd-ttl"><em>⚡</em> Recent Active Orders</span><button class="btn btn-s btn-sm" onclick="goPage('all-orders',document.getElementById('nav-all-orders'))">View All</button></div>
-            <div class="cd-bd" style="padding:0"><table><thead><tr><th>Order ID</th><th>Type</th><th>Client</th><th>Status</th></tr></thead><tbody id="d-recent"></tbody></table></div>
-          </div>
-          <div class="cd">
-            <div class="cd-hd"><span class="cd-ttl"><em>📊</em> Status Breakdown</span></div>
-            <div class="cd-bd"><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px" id="d-status"></div></div>
-          </div>
+      <div class="cd">
+        <div class="cd-hd" style="display:flex;align-items:center;justify-content:space-between">
+          <span class="cd-ttl"><em>🎯</em> Sales Pipeline</span>
+          <button class="btn btn-p btn-sm" onclick="openAddLead()">+ Add Lead</button>
         </div>
-        <div>
-          <div class="cd" style="height:100%">
-            <div class="cd-hd" style="display:flex;align-items:center;justify-content:space-between">
-              <span class="cd-ttl"><em>🎯</em> Sales Pipeline</span>
-              <button class="btn btn-p btn-sm" onclick="openAddLead()">+ Add Lead</button>
-            </div>
-            <div class="cd-bd" style="padding:8px 14px;overflow-x:auto">
-              <div id="dash-pipeline" style="display:flex;gap:10px;min-width:500px"></div>
-            </div>
-          </div>
+        <div class="cd-bd" style="padding:8px 14px;overflow-x:auto">
+          <div id="dash-pipeline" style="display:flex;gap:12px;min-width:500px"></div>
         </div>
       </div>
     </div>
@@ -883,13 +869,42 @@ input:checked+.slider::before{transform:translateX(18px);}
       </div>
       <button class="btn btn-p" onclick="openAddLead()">+ Add Lead</button>
     </div>
-    <div class="grid4" style="margin-bottom:18px">
-      <div class="cd"><div class="cd-bd" style="text-align:center;padding:16px 12px"><div id="leads-stat-total" style="font-size:28px;font-weight:800;color:var(--pk)">0</div><div style="font-size:11px;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin-top:2px">Total Leads</div></div></div>
-      <div class="cd"><div class="cd-bd" style="text-align:center;padding:16px 12px"><div id="leads-stat-new" style="font-size:28px;font-weight:800;color:var(--tl2)">0</div><div style="font-size:11px;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin-top:2px">New</div></div></div>
-      <div class="cd"><div class="cd-bd" style="text-align:center;padding:16px 12px"><div id="leads-stat-quoted" style="font-size:28px;font-weight:800;color:#f59e0b">0</div><div style="font-size:11px;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin-top:2px">Quoted</div></div></div>
-      <div class="cd"><div class="cd-bd" style="text-align:center;padding:16px 12px"><div id="leads-stat-won" style="font-size:28px;font-weight:800;color:#22c55e">0</div><div style="font-size:11px;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin-top:2px">Won</div></div></div>
+    <!-- Stats -->
+    <div class="sg" style="margin-bottom:18px">
+      <div class="sc cp"><div class="sc-lb">Total Leads</div><div class="sc-vl" id="leads-stat-total">0</div></div>
+      <div class="sc ct"><div class="sc-lb">New</div><div class="sc-vl" id="leads-stat-new">0</div></div>
+      <div class="sc" style="border-top:3px solid #f59e0b"><div class="sc-lb">Quoted</div><div class="sc-vl" style="color:#f59e0b" id="leads-stat-quoted">0</div></div>
+      <div class="sc" style="border-top:3px solid #22c55e"><div class="sc-lb">Won</div><div class="sc-vl" style="color:#22c55e" id="leads-stat-won">0</div></div>
     </div>
-    <div id="leads-kanban" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;align-items:start"></div>
+    <!-- Filter tabs -->
+    <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap" id="leads-filter-tabs">
+      <button class="btn btn-s btn-sm leads-ftab active-ftab" onclick="setLeadFilter('all',this)">All</button>
+      <button class="btn btn-s btn-sm leads-ftab" onclick="setLeadFilter('new',this)">New</button>
+      <button class="btn btn-s btn-sm leads-ftab" onclick="setLeadFilter('quoted',this)">Quoted</button>
+      <button class="btn btn-s btn-sm leads-ftab" onclick="setLeadFilter('negotiating',this)">Negotiating</button>
+      <button class="btn btn-s btn-sm leads-ftab" onclick="setLeadFilter('won',this)">Won</button>
+      <button class="btn btn-s btn-sm leads-ftab" onclick="setLeadFilter('lost',this)">Lost</button>
+    </div>
+    <!-- List -->
+    <div class="cd">
+      <div class="cd-bd" style="padding:0;overflow-x:auto">
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Phone</th>
+              <th>Product</th>
+              <th>Volume</th>
+              <th>Date</th>
+              <th>Status</th>
+              <th>Pricing</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="leads-list-body"></tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
   <!-- CLIENTS -->
@@ -4739,12 +4754,13 @@ setTimeout(function(){
 // LEADS / SALES PIPELINE MODULE
 // ══════════════════════════════════════════
 var LEADS = [];
+var LEAD_FILTER = 'all';
 var LEAD_COLS = [
-  {id:'new',         label:'New',         color:'#2abcd0', bg:'rgba(42,188,208,0.08)'},
-  {id:'quoted',      label:'Quoted',      color:'#f59e0b', bg:'rgba(245,158,11,0.08)'},
-  {id:'negotiating', label:'Negotiating', color:'#a78bfa', bg:'rgba(167,139,250,0.08)'},
-  {id:'won',         label:'Won',         color:'#22c55e', bg:'rgba(34,197,94,0.08)'},
-  {id:'lost',        label:'Lost',        color:'#ef4444', bg:'rgba(239,68,68,0.08)'}
+  {id:'new',         label:'New',        color:'#2abcd0'},
+  {id:'quoted',      label:'Quoted',     color:'#f59e0b'},
+  {id:'negotiating', label:'Negotiating',color:'#a78bfa'},
+  {id:'won',         label:'Won',        color:'#22c55e'},
+  {id:'lost',        label:'Lost',       color:'#ef4444'}
 ];
 
 function loadLeads(){
@@ -4752,6 +4768,13 @@ function loadLeads(){
 }
 function saveLeads(){
   localStorage.setItem('le_leads',JSON.stringify(LEADS));
+}
+
+function setLeadFilter(f, el){
+  LEAD_FILTER = f;
+  document.querySelectorAll('.leads-ftab').forEach(function(b){ b.classList.remove('active-ftab'); });
+  if(el) el.classList.add('active-ftab');
+  rLeads();
 }
 
 function openAddLead(id){
@@ -4790,8 +4813,7 @@ function saveLead(){
   } else {
     LEADS.push({
       id:'LD-'+Date.now(),
-      name:name,
-      phone:phone,
+      name:name, phone:phone,
       product:document.getElementById('lead-product').value,
       volume:document.getElementById('lead-volume').value.trim(),
       status:'new',
@@ -4805,9 +4827,9 @@ function saveLead(){
   rDashPipeline();
 }
 
-function moveLead(id,newStatus){
+function moveLeadStatus(id, val){
   var l=LEADS.find(function(x){return x.id===id;});
-  if(l){l.status=newStatus;saveLeads();rLeads();rDashPipeline();}
+  if(l){l.status=val;saveLeads();rLeads();rDashPipeline();}
 }
 
 function deleteLead(id){
@@ -4819,65 +4841,70 @@ function deleteLead(id){
 function requestPricing(id){
   var l=LEADS.find(function(x){return x.id===id;});
   if(!l)return;
-  l.pricingRequested=true;
+  l.pricingRequested=!l.pricingRequested;
   saveLeads();rLeads();rDashPipeline();
-  alert('Pricing flagged for: '+l.name);
+}
+
+function getLeadColour(status){
+  var c=LEAD_COLS.find(function(x){return x.id===status;});
+  return c ? c.color : '#888';
+}
+function getLeadLabel(status){
+  var c=LEAD_COLS.find(function(x){return x.id===status;});
+  return c ? c.label : status;
 }
 
 function rLeads(){
   loadLeads();
-  var el=document.getElementById('leads-stat-total');
-  if(el) el.textContent=LEADS.filter(function(l){return l.status!=='lost';}).length;
-  el=document.getElementById('leads-stat-new');
-  if(el) el.textContent=LEADS.filter(function(l){return l.status==='new';}).length;
-  el=document.getElementById('leads-stat-quoted');
-  if(el) el.textContent=LEADS.filter(function(l){return l.status==='quoted';}).length;
-  el=document.getElementById('leads-stat-won');
-  if(el) el.textContent=LEADS.filter(function(l){return l.status==='won';}).length;
+  // Stats
+  var el;
+  el=document.getElementById('leads-stat-total'); if(el) el.textContent=LEADS.filter(function(l){return l.status!=='lost';}).length;
+  el=document.getElementById('leads-stat-new');   if(el) el.textContent=LEADS.filter(function(l){return l.status==='new';}).length;
+  el=document.getElementById('leads-stat-quoted');if(el) el.textContent=LEADS.filter(function(l){return l.status==='quoted';}).length;
+  el=document.getElementById('leads-stat-won');   if(el) el.textContent=LEADS.filter(function(l){return l.status==='won';}).length;
 
-  var kb=document.getElementById('leads-kanban');
-  if(!kb)return;
-  var activeCols=LEAD_COLS.slice(0,4);
-  kb.style.gridTemplateColumns='repeat('+activeCols.length+',1fr)';
-  kb.innerHTML=activeCols.map(function(col){
-    var leads=LEADS.filter(function(l){return l.status===col.id;});
-    var cards=leads.length ? leads.map(function(l){
-      var priceBadge=l.pricingRequested
-        ? '<span style="position:absolute;top:8px;right:8px;background:#f59e0b;color:#fff;border-radius:4px;font-size:10px;padding:2px 6px;font-weight:700">PRICING</span>'
-        : '';
-      var priceBtn=l.pricingRequested
-        ? '<span style="font-size:11px;color:#f59e0b;font-weight:600">Pricing Requested</span>'
-        : '<button onclick="requestPricing(\''+l.id+'\')" style="font-size:11px;padding:3px 8px;border-radius:6px;border:1px solid #f59e0b;background:rgba(245,158,11,0.1);color:#f59e0b;cursor:pointer;font-weight:600">Request Pricing</button>';
-      var opts=LEAD_COLS.map(function(c){
-        return '<option value="'+c.id+'"'+(l.status===c.id?' selected':'')+'>'+c.label+'</option>';
-      }).join('');
-      return '<div style="background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:12px;margin-bottom:10px;position:relative">'
-        +priceBadge
-        +'<div style="font-weight:700;font-size:14px;color:var(--tx);margin-bottom:4px">'+l.name+'</div>'
-        +'<div style="font-size:12px;color:var(--mu);margin-bottom:2px">'+l.phone+'</div>'
-        +'<div style="font-size:12px;color:var(--mu);margin-bottom:2px">'+l.product+'</div>'
-        +(l.volume ? '<div style="font-size:12px;color:var(--mu);margin-bottom:8px">'+l.volume+'</div>' : '<div style="margin-bottom:8px"></div>')
-        +'<select onchange="moveLead(\''+l.id+'\',this.value)" style="font-size:11px;padding:3px 6px;border-radius:6px;border:1px solid var(--bd);background:var(--lt);color:var(--tx);width:100%;margin-bottom:6px">'+opts+'</select>'
-        +'<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">'
-        +priceBtn
-        +'<button onclick="openAddLead(\''+l.id+'\')" style="font-size:11px;padding:3px 8px;border-radius:6px;border:1px solid var(--bd);background:var(--lt);color:var(--mu);cursor:pointer;margin-left:auto">Edit</button>'
-        +'<button onclick="deleteLead(\''+l.id+'\')" style="font-size:11px;padding:3px 8px;border-radius:6px;border:1px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.08);color:#ef4444;cursor:pointer">Del</button>'
-        +'</div>'
-        +'</div>';
-    }).join('')
-    : '<div style="text-align:center;color:var(--mu);font-size:12px;padding:20px 0">No leads</div>';
+  // Badge
+  var badge=document.getElementById('lb-leads');
+  if(badge){ var active=LEADS.filter(function(l){return l.status!=='lost'&&l.status!=='won';}).length; badge.textContent=active||''; }
 
-    return '<div style="background:'+col.bg+';border:1px solid '+col.color+'55;border-radius:12px;padding:12px">'
-      +'<div style="font-weight:700;font-size:12px;color:'+col.color+';margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px">'+col.label+' ('+leads.length+')</div>'
-      +cards
-      +'</div>';
+  // List
+  var tbody=document.getElementById('leads-list-body');
+  if(!tbody)return;
+  var filtered = LEAD_FILTER==='all' ? LEADS : LEADS.filter(function(l){return l.status===LEAD_FILTER;});
+  filtered = filtered.slice().sort(function(a,b){ return (b.date||'').localeCompare(a.date||''); });
+
+  if(!filtered.length){
+    tbody.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--mu);padding:32px">'+(LEADS.length?'No leads in this category':'No leads yet. Click + Add Lead to get started.')+'</td></tr>';
+    return;
+  }
+
+  var statusOpts = LEAD_COLS.map(function(c){
+    return '<option value="'+c.id+'">'+c.label+'</option>';
   }).join('');
 
-  var badge=document.getElementById('lb-leads');
-  if(badge){
-    var active=LEADS.filter(function(l){return l.status!=='lost'&&l.status!=='won';}).length;
-    badge.textContent=active||'';
-  }
+  tbody.innerHTML=filtered.map(function(l){
+    var col=getLeadColour(l.status);
+    var lbl=getLeadLabel(l.status);
+    var pricingBtn = l.pricingRequested
+      ? '<span style="background:#f59e0b;color:#fff;border-radius:5px;padding:2px 8px;font-size:11px;font-weight:700">Flagged</span>'
+      : '<button onclick="requestPricing(\''+l.id+'\')" style="font-size:11px;padding:2px 8px;border-radius:5px;border:1px solid #f59e0b;background:transparent;color:#f59e0b;cursor:pointer">Request</button>';
+    var sel='<select onchange="moveLeadStatus(\''+l.id+'\',this.value)" style="font-size:11px;padding:3px 6px;border-radius:6px;border:1px solid '+col+';color:'+col+';background:transparent;font-weight:600">'+
+      LEAD_COLS.map(function(c){ return '<option value="'+c.id+'"'+(l.status===c.id?' selected':'')+'>'+c.label+'</option>'; }).join('')+
+      '</select>';
+    return '<tr>'
+      +'<td style="font-weight:700">'+l.name+'</td>'
+      +'<td>'+( l.phone||'—')+'</td>'
+      +'<td>'+l.product+'</td>'
+      +'<td>'+(l.volume||'—')+'</td>'
+      +'<td style="color:var(--mu);font-size:12px">'+( l.date||'')+'</td>'
+      +'<td>'+sel+'</td>'
+      +'<td>'+pricingBtn+'</td>'
+      +'<td style="white-space:nowrap">'
+        +'<button onclick="openAddLead(\''+l.id+'\')" class="btn btn-s btn-sm">Edit</button> '
+        +'<button onclick="deleteLead(\''+l.id+'\')" style="font-size:11px;padding:3px 8px;border-radius:6px;border:1px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.08);color:#ef4444;cursor:pointer">Del</button>'
+      +'</td>'
+      +'</tr>';
+  }).join('');
 }
 
 function rDashPipeline(){
@@ -4900,11 +4927,11 @@ function rDashPipeline(){
     var cards=leads.length
       ? leads.slice(0,3).map(function(l){
           return '<div style="background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:8px 10px;margin-bottom:6px;font-size:12px">'
-            +(l.pricingRequested ? '<span style="background:#f59e0b;color:#fff;border-radius:3px;font-size:9px;padding:1px 4px;font-weight:700;margin-right:4px">!</span>' : '')
+            +(l.pricingRequested?'<span style="background:#f59e0b;color:#fff;border-radius:3px;font-size:9px;padding:1px 4px;font-weight:700;margin-right:4px">!</span>':'')
             +'<span style="font-weight:600;color:var(--tx)">'+l.name+'</span>'
             +'<div style="color:var(--mu);font-size:11px;margin-top:2px">'+l.product+'</div>'
             +'</div>';
-        }).join('')+(leads.length>3 ? '<div style="font-size:11px;color:var(--mu);text-align:center">+'+(leads.length-3)+' more</div>' : '')
+        }).join('')+(leads.length>3?'<div style="font-size:11px;color:var(--mu);text-align:center">+'+(leads.length-3)+' more</div>':'')
       : '<div style="font-size:11px;color:var(--mu);text-align:center;padding:8px 0">Empty</div>';
     return '<div style="flex:1;min-width:100px;border-right:1px solid var(--bd);padding-right:10px;margin-right:2px">'
       +'<div style="font-size:11px;font-weight:700;color:'+col.color+';margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px">'+col.label+' ('+leads.length+')</div>'
@@ -4913,7 +4940,6 @@ function rDashPipeline(){
   }).join('');
 }
 
-// ══════════════════════════════════════════
 // DEBTORS MODULE
 // ══════════════════════════════════════════
 var debOrderRows = []; // temp rows while editing
@@ -5386,4 +5412,5 @@ function rDebtors() {
 
 </body>
 </html>
+
 
