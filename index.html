@@ -993,7 +993,7 @@ input:checked+.slider::before{transform:translateX(18px);}
       </div>
       <div class="cd-bd" style="padding:0;overflow-x:auto">
         <table>
-          <thead><tr><th>Date</th><th>PO Number</th><th>Supplier</th><th>Product</th><th>Qty</th><th>Total</th><th>Status</th></tr></thead>
+          <thead><tr><th>Date</th><th>PO Number</th><th>Supplier</th><th>Product</th><th>Qty</th><th>Total</th><th>Status</th><th>Document</th></tr></thead>
           <tbody id="po-txlog"></tbody>
         </table>
       </div>
@@ -4540,6 +4540,11 @@ function rPO(){
     var received = PO.filter(function(p){ return p.status === 'received'; })
       .sort(function(a,b){ return b.date > a.date ? 1 : -1; });
     txbody.innerHTML = received.length ? received.map(function(p){
+      var doc = getPODoc(p.id);
+      var docBtn = doc
+        ? '<a href="'+doc.data+'" download="'+doc.name+'" style="font-size:11px;padding:2px 8px;border-radius:5px;border:1px solid var(--tl2);color:var(--tl2);text-decoration:none;font-weight:600;white-space:nowrap">&#128196; '+doc.name+'</a>'
+          +' <button onclick="removePODoc(&quot;'+p.id+'&quot;)" style="font-size:10px;padding:1px 5px;border-radius:4px;border:1px solid rgba(239,68,68,0.3);background:transparent;color:#ef4444;cursor:pointer">&#x2715;</button>'
+        : '<label style="font-size:11px;padding:2px 8px;border-radius:5px;border:1px solid var(--bd);color:var(--mu);cursor:pointer;white-space:nowrap">&#128206; Attach<input type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xlsx" style="display:none" onchange="attachPODoc(&quot;'+p.id+'&quot;,this)"></label>';
       return '<tr>'
         +'<td style="font-size:12px;color:var(--mu)">'+p.date+'</td>'
         +'<td style="font-weight:700;color:var(--pk);font-family:monospace">'+p.id+'</td>'
@@ -4547,10 +4552,36 @@ function rPO(){
         +'<td>'+p.product+'</td>'
         +'<td style="font-weight:600">'+p.qty.toLocaleString()+' '+(((STOCK||[]).find(function(s){return s.name===p.product;})||{unit:''}).unit)+'</td>'
         +'<td style="font-weight:700;color:var(--tl2)">'+fR(p.total)+'</td>'
-        +'<td><span style="background:rgba(20,184,166,0.1);color:var(--tl2);border:1px solid rgba(20,184,166,0.3);border-radius:6px;padding:2px 8px;font-size:11px;font-weight:600">✅ Received</span></td>'
+        +'<td><span style="background:rgba(20,184,166,0.1);color:var(--tl2);border:1px solid rgba(20,184,166,0.3);border-radius:6px;padding:2px 8px;font-size:11px;font-weight:600">&#10003; Received</span></td>'
+        +'<td>'+docBtn+'</td>'
         +'</tr>';
-    }).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--mu);padding:20px">No received orders yet</td></tr>';
+    }).join('') : '<tr><td colspan="8" style="text-align:center;color:var(--mu);padding:20px">No received orders yet</td></tr>';
   }
+}
+
+
+// ── PO DOCUMENT ATTACHMENTS ──
+function getPODoc(poId){
+  try{ return JSON.parse(localStorage.getItem('le_po_doc_'+poId)||'null'); }catch(e){ return null; }
+}
+
+function attachPODoc(poId, input){
+  var file = input.files[0];
+  if(!file) return;
+  if(file.size > 5*1024*1024){ alert('File too large. Max 5MB.'); return; }
+  var reader = new FileReader();
+  reader.onload = function(e){
+    var doc = { name: file.name, type: file.type, data: e.target.result };
+    localStorage.setItem('le_po_doc_'+poId, JSON.stringify(doc));
+    rPO();
+  };
+  reader.readAsDataURL(file);
+}
+
+function removePODoc(poId){
+  if(!confirm('Remove attached document?')) return;
+  localStorage.removeItem('le_po_doc_'+poId);
+  rPO();
 }
 
 function updateClientPricingFields() {
