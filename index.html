@@ -2081,6 +2081,7 @@ function refreshPage(){
   if(page==="fuel-orders") loadFO(done);
   else if(page==="lpg-orders") loadLO(done);
   else if(page==="all-orders") loadFO(function(){ loadLO(done); });
+  else if(page==="purchase-orders") loadPO(done);
   else if(page==="clients") loadCL(done);
   else if(page==="leads"){ loadLeads(); done(); }
   else if(page==="debtors") loadDB(done);
@@ -5462,5 +5463,6 @@ function rDebtors() {
 
 </body>
 </html>
+
 
 
