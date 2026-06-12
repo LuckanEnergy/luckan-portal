@@ -2539,7 +2539,7 @@ function updStats(){
 }
 function rDash(){
   updStats();
-  rDashPipeline();
+  loadLeads(); rDashPipeline();
   var all=FO.filter(function(o){return o.status!=="delivered";}).map(function(o){return Object.assign({},o,{tp:"fuel"});})
     .concat(LO.filter(function(o){return o.status!=="delivered";}).map(function(o){return Object.assign({},o,{tp:"lpg"});}));
   all.sort(function(a,b){return b.date.localeCompare(a.date);});
@@ -4883,10 +4883,11 @@ function rLeads(){
 function rDashPipeline(){
   var el=document.getElementById('dash-pipeline');
   if(!el)return;
-  loadLeads();
+  var localLeads=[];
+  try{ localLeads=JSON.parse(localStorage.getItem('le_leads')||'[]'); }catch(e){}
   var cols=LEAD_COLS.slice(0,4);
   el.innerHTML=cols.map(function(col){
-    var leads=LEADS.filter(function(l){return l.status===col.id;});
+    var leads=localLeads.filter(function(l){return l.status===col.id;});
     var cards=leads.length
       ? leads.slice(0,3).map(function(l){
           return '<div style="background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:8px 10px;margin-bottom:6px;font-size:12px">'
