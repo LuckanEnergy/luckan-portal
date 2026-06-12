@@ -1226,8 +1226,8 @@ input:checked+.slider::before{transform:translateX(18px);}
     <div class="rpt-kpi">
       <div class="kpi pk"><div class="kpi-v" id="rk1">R0</div><div class="kpi-l">Total Revenue</div></div>
       <div class="kpi tl"><div class="kpi-v" id="rk2">0</div><div class="kpi-l">Orders</div></div>
-      <div class="kpi g"><div class="kpi-v" id="rk3">0L</div><div class="kpi-l">Paid Orders</div></div>
-      <div class="kpi o"><div class="kpi-v" id="rk4">0%</div><div class="kpi-l">Payment Rate</div></div>
+      <div class="kpi o"><div class="kpi-v" id="rk3">R0</div><div class="kpi-l">Purchase Costs</div></div>
+      <div class="kpi g"><div class="kpi-v" id="rk4">R0</div><div class="kpi-l">Net Profit</div></div>
     </div>
     <div class="g2">
       <div class="cd"><div class="cd-hd"><span class="cd-ttl">⛽ Fuel Breakdown</span></div><div class="cd-bd" id="fbd"></div></div>
@@ -2086,7 +2086,7 @@ function refreshPage(){
   else if(page==="debtors") loadDB(done);
   else if(page==="stock-fuel"||page==="stock-lpg") loadSTOCK(done);
   else if(page==="assets") loadAR(done);
-  else if(page==="sales-report") loadDB(done);
+  else if(page==="sales-report") loadDB(function(){ loadPO(done); });
   else done();
 }
 
@@ -2854,11 +2854,24 @@ function rRpt(){
   rows=rows.filter(function(o){return(!from||!o.date||o.date>=from)&&(!to||!o.date||o.date<=to);});
   var totalRev=rows.reduce(function(s,o){return s+(o.value||0);},0);
   var fuelRows=rows.filter(function(o){return o.type==="fuel";});
-  var rate=100;
+
+  // Purchase order costs — received POs in the same date range
+  var poRows=(PO||[]).filter(function(p){
+    if(p.status!=='received')return false;
+    if(from&&p.date&&p.date<from)return false;
+    if(to&&p.date&&p.date>to)return false;
+    if(type==='fuel'&&p.cat==='LPG')return false;
+    if(type==='lpg'&&p.cat!=='LPG')return false;
+    return true;
+  });
+  var totalCost=poRows.reduce(function(s,p){return s+(p.total||0);},0);
+  var netProfit=totalRev-totalCost;
+
   document.getElementById("rk1").textContent=fR(totalRev);
   document.getElementById("rk2").textContent=rows.length;
-  document.getElementById("rk3").textContent=fuelRows.length+" fuel";
-  document.getElementById("rk4").textContent="100%";
+  document.getElementById("rk3").textContent=fR(totalCost);
+  document.getElementById("rk4").style.color=netProfit>=0?'var(--tl2)':'#ef4444';
+  document.getElementById("rk4").textContent=fR(netProfit);
   document.getElementById("rpt-count").textContent=rows.length+" order(s)";
   // Fuel breakdown by description
   var fp={};fuelRows.forEach(function(o){var lbl=(o.detail||"").split("—")[1]||o.detail;lbl=(lbl||"").trim();fp[lbl]=(fp[lbl]||0)+1;});
@@ -2882,7 +2895,11 @@ function rRpt(){
       +"<td style=\"font-weight:700\">"+fR(o.value||0)+"</td>"
       +"<td><span class=\"chip delivered\">✅ Paid</span></td></tr>";
   }).join("")||"<tr><td colspan=\"7\" style=\"text-align:center;color:var(--mu);padding:26px\">No paid orders yet — mark orders as paid in Debtors to see them here.</td></tr>";
-  document.getElementById("rpt-total").innerHTML=rows.length?"<td colspan=\"5\" style=\"font-size:11px;letter-spacing:1px;text-transform:uppercase\">TOTAL COLLECTED ("+rows.length+" paid orders)</td><td>"+fR(totalRev)+"</td><td></td>":"";
+  document.getElementById("rpt-total").innerHTML=rows.length
+    ? "<td colspan=\"5\" style=\"font-size:11px;letter-spacing:1px;text-transform:uppercase\">TOTAL COLLECTED ("+rows.length+" paid orders)</td><td style=\"font-weight:800;color:var(--pk)\">"+fR(totalRev)+"</td><td></td>"
+      +"</tr><tr style=\"background:rgba(239,68,68,0.06)\"><td colspan=\"5\" style=\"font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#ef4444\">PURCHASE COSTS ("+poRows.length+" received POs)</td><td style=\"font-weight:800;color:#ef4444\">- "+fR(totalCost)+"</td><td></td>"
+      +"</tr><tr style=\"background:rgba(34,197,94,0.06)\"><td colspan=\"5\" style=\"font-size:11px;letter-spacing:1px;text-transform:uppercase;color:"+(netProfit>=0?'#22c55e':'#ef4444')+'\">'+(netProfit>=0?'NET PROFIT':'NET LOSS')+"</td><td style=\"font-weight:800;color:"+(netProfit>=0?'#22c55e':'#ef4444')+'\">'+(netProfit>=0?'':'- ')+fR(Math.abs(netProfit))+"</td><td></td>"
+    : "";
   var cm={};rows.forEach(function(o){if(!cm[o.client])cm[o.client]={n:0,v:0};cm[o.client].n++;cm[o.client].v+=(o.value||0);});
   var cls=Object.keys(cm).map(function(n){return{n:n,d:cm[n]};}).sort(function(a,b){return b.d.v-a.d.v;});
   var mx=cls.length?cls[0].d.v:1;
