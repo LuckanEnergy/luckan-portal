@@ -4743,6 +4743,7 @@ function startPortal() {
               loadDB(function(){
                 loadSTOCK(function(){
                   loadAR(function(){
+                    loadPO(function(){
                     rDash();
                     setSyncStatus('synced','Live ✓');
                     // Restore last visited page
@@ -4751,6 +4752,7 @@ function startPortal() {
                       var navEl = document.getElementById('nav-'+lastPage);
                       goPage(lastPage, navEl);
                     }
+                    });
                   });
                 });
               });
