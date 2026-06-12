@@ -589,24 +589,22 @@ input:checked+.slider::before{transform:translateX(18px);}
         <div class="sc cp2"><div class="sc-ic">🔥</div><div class="sc-lb">LPG Orders</div><div class="sc-vl" id="s2">0</div><div class="sc-sb">Cylinders &amp; bulk gas</div></div>
         <div class="sc ct2"><div class="sc-ic">📁</div><div class="sc-lb">Documents</div><div class="sc-vl" id="s3">0</div><div class="sc-sb">Stored in portal</div></div>
       </div>
-      <div class="g3" style="margin-bottom:16px">
-        <div class="cd">
-          <div class="cd-hd"><span class="cd-ttl"><em>⏳</em> Pending Orders</span><button class="btn btn-s btn-sm" onclick="goPage('all-orders',document.getElementById('nav-all-orders'))">View All</button></div>
-          <div class="cd-bd" style="padding:0">
-            <table>
-              <thead><tr><th>Order ID</th><th>Type</th><th>Client</th><th>Product</th><th>Status</th></tr></thead>
-              <tbody id="d-pending"></tbody>
-            </table>
-          </div>
+      <div class="cd" style="margin-bottom:16px">
+        <div class="cd-hd"><span class="cd-ttl"><em>⏳</em> Pending Orders</span><button class="btn btn-s btn-sm" onclick="goPage('all-orders',document.getElementById('nav-all-orders'))">View All</button></div>
+        <div class="cd-bd" style="padding:0">
+          <table>
+            <thead><tr><th>Order ID</th><th>Type</th><th>Client</th><th>Product</th><th>Status</th></tr></thead>
+            <tbody id="d-pending"></tbody>
+          </table>
         </div>
-        <div class="cd">
-          <div class="cd-hd" style="display:flex;align-items:center;justify-content:space-between">
-            <span class="cd-ttl"><em>🎯</em> Sales Pipeline</span>
-            <button class="btn btn-p btn-sm" onclick="openAddLead()">+ Add Lead</button>
-          </div>
-          <div class="cd-bd" style="padding:8px 14px;overflow-x:auto">
-            <div id="dash-pipeline" style="display:flex;gap:12px;min-width:300px"></div>
-          </div>
+      </div>
+      <div class="cd">
+        <div class="cd-hd" style="display:flex;align-items:center;justify-content:space-between">
+          <span class="cd-ttl"><em>🎯</em> Sales Pipeline</span>
+          <button class="btn btn-p btn-sm" onclick="openAddLead()">+ Add Lead</button>
+        </div>
+        <div class="cd-bd" style="padding:8px 14px;overflow-x:auto">
+          <div id="dash-pipeline" style="display:flex;gap:12px;min-width:300px"></div>
         </div>
       </div>
     </div>
