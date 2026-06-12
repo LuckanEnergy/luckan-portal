@@ -602,8 +602,13 @@ input:checked+.slider::before{transform:translateX(18px);}
         </div>
         <div>
           <div class="cd" style="height:100%">
-            <div class="cd-hd"><span class="cd-ttl"><em>📡</em> Activity Feed</span></div>
-            <div class="cd-bd" style="padding:8px 14px" id="d-act"></div>
+            <div class="cd-hd" style="display:flex;align-items:center;justify-content:space-between">
+              <span class="cd-ttl"><em>🎯</em> Sales Pipeline</span>
+              <button class="btn btn-p btn-sm" onclick="openAddLead()">+ Add Lead</button>
+            </div>
+            <div class="cd-bd" style="padding:8px 14px;overflow-x:auto">
+              <div id="dash-pipeline" style="display:flex;gap:10px;min-width:500px"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -869,23 +874,21 @@ input:checked+.slider::before{transform:translateX(18px);}
     </div>
   </div>
 
-  <!-- LEADS / SALES PIPELINE -->
+  <!-- SALES PIPELINE -->
   <div class="pg" id="pg-leads">
     <div class="ph">
       <div>
-        <h2 class="pt">🎯 Sales Pipeline</h2>
+        <h2 class="pt">Sales Pipeline</h2>
         <p class="ps">Track potential clients and deals in progress</p>
       </div>
       <button class="btn btn-p" onclick="openAddLead()">+ Add Lead</button>
     </div>
-    <!-- Summary stats -->
     <div class="grid4" style="margin-bottom:18px">
       <div class="cd"><div class="cd-bd" style="text-align:center;padding:16px 12px"><div id="leads-stat-total" style="font-size:28px;font-weight:800;color:var(--pk)">0</div><div style="font-size:11px;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin-top:2px">Total Leads</div></div></div>
       <div class="cd"><div class="cd-bd" style="text-align:center;padding:16px 12px"><div id="leads-stat-new" style="font-size:28px;font-weight:800;color:var(--tl2)">0</div><div style="font-size:11px;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin-top:2px">New</div></div></div>
       <div class="cd"><div class="cd-bd" style="text-align:center;padding:16px 12px"><div id="leads-stat-quoted" style="font-size:28px;font-weight:800;color:#f59e0b">0</div><div style="font-size:11px;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin-top:2px">Quoted</div></div></div>
       <div class="cd"><div class="cd-bd" style="text-align:center;padding:16px 12px"><div id="leads-stat-won" style="font-size:28px;font-weight:800;color:#22c55e">0</div><div style="font-size:11px;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin-top:2px">Won</div></div></div>
     </div>
-    <!-- Kanban Board -->
     <div id="leads-kanban" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;align-items:start"></div>
   </div>
 
@@ -2055,7 +2058,7 @@ function refreshPage(){
   else if(page==="lpg-orders") loadLO(done);
   else if(page==="all-orders") loadFO(function(){ loadLO(done); });
   else if(page==="clients") loadCL(done);
-  else if(page==="leads") { loadLeads(); done(); }
+  else if(page==="leads"){ loadLeads(); done(); }
   else if(page==="debtors") loadDB(done);
   else if(page==="stock-fuel"||page==="stock-lpg") loadSTOCK(done);
   else if(page==="assets") loadAR(done);
@@ -4728,52 +4731,6 @@ setTimeout(function(){
   });
 }, 300);
 
-// ── AUTO BACKUP (once per day) ──
-setTimeout(function(){
-  try {
-    var lastBackup = localStorage.getItem('le_last_backup') || '';
-    var today = new Date().toISOString().slice(0,10);
-    if(lastBackup === today) return; // already backed up today
-    autoBackupToExcel();
-  } catch(e){ console.error('Auto backup error:', e); }
-}, 3000); // wait 3s for data to load first
-
-function autoBackupToExcel() {
-  var tables = [
-    { name: 'Clients',        loader: function(cb){ dbGet('clients','order=created_at.desc').then(cb); } },
-    { name: 'Fuel Orders',    loader: function(cb){ dbGet('fuel_orders','order=date.desc').then(cb); } },
-    { name: 'LPG Orders',     loader: function(cb){ dbGet('lpg_orders','order=date.desc').then(cb); } },
-    { name: 'Debtors',        loader: function(cb){ dbGet('debtors','order=created_at.desc').then(cb); } },
-    { name: 'Purchase Orders',loader: function(cb){ dbGet('purchase_orders','order=date.desc').then(cb); } },
-    { name: 'Stock Levels',   loader: function(cb){ dbGet('stock','order=name.asc').then(cb); } },
-    { name: 'Stock Transactions', loader: function(cb){ dbGet('stock_transactions','order=date.desc,time.desc&limit=500').then(cb); } }
-  ];
-
-  var wb = XLSX.utils.book_new();
-  var remaining = tables.length;
-
-  tables.forEach(function(t) {
-    t.loader(function(rows) {
-      try {
-        var data = Array.isArray(rows) ? rows : [];
-        var ws = XLSX.utils.json_to_sheet(data.length ? data : [{ note: 'No data' }]);
-        XLSX.utils.book_append_sheet(wb, ws, t.name);
-      } catch(e) { console.error('Backup sheet error:', t.name, e); }
-      remaining--;
-      if(remaining === 0) {
-        var today = new Date().toISOString().slice(0,10);
-        var filename = 'LuckanEnergy-Backup-' + today + '.xlsx';
-        XLSX.writeFile(wb, filename);
-        localStorage.setItem('le_last_backup', today);
-        addAct('Auto backup downloaded: ' + filename, '💾', 'tl');
-      }
-    }).catch(function(e){
-      console.error('Backup load error:', t.name, e);
-      remaining--;
-    });
-  });
-}
-
 // Realtime updates handled by Supabase subscription
 
 
@@ -4782,63 +4739,63 @@ function autoBackupToExcel() {
 // ══════════════════════════════════════════
 var LEADS = [];
 var LEAD_COLS = [
-  { id: 'new',         label: '🆕 New',         color: 'var(--tl2)',  bg: 'rgba(43,188,208,0.08)' },
-  { id: 'quoted',      label: '💬 Quoted',       color: '#f59e0b',     bg: 'rgba(245,158,11,0.08)' },
-  { id: 'negotiating', label: '🤝 Negotiating',  color: '#a78bfa',     bg: 'rgba(167,139,250,0.08)' },
-  { id: 'won',         label: '✅ Won',           color: '#22c55e',     bg: 'rgba(34,197,94,0.08)'  },
-  { id: 'lost',        label: '❌ Lost',          color: '#ef4444',     bg: 'rgba(239,68,68,0.08)'  }
+  {id:'new',         label:'New',         color:'#2abcd0', bg:'rgba(42,188,208,0.08)'},
+  {id:'quoted',      label:'Quoted',      color:'#f59e0b', bg:'rgba(245,158,11,0.08)'},
+  {id:'negotiating', label:'Negotiating', color:'#a78bfa', bg:'rgba(167,139,250,0.08)'},
+  {id:'won',         label:'Won',         color:'#22c55e', bg:'rgba(34,197,94,0.08)'},
+  {id:'lost',        label:'Lost',        color:'#ef4444', bg:'rgba(239,68,68,0.08)'}
 ];
 
-function loadLeads() {
-  try { LEADS = JSON.parse(localStorage.getItem('le_leads') || '[]'); } catch(e){ LEADS=[]; }
+function loadLeads(){
+  try{ LEADS=JSON.parse(localStorage.getItem('le_leads')||'[]'); }catch(e){ LEADS=[]; }
+}
+function saveLeads(){
+  localStorage.setItem('le_leads',JSON.stringify(LEADS));
 }
 
-function saveLeads() {
-  localStorage.setItem('le_leads', JSON.stringify(LEADS));
-}
-
-function openAddLead(id) {
-  document.getElementById('lead-edit-id').value = id || '';
-  if (id) {
-    var l = LEADS.find(function(x){ return x.id === id; });
-    if (!l) return;
-    document.getElementById('lead-modal-title').textContent = 'Edit Lead';
-    document.getElementById('lead-name').value = l.name || '';
-    document.getElementById('lead-phone').value = l.phone || '';
-    document.getElementById('lead-product').value = l.product || 'Diesel 50ppm';
-    document.getElementById('lead-volume').value = l.volume || '';
+function openAddLead(id){
+  var eid = id||'';
+  document.getElementById('lead-edit-id').value = eid;
+  if(eid){
+    var l=LEADS.find(function(x){return x.id===eid;});
+    if(!l)return;
+    document.getElementById('lead-modal-title').textContent='Edit Lead';
+    document.getElementById('lead-name').value=l.name||'';
+    document.getElementById('lead-phone').value=l.phone||'';
+    document.getElementById('lead-product').value=l.product||'Diesel 50ppm';
+    document.getElementById('lead-volume').value=l.volume||'';
   } else {
-    document.getElementById('lead-modal-title').textContent = 'Add Lead';
-    document.getElementById('lead-name').value = '';
-    document.getElementById('lead-phone').value = '';
-    document.getElementById('lead-product').value = 'Diesel 50ppm';
-    document.getElementById('lead-volume').value = '';
+    document.getElementById('lead-modal-title').textContent='Add Lead';
+    document.getElementById('lead-name').value='';
+    document.getElementById('lead-phone').value='';
+    document.getElementById('lead-product').value='Diesel 50ppm';
+    document.getElementById('lead-volume').value='';
   }
   document.getElementById('m-addlead').classList.add('open');
 }
 
-function saveLead() {
-  var name = document.getElementById('lead-name').value.trim();
-  var phone = document.getElementById('lead-phone').value.trim();
-  if (!name) { alert('Name is required'); return; }
-  var eid = document.getElementById('lead-edit-id').value;
-  if (eid) {
-    var l = LEADS.find(function(x){ return x.id === eid; });
-    if (l) {
-      l.name = name; l.phone = phone;
-      l.product = document.getElementById('lead-product').value;
-      l.volume = document.getElementById('lead-volume').value.trim();
+function saveLead(){
+  var name=document.getElementById('lead-name').value.trim();
+  var phone=document.getElementById('lead-phone').value.trim();
+  if(!name){alert('Name is required');return;}
+  var eid=document.getElementById('lead-edit-id').value;
+  if(eid){
+    var l=LEADS.find(function(x){return x.id===eid;});
+    if(l){
+      l.name=name; l.phone=phone;
+      l.product=document.getElementById('lead-product').value;
+      l.volume=document.getElementById('lead-volume').value.trim();
     }
   } else {
     LEADS.push({
-      id: 'LD-' + Date.now(),
-      name: name,
-      phone: phone,
-      product: document.getElementById('lead-product').value,
-      volume: document.getElementById('lead-volume').value.trim(),
-      status: 'new',
-      pricingRequested: false,
-      date: new Date().toISOString().slice(0,10)
+      id:'LD-'+Date.now(),
+      name:name,
+      phone:phone,
+      product:document.getElementById('lead-product').value,
+      volume:document.getElementById('lead-volume').value.trim(),
+      status:'new',
+      pricingRequested:false,
+      date:new Date().toISOString().slice(0,10)
     });
   }
   saveLeads();
@@ -4847,91 +4804,104 @@ function saveLead() {
   rDashPipeline();
 }
 
-function moveLead(id, newStatus) {
-  var l = LEADS.find(function(x){ return x.id === id; });
-  if (l) { l.status = newStatus; saveLeads(); rLeads(); rDashPipeline(); }
+function moveLead(id,newStatus){
+  var l=LEADS.find(function(x){return x.id===id;});
+  if(l){l.status=newStatus;saveLeads();rLeads();rDashPipeline();}
 }
 
-function deleteLead(id) {
-  if (!confirm('Delete this lead?')) return;
-  LEADS = LEADS.filter(function(x){ return x.id !== id; });
-  saveLeads(); rLeads(); rDashPipeline();
+function deleteLead(id){
+  if(!confirm('Delete this lead?'))return;
+  LEADS=LEADS.filter(function(x){return x.id!==id;});
+  saveLeads();rLeads();rDashPipeline();
 }
 
-function requestPricing(id) {
-  var l = LEADS.find(function(x){ return x.id === id; });
-  if (!l) return;
-  l.pricingRequested = true;
-  saveLeads(); rLeads(); rDashPipeline();
-  alert('Pricing request flagged for: ' + l.name);
+function requestPricing(id){
+  var l=LEADS.find(function(x){return x.id===id;});
+  if(!l)return;
+  l.pricingRequested=true;
+  saveLeads();rLeads();rDashPipeline();
+  alert('Pricing flagged for: '+l.name);
 }
 
-function rLeads() {
+function rLeads(){
   loadLeads();
-  // Stats
-  document.getElementById('leads-stat-total').textContent = LEADS.filter(function(l){ return l.status !== 'lost'; }).length;
-  document.getElementById('leads-stat-new').textContent = LEADS.filter(function(l){ return l.status === 'new'; }).length;
-  document.getElementById('leads-stat-quoted').textContent = LEADS.filter(function(l){ return l.status === 'quoted'; }).length;
-  document.getElementById('leads-stat-won').textContent = LEADS.filter(function(l){ return l.status === 'won'; }).length;
+  var el=document.getElementById('leads-stat-total');
+  if(el) el.textContent=LEADS.filter(function(l){return l.status!=='lost';}).length;
+  el=document.getElementById('leads-stat-new');
+  if(el) el.textContent=LEADS.filter(function(l){return l.status==='new';}).length;
+  el=document.getElementById('leads-stat-quoted');
+  if(el) el.textContent=LEADS.filter(function(l){return l.status==='quoted';}).length;
+  el=document.getElementById('leads-stat-won');
+  if(el) el.textContent=LEADS.filter(function(l){return l.status==='won';}).length;
 
-  var kb = document.getElementById('leads-kanban');
-  if (!kb) return;
-  // Show only first 4 cols on kanban (hide lost here, show in a separate list)
-  var cols = LEAD_COLS.slice(0, 4);
-  kb.style.gridTemplateColumns = 'repeat(' + cols.length + ',1fr)';
-  kb.innerHTML = cols.map(function(col) {
-    var leads = LEADS.filter(function(l){ return l.status === col.id; });
-    var cards = leads.length ? leads.map(function(l){
+  var kb=document.getElementById('leads-kanban');
+  if(!kb)return;
+  var activeCols=LEAD_COLS.slice(0,4);
+  kb.style.gridTemplateColumns='repeat('+activeCols.length+',1fr)';
+  kb.innerHTML=activeCols.map(function(col){
+    var leads=LEADS.filter(function(l){return l.status===col.id;});
+    var cards=leads.length ? leads.map(function(l){
+      var priceBadge=l.pricingRequested
+        ? '<span style="position:absolute;top:8px;right:8px;background:#f59e0b;color:#fff;border-radius:4px;font-size:10px;padding:2px 6px;font-weight:700">PRICING</span>'
+        : '';
+      var priceBtn=l.pricingRequested
+        ? '<span style="font-size:11px;color:#f59e0b;font-weight:600">Pricing Requested</span>'
+        : '<button onclick="requestPricing(\''+l.id+'\')" style="font-size:11px;padding:3px 8px;border-radius:6px;border:1px solid #f59e0b;background:rgba(245,158,11,0.1);color:#f59e0b;cursor:pointer;font-weight:600">Request Pricing</button>';
+      var opts=LEAD_COLS.map(function(c){
+        return '<option value="'+c.id+'"'+(l.status===c.id?' selected':'')+'>'+c.label+'</option>';
+      }).join('');
       return '<div style="background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:12px;margin-bottom:10px;position:relative">'
-        + (l.pricingRequested ? '<div style="position:absolute;top:8px;right:8px;background:#f59e0b;color:#fff;border-radius:4px;font-size:10px;padding:2px 6px;font-weight:700">⚡ PRICING</div>' : '')
-        + '<div style="font-weight:700;font-size:14px;color:var(--tx);margin-bottom:4px;padding-right:' + (l.pricingRequested ? '70px' : '0') + '">' + l.name + '</div>'
-        + '<div style="font-size:12px;color:var(--mu);margin-bottom:2px">📞 ' + (l.phone||'—') + '</div>'
-        + '<div style="font-size:12px;color:var(--mu);margin-bottom:2px">⛽ ' + l.product + '</div>'
-        + (l.volume ? '<div style="font-size:12px;color:var(--mu);margin-bottom:8px">📦 ' + l.volume + '</div>' : '<div style="margin-bottom:8px"></div>')
-        + '<div style="display:flex;gap:6px;flex-wrap:wrap">'
-        + '<select onchange="moveLead('' + l.id + '',this.value)" style="font-size:11px;padding:3px 6px;border-radius:6px;border:1px solid var(--bd);background:var(--lt);color:var(--tx);flex:1">'
-        + LEAD_COLS.map(function(c){ return '<option value="'+c.id+'"'+(l.status===c.id?' selected':'')+'>'+c.label+'</option>'; }).join('')
-        + '</select>'
-        + '</div>'
-        + '<div style="display:flex;gap:6px;margin-top:6px">'
-        + (!l.pricingRequested ? '<button onclick="requestPricing(''+l.id+'')" style="font-size:11px;padding:3px 8px;border-radius:6px;border:1px solid #f59e0b;background:rgba(245,158,11,0.1);color:#f59e0b;cursor:pointer;font-weight:600">💰 Request Pricing</button>' : '<span style="font-size:11px;color:#f59e0b;font-weight:600">💰 Pricing Requested</span>')
-        + '<button onclick="openAddLead(''+l.id+'')" style="font-size:11px;padding:3px 8px;border-radius:6px;border:1px solid var(--bd);background:var(--lt);color:var(--mu);cursor:pointer">✏️</button>'
-        + '<button onclick="deleteLead(''+l.id+'')" style="font-size:11px;padding:3px 8px;border-radius:6px;border:1px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.08);color:#ef4444;cursor:pointer">🗑</button>'
-        + '</div>'
-        + '</div>';
-    }).join('') : '<div style="text-align:center;color:var(--mu);font-size:12px;padding:20px 0">No leads here</div>';
+        +priceBadge
+        +'<div style="font-weight:700;font-size:14px;color:var(--tx);margin-bottom:4px">'+l.name+'</div>'
+        +'<div style="font-size:12px;color:var(--mu);margin-bottom:2px">'+l.phone+'</div>'
+        +'<div style="font-size:12px;color:var(--mu);margin-bottom:2px">'+l.product+'</div>'
+        +(l.volume ? '<div style="font-size:12px;color:var(--mu);margin-bottom:8px">'+l.volume+'</div>' : '<div style="margin-bottom:8px"></div>')
+        +'<select onchange="moveLead(\''+l.id+'\',this.value)" style="font-size:11px;padding:3px 6px;border-radius:6px;border:1px solid var(--bd);background:var(--lt);color:var(--tx);width:100%;margin-bottom:6px">'+opts+'</select>'
+        +'<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">'
+        +priceBtn
+        +'<button onclick="openAddLead(\''+l.id+'\')" style="font-size:11px;padding:3px 8px;border-radius:6px;border:1px solid var(--bd);background:var(--lt);color:var(--mu);cursor:pointer;margin-left:auto">Edit</button>'
+        +'<button onclick="deleteLead(\''+l.id+'\')" style="font-size:11px;padding:3px 8px;border-radius:6px;border:1px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.08);color:#ef4444;cursor:pointer">Del</button>'
+        +'</div>'
+        +'</div>';
+    }).join('')
+    : '<div style="text-align:center;color:var(--mu);font-size:12px;padding:20px 0">No leads</div>';
 
-    return '<div style="background:' + col.bg + ';border:1px solid ' + col.color + '33;border-radius:12px;padding:12px">'
-      + '<div style="font-weight:700;font-size:13px;color:' + col.color + ';margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px">' + col.label + ' <span style="font-weight:400;opacity:.7">(' + leads.length + ')</span></div>'
-      + cards
-      + '</div>';
+    return '<div style="background:'+col.bg+';border:1px solid '+col.color+'55;border-radius:12px;padding:12px">'
+      +'<div style="font-weight:700;font-size:12px;color:'+col.color+';margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px">'+col.label+' ('+leads.length+')</div>'
+      +cards
+      +'</div>';
   }).join('');
 
-  // lb badge
-  var badge = document.getElementById('lb-leads');
-  if (badge) { var active = LEADS.filter(function(l){ return l.status !== 'lost' && l.status !== 'won'; }).length; badge.textContent = active || ''; }
+  var badge=document.getElementById('lb-leads');
+  if(badge){
+    var active=LEADS.filter(function(l){return l.status!=='lost'&&l.status!=='won';}).length;
+    badge.textContent=active||'';
+  }
 }
 
-function rDashPipeline() {
-  var el = document.getElementById('dash-pipeline');
-  if (!el) return;
+function rDashPipeline(){
+  var el=document.getElementById('dash-pipeline');
+  if(!el)return;
   loadLeads();
-  var cols = LEAD_COLS.slice(0,4);
-  el.innerHTML = cols.map(function(col){
-    var leads = LEADS.filter(function(l){ return l.status === col.id; });
-    return '<div style="flex:1;min-width:110px">'
-      + '<div style="font-size:11px;font-weight:700;color:'+col.color+';margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px">'+col.label+' ('+leads.length+')</div>'
-      + (leads.length ? leads.slice(0,3).map(function(l){
+  var cols=LEAD_COLS.slice(0,4);
+  el.innerHTML=cols.map(function(col){
+    var leads=LEADS.filter(function(l){return l.status===col.id;});
+    var cards=leads.length
+      ? leads.slice(0,3).map(function(l){
           return '<div style="background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:8px 10px;margin-bottom:6px;font-size:12px">'
-            + (l.pricingRequested ? '<span style="background:#f59e0b;color:#fff;border-radius:3px;font-size:9px;padding:1px 5px;font-weight:700;margin-right:4px">⚡</span>' : '')
-            + '<span style="font-weight:600;color:var(--tx)">'+l.name+'</span>'
-            + '<div style="color:var(--mu);font-size:11px;margin-top:2px">'+l.product+'</div>'
-            + '</div>';
-        }).join('') + (leads.length > 3 ? '<div style="font-size:11px;color:var(--mu);text-align:center">+' + (leads.length-3) + ' more</div>' : '')
-        : '<div style="font-size:11px;color:var(--mu);text-align:center;padding:8px 0">Empty</div>')
-      + '</div>';
+            +(l.pricingRequested ? '<span style="background:#f59e0b;color:#fff;border-radius:3px;font-size:9px;padding:1px 4px;font-weight:700;margin-right:4px">!</span>' : '')
+            +'<span style="font-weight:600;color:var(--tx)">'+l.name+'</span>'
+            +'<div style="color:var(--mu);font-size:11px;margin-top:2px">'+l.product+'</div>'
+            +'</div>';
+        }).join('')+(leads.length>3 ? '<div style="font-size:11px;color:var(--mu);text-align:center">+' + (leads.length-3)+' more</div>' : '')
+      : '<div style="font-size:11px;color:var(--mu);text-align:center;padding:8px 0">Empty</div>';
+    return '<div style="flex:1;min-width:110px">'
+      +'<div style="font-size:11px;font-weight:700;color:'+col.color+';margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px">'+col.label+' ('+leads.length+')</div>'
+      +cards
+      +'</div>';
   }).join('');
 }
+
 // ══════════════════════════════════════════
 // DEBTORS MODULE
 // ══════════════════════════════════════════
@@ -5361,7 +5331,7 @@ function rDebtors() {
   <div class="mbox" style="max-width:460px;width:92%">
     <div class="mh">
       <span class="mt2" id="lead-modal-title">Add Lead</span>
-      <button class="xbtn" onclick="closeM('m-addlead')">✕</button>
+      <button class="xbtn" onclick="closeM('m-addlead')">&#x2715;</button>
     </div>
     <div class="mb">
       <div class="fm"><label>Name *</label><input id="lead-name" type="text" placeholder="Contact name"></div>
@@ -5372,9 +5342,9 @@ function rDebtors() {
           <option>Diesel AGO</option>
           <option>Petrol (ULP 95)</option>
           <option>Petrol (ULP 93)</option>
-          <option>LPG (9kg)</option>
-          <option>LPG (19kg)</option>
-          <option>LPG (48kg)</option>
+          <option>LPG 9kg</option>
+          <option>LPG 19kg</option>
+          <option>LPG 48kg</option>
           <option>Burner Fuel</option>
           <option>Other</option>
         </select>
