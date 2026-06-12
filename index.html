@@ -4885,7 +4885,16 @@ function rDashPipeline(){
   if(!el)return;
   var localLeads=[];
   try{ localLeads=JSON.parse(localStorage.getItem('le_leads')||'[]'); }catch(e){}
-  var cols=LEAD_COLS.slice(0,4);
+  var cols=[
+    {id:'new',         label:'New',        color:'#2abcd0'},
+    {id:'quoted',      label:'Quoted',     color:'#f59e0b'},
+    {id:'negotiating', label:'Negotiating',color:'#a78bfa'},
+    {id:'won',         label:'Won',        color:'#22c55e'}
+  ];
+  if(!localLeads.length){
+    el.innerHTML='<div style="color:var(--mu);font-size:12px;padding:16px 0">No leads yet. Click + Add Lead to get started.</div>';
+    return;
+  }
   el.innerHTML=cols.map(function(col){
     var leads=localLeads.filter(function(l){return l.status===col.id;});
     var cards=leads.length
@@ -4895,9 +4904,9 @@ function rDashPipeline(){
             +'<span style="font-weight:600;color:var(--tx)">'+l.name+'</span>'
             +'<div style="color:var(--mu);font-size:11px;margin-top:2px">'+l.product+'</div>'
             +'</div>';
-        }).join('')+(leads.length>3 ? '<div style="font-size:11px;color:var(--mu);text-align:center">+' + (leads.length-3)+' more</div>' : '')
+        }).join('')+(leads.length>3 ? '<div style="font-size:11px;color:var(--mu);text-align:center">+'+(leads.length-3)+' more</div>' : '')
       : '<div style="font-size:11px;color:var(--mu);text-align:center;padding:8px 0">Empty</div>';
-    return '<div style="flex:1;min-width:110px">'
+    return '<div style="flex:1;min-width:100px;border-right:1px solid var(--bd);padding-right:10px;margin-right:2px">'
       +'<div style="font-size:11px;font-weight:700;color:'+col.color+';margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px">'+col.label+' ('+leads.length+')</div>'
       +cards
       +'</div>';
