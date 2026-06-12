@@ -671,23 +671,37 @@ input:checked+.slider::before{transform:translateX(18px);}
   <!-- FUEL ORDERS -->
   <div class="pg" id="pg-fuel-orders">
     <div class="sh">
-      <div><div class="st">⛽ FUEL <em>ORDERS</em></div><div class="ss">Active orders only — delivered orders are automatically archived</div></div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn btn-d btn-sm" onclick="clearOrds('fuel')">🗑 Clear All</button>
-        <button class="btn btn-p" onclick="openM('fuel')">+ New Fuel Order</button>
+      <div><div class="st">⛽ FUEL <em>ORDERS</em></div><div class="ss">Manage fuel orders · Delivered orders move to Transaction Log</div></div>
+      <button class="btn btn-p" onclick="openM('fuel')">+ New Fuel Order</button>
+    </div>
+    <!-- KPIs -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px">
+      <div class="kpi pk"><div class="kpi-v" id="fo-k1">0</div><div class="kpi-l">Pending</div></div>
+      <div class="kpi o"><div class="kpi-v" id="fo-k2">0</div><div class="kpi-l">Processing</div></div>
+      <div class="kpi tl"><div class="kpi-v" id="fo-k3">0</div><div class="kpi-l">Delivered</div></div>
+      <div class="kpi g"><div class="kpi-v" id="fo-k4">R 0</div><div class="kpi-l">Total Value</div></div>
+    </div>
+    <!-- Table -->
+    <div class="cd">
+      <div class="cd-hd" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <span class="cd-ttl">Fuel Orders</span>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <input type="text" placeholder="Search orders…" id="fsrch" oninput="rFuel()" style="padding:5px 10px;font-size:12px;border-radius:6px;border:1px solid var(--bd);width:180px">
+          <select style="padding:5px 8px;font-size:12px;border-radius:6px;border:1px solid var(--bd)" id="ff" onchange="rFuel()">
+            <option value="">All Statuses</option><option value="pending">Pending</option><option value="processing">Processing</option><option value="delivered">Delivered</option><option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+      </div>
+      <div class="cd-bd" style="padding:0;overflow-x:auto">
+        <table><thead><tr><th>Order ID</th><th>Date</th><th>Client</th><th>Product</th><th>Volume</th><th>Value</th><th>Status</th><th>Actions</th></tr></thead><tbody id="ft"></tbody></table>
       </div>
     </div>
-    <div class="qb" id="fqb"></div>
-    <div class="cd">
-      <div class="cd-hd">
-        <span class="cd-ttl">Active Fuel Orders</span>
-        <select style="width:128px;padding:5px 8px;font-size:12px" id="ff" onchange="rFuel()">
-          <option value="">All Statuses</option><option value="pending">Pending</option><option value="processing">Processing</option><option value="cancelled">Cancelled</option>
-        </select>
-      </div>
-      <div class="cd-bd" style="padding:0">
-        <div style="padding:9px 12px 0"><div class="sw"><input type="text" placeholder="Search by ID, client or product…" id="fsrch" oninput="rFuel()"></div></div>
-        <table><thead><tr><th>Order ID</th><th class="hide-mobile">Date</th><th>Client</th><th class="hide-mobile">Product</th><th class="hide-mobile">Volume</th><th>Value</th><th>Status</th><th>Actions</th></tr></thead><tbody id="ft"></tbody></table>
+    <!-- Transaction Log -->
+    <div class="cd" style="margin-top:18px">
+      <div class="cd-hd"><span class="cd-ttl">📋 Transaction Log — Delivered Orders</span></div>
+      <div class="cd-bd" style="padding:0;overflow-x:auto">
+        <table><thead><tr><th>Order ID</th><th>Date</th><th>Client</th><th>Product</th><th>Volume</th><th>Value</th><th>Status</th></tr></thead>
+        <tbody id="fo-txlog"></tbody></table>
       </div>
     </div>
   </div>
@@ -695,23 +709,37 @@ input:checked+.slider::before{transform:translateX(18px);}
   <!-- LPG ORDERS -->
   <div class="pg" id="pg-lpg-orders">
     <div class="sh">
-      <div><div class="st">🔥 LPG <em>ORDERS</em></div><div class="ss">Active orders only — delivered orders are automatically archived</div></div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn btn-d btn-sm" onclick="clearOrds('lpg')">🗑 Clear All</button>
-        <button class="btn btn-p" onclick="openM('lpg')">+ New LPG Order</button>
+      <div><div class="st">🔥 LPG <em>ORDERS</em></div><div class="ss">Manage LPG orders · Delivered orders move to Transaction Log</div></div>
+      <button class="btn btn-p" onclick="openM('lpg')">+ New LPG Order</button>
+    </div>
+    <!-- KPIs -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px">
+      <div class="kpi pk"><div class="kpi-v" id="lo-k1">0</div><div class="kpi-l">Pending</div></div>
+      <div class="kpi o"><div class="kpi-v" id="lo-k2">0</div><div class="kpi-l">Processing</div></div>
+      <div class="kpi tl"><div class="kpi-v" id="lo-k3">0</div><div class="kpi-l">Delivered</div></div>
+      <div class="kpi g"><div class="kpi-v" id="lo-k4">R 0</div><div class="kpi-l">Total Value</div></div>
+    </div>
+    <!-- Table -->
+    <div class="cd">
+      <div class="cd-hd" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <span class="cd-ttl">LPG Orders</span>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <input type="text" placeholder="Search orders…" id="lsrch" oninput="rLPG()" style="padding:5px 10px;font-size:12px;border-radius:6px;border:1px solid var(--bd);width:180px">
+          <select style="padding:5px 8px;font-size:12px;border-radius:6px;border:1px solid var(--bd)" id="lf" onchange="rLPG()">
+            <option value="">All Statuses</option><option value="pending">Pending</option><option value="processing">Processing</option><option value="delivered">Delivered</option><option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+      </div>
+      <div class="cd-bd" style="padding:0;overflow-x:auto">
+        <table><thead><tr><th>Order ID</th><th>Date</th><th>Client</th><th>Cylinder</th><th>Qty</th><th>Value</th><th>Status</th><th>Actions</th></tr></thead><tbody id="lt"></tbody></table>
       </div>
     </div>
-    <div class="qb" id="lqb"></div>
-    <div class="cd">
-      <div class="cd-hd">
-        <span class="cd-ttl">Active LPG Orders</span>
-        <select style="width:128px;padding:5px 8px;font-size:12px" id="lf" onchange="rLPG()">
-          <option value="">All Statuses</option><option value="pending">Pending</option><option value="processing">Processing</option><option value="cancelled">Cancelled</option>
-        </select>
-      </div>
-      <div class="cd-bd" style="padding:0">
-        <div style="padding:9px 12px 0"><div class="sw"><input type="text" placeholder="Search LPG orders…" id="lsrch" oninput="rLPG()"></div></div>
-        <table><thead><tr><th>Order ID</th><th class="hide-mobile">Date</th><th>Client</th><th class="hide-mobile">Cylinder</th><th class="hide-mobile">Qty</th><th>Value</th><th>Status</th><th>Actions</th></tr></thead><tbody id="lt"></tbody></table>
+    <!-- Transaction Log -->
+    <div class="cd" style="margin-top:18px">
+      <div class="cd-hd"><span class="cd-ttl">📋 Transaction Log — Delivered Orders</span></div>
+      <div class="cd-bd" style="padding:0;overflow-x:auto">
+        <table><thead><tr><th>Order ID</th><th>Date</th><th>Client</th><th>Cylinder</th><th>Qty</th><th>Value</th><th>Status</th></tr></thead>
+        <tbody id="lo-txlog"></tbody></table>
       </div>
     </div>
   </div>
@@ -2519,36 +2547,77 @@ function delFolder(id){if(!confirm("Delete folder? Files move to Root."))return;
 function rFuel(){
   var q=(document.getElementById("fsrch")||{}).value||"";q=q.toLowerCase();
   var f=(document.getElementById("ff")||{}).value||"";
-  var rows=FO.filter(function(o){return o.status!=="delivered"&&(!f||o.status===f)&&(!q||o.id.toLowerCase().includes(q)||o.client.toLowerCase().includes(q)||o.product.toLowerCase().includes(q));});
+  // KPIs
+  var k1=document.getElementById("fo-k1"); if(k1) k1.textContent=FO.filter(function(o){return o.status==="pending";}).length;
+  var k2=document.getElementById("fo-k2"); if(k2) k2.textContent=FO.filter(function(o){return o.status==="processing";}).length;
+  var k3=document.getElementById("fo-k3"); if(k3) k3.textContent=FO.filter(function(o){return o.status==="delivered";}).length;
+  var k4=document.getElementById("fo-k4"); if(k4) k4.textContent=fR(FO.reduce(function(s,o){return s+V(o);},0));
+  // Orders table
+  var rows=FO.filter(function(o){
+    if(f==="delivered") return o.status==="delivered";
+    if(f) return o.status===f && o.status!=="delivered";
+    return o.status!=="delivered";
+  }).filter(function(o){
+    return !q||o.id.toLowerCase().includes(q)||o.client.toLowerCase().includes(q)||(o.product||"").toLowerCase().includes(q);
+  });
   document.getElementById("ft").innerHTML=rows.length?rows.map(function(o){
     return "<tr>"
       +'<td style="font-size:12px;font-weight:700;color:var(--pk);font-family:monospace">'+o.id+"</td>"
-      +'<td class="hide-mobile" style="color:var(--mu);font-size:12px">'+o.date+"</td>"
+      +'<td style="color:var(--mu);font-size:12px">'+o.date+"</td>"
       +'<td style="font-weight:600">'+o.client+"</td>"
-      +'<td class="hide-mobile">'+o.product+"</td>"
-      +'<td class="hide-mobile">'+fm(o.volume)+"L</td>"
+      +'<td>'+o.product+"</td>"
+      +'<td>'+fm(o.volume)+"L</td>"
       +'<td style="font-weight:700">'+fR(V(o))+"</td>"
       +"<td>"+sSel("fuel",o.id,o.status)+"</td>"
       +'<td><div style="display:flex;gap:4px;align-items:center">'
-        +(o.invoice?'<button class="btn btn-t btn-sm" title="View Invoice" onclick="viewInvoice(\''+o.id+'\')" >📎</button>':'')        +'<button class="btn btn-s btn-sm" onclick="viewOrd('+"'fuel'"+",'"+o.id+"'"+')">View</button>'
-        +'<button class="btn btn-t btn-sm" onclick="editFuel('+"'"+o.id+"'"+')">✏</button>'
-        +'<button class="btn btn-d btn-sm" onclick="delOrd('+"'fuel'"+",'"+o.id+"'"+')">🗑</button>'
+        +(o.invoice?'<button class="btn btn-t btn-sm" onclick="viewInvoice(&quot;'+o.id+'&quot;)">&#128206;</button>':'')
+        +'<button class="btn btn-s btn-sm" onclick="viewOrd(&quot;fuel&quot;,&quot;'+o.id+'&quot;)">View</button>'
+        +'<button class="btn btn-t btn-sm" onclick="editFuel(&quot;'+o.id+'&quot;)">&#9998;</button>'
+        +'<button class="btn btn-d btn-sm" onclick="delOrd(&quot;fuel&quot;,&quot;'+o.id+'&quot;)">&#128465;</button>'
       +"</div></td></tr>";
-  }).join(""):'<tr><td colspan="8" style="text-align:center;color:var(--mu);padding:28px">No active fuel orders</td></tr>';
+  }).join(""):'<tr><td colspan="8" style="text-align:center;color:var(--mu);padding:28px">No orders found</td></tr>';
+  // Transaction log
+  var txbody=document.getElementById("fo-txlog");
+  if(txbody){
+    var delivered=FO.filter(function(o){return o.status==="delivered";}).sort(function(a,b){return b.date.localeCompare(a.date);});
+    txbody.innerHTML=delivered.length?delivered.map(function(o){
+      return "<tr>"
+        +'<td style="font-size:12px;font-weight:700;color:var(--pk);font-family:monospace">'+o.id+"</td>"
+        +'<td style="color:var(--mu);font-size:12px">'+o.date+"</td>"
+        +'<td style="font-weight:600">'+o.client+"</td>"
+        +'<td>'+o.product+"</td>"
+        +'<td>'+fm(o.volume)+"L</td>"
+        +'<td style="font-weight:700;color:var(--tl2)">'+fR(V(o))+"</td>"
+        +'<td><span style="background:rgba(34,197,94,0.1);color:#16a34a;border:1px solid rgba(34,197,94,0.3);border-radius:6px;padding:2px 8px;font-size:11px;font-weight:600">Delivered</span></td>'
+        +"</tr>";
+    }).join(""):'<tr><td colspan="7" style="text-align:center;color:var(--mu);padding:20px">No delivered orders yet</td></tr>';
+  }
 }
 
-// RENDER LPG (active only)
+// RENDER LPG
 function rLPG(){
   var q=(document.getElementById("lsrch")||{}).value||"";q=q.toLowerCase();
   var f=(document.getElementById("lf")||{}).value||"";
-  var rows=LO.filter(function(o){return o.status!=="delivered"&&(!f||o.status===f)&&(!q||o.id.toLowerCase().includes(q)||o.client.toLowerCase().includes(q)||o.size.toLowerCase().includes(q));});
+  // KPIs
+  var k1=document.getElementById("lo-k1"); if(k1) k1.textContent=LO.filter(function(o){return o.status==="pending";}).length;
+  var k2=document.getElementById("lo-k2"); if(k2) k2.textContent=LO.filter(function(o){return o.status==="processing";}).length;
+  var k3=document.getElementById("lo-k3"); if(k3) k3.textContent=LO.filter(function(o){return o.status==="delivered";}).length;
+  var k4=document.getElementById("lo-k4"); if(k4) k4.textContent=fR(LO.reduce(function(s,o){return s+V(o);},0));
+  // Orders table
+  var rows=LO.filter(function(o){
+    if(f==="delivered") return o.status==="delivered";
+    if(f) return o.status===f && o.status!=="delivered";
+    return o.status!=="delivered";
+  }).filter(function(o){
+    return !q||o.id.toLowerCase().includes(q)||o.client.toLowerCase().includes(q)||(o.size||"").toLowerCase().includes(q);
+  });
   document.getElementById("lt").innerHTML=rows.length?rows.map(function(o){
     return "<tr>"
       +'<td style="font-size:12px;font-weight:700;color:var(--tl2);font-family:monospace">'+o.id+"</td>"
-      +'<td class="hide-mobile" style="color:var(--mu);font-size:12px">'+o.date+"</td>"
+      +'<td style="color:var(--mu);font-size:12px">'+o.date+"</td>"
       +'<td style="font-weight:600">'+o.client+"</td>"
-      +'<td class="hide-mobile">'+o.size+"</td>"
-      +'<td class="hide-mobile">'+fm(o.qty)+"</td>"
+      +'<td>'+o.size+"</td>"
+      +'<td>'+fm(o.qty)+"</td>"
       +'<td style="font-weight:700">'+fR(V(o))+"</td>"
       +"<td>"+sSel("lpg",o.id,o.status)+"</td>"
       +'<td><div style="display:flex;gap:4px;align-items:center">'
@@ -2556,7 +2625,23 @@ function rLPG(){
         +'<button class="btn btn-t btn-sm" onclick="editLPG('+"'"+o.id+"'"+')">✏</button>'
         +'<button class="btn btn-d btn-sm" onclick="delOrd('+"'lpg'"+",'"+o.id+"'"+')">🗑</button>'
       +"</div></td></tr>";
-  }).join(""):'<tr><td colspan="8" style="text-align:center;color:var(--mu);padding:28px">No active LPG orders</td></tr>';
+  }).join(""):'<tr><td colspan="8" style="text-align:center;color:var(--mu);padding:28px">No orders found</td></tr>';
+  // Transaction log — delivered only
+  var txbody=document.getElementById("lo-txlog");
+  if(txbody){
+    var delivered=LO.filter(function(o){return o.status==="delivered";}).sort(function(a,b){return b.date.localeCompare(a.date);});
+    txbody.innerHTML=delivered.length?delivered.map(function(o){
+      return "<tr>"
+        +'<td style="font-size:12px;font-weight:700;color:var(--tl2);font-family:monospace">'+o.id+"</td>"
+        +'<td style="color:var(--mu);font-size:12px">'+o.date+"</td>"
+        +'<td style="font-weight:600">'+o.client+"</td>"
+        +'<td>'+o.size+"</td>"
+        +'<td>'+fm(o.qty)+"</td>"
+        +'<td style="font-weight:700;color:var(--tl2)">'+fR(V(o))+"</td>"
+        +'<td><span style="background:rgba(34,197,94,0.1);color:#16a34a;border:1px solid rgba(34,197,94,0.3);border-radius:6px;padding:2px 8px;font-size:11px;font-weight:600">Delivered</span></td>'
+        +"</tr>";
+    }).join(""):'<tr><td colspan="7" style="text-align:center;color:var(--mu);padding:20px">No delivered orders yet</td></tr>';
+  }
 }
 
 // RENDER ALL (active only)
@@ -5602,6 +5687,7 @@ function rDebtors() {
 
 </body>
 </html>
+
 
 
 
