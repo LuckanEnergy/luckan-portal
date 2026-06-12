@@ -1624,26 +1624,47 @@ input:checked+.slider::before{transform:translateX(18px);}
 
 <!-- FUEL MODAL -->
 <div class="mo" id="mf">
-  <div class="mdl">
-    <div class="mh"><div style="display:flex;align-items:center"><div class="mac pk"></div><span class="mt2" id="mf-title">⛽ New Fuel Order</span></div><button class="xbtn" onclick="closeM('mf')">✕</button></div>
-    <div class="mb2">
+  <div class="mo-box" style="max-width:520px;width:95%">
+    <div class="mh">
+      <div style="display:flex;align-items:center"><div class="mac pk"></div><span class="mt2" id="mf-title">⛽ New Fuel Order</span></div>
+      <button class="xbtn" onclick="closeM('mf')">✕</button>
+    </div>
+    <div style="padding:16px;overflow-y:auto;max-height:70vh">
       <input type="hidden" id="f-eid">
       <div class="fg">
+        <div class="fm"><label>Date *</label><input type="date" id="fd"></div>
         <div class="fm"><label>Client *</label>
           <div class="client-ac-wrap">
             <input type="text" id="fc" placeholder="Type or select a client…" autocomplete="off" oninput="acFilter('fc','fac','fuel')" onfocus="acFilter('fc','fac','fuel')" onblur="setTimeout(function(){document.getElementById('fac').classList.remove('open')},180)">
             <div class="client-ac-list" id="fac"></div>
           </div>
         </div>
-        <div class="fm"><label>Date *</label><input type="date" id="fd"></div>
-        <div class="fm"><label>Fuel Product</label><select id="fp"><option>Diesel 50ppm</option><option>Diesel AGO</option><option>Petrol (ULP 95)</option><option>Petrol (ULP 93)</option><option>Burner Fuel</option><option>Marine Gas Oil</option><option>Lubricants</option><option>Waste Oil Collection</option></select></div>
+        <div class="fm"><label>Fuel Product</label>
+          <select id="fp">
+            <option>Diesel 50ppm</option>
+            <option>Diesel AGO</option>
+            <option>Petrol (ULP 95)</option>
+            <option>Petrol (ULP 93)</option>
+            <option>Burner Fuel</option>
+            <option>Marine Gas Oil</option>
+            <option>Lubricants</option>
+            <option>Waste Oil Collection</option>
+          </select>
+        </div>
         <div class="fm"><label>Volume (Litres) *</label><input type="number" id="fv" placeholder="e.g. 10000" min="1"></div>
         <div class="fm"><label>Unit Price (R/L) *</label><input type="number" id="fpr" placeholder="e.g. 22.50" step="0.01"></div>
+        <div class="fm"><label>Status</label>
+          <select id="fst">
+            <option value="pending">Pending</option>
+            <option value="processing">Processing</option>
+            <option value="delivered">Delivered</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
         <div class="fm"><label>Delivery Location</label><input type="text" id="fl" placeholder="e.g. Wynberg Depot"></div>
-        <div class="fm"><label>Status</label><select id="fst"><option value="pending">Pending</option><option value="processing">Processing</option><option value="delivered">Delivered</option><option value="cancelled">Cancelled</option></select></div>
         <div class="fm"><label>Driver / Truck</label><input type="text" id="ftr" placeholder="e.g. CA 123-456"></div>
-        <div class="fm full"><label>Notes</label><textarea id="fn" placeholder="Additional notes…"></textarea></div>
-        <!-- INVOICE ATTACHMENT -->
+        <div class="fm full"><label>Order Reference / Invoice No.</label><input type="text" id="f-ref" placeholder="e.g. INV-2026-001"></div>
+        <div class="fm full"><label>Notes</label><textarea id="fn" placeholder="Additional notes…" style="min-height:60px"></textarea></div>
         <div class="fm full">
           <label>Invoice / Photo</label>
           <div id="f-attach-area" style="border:2px dashed var(--bd);border-radius:10px;padding:14px;text-align:center;cursor:pointer;transition:.2s;background:var(--lt)" onclick="document.getElementById('f-file-input').click()">
@@ -1653,7 +1674,7 @@ input:checked+.slider::before{transform:translateX(18px);}
             </div>
             <div id="f-attach-placeholder">
               <div style="font-size:24px;margin-bottom:4px">📎</div>
-              <div style="font-size:12px;color:var(--mu)">Tap to upload or take photo</div>
+              <div style="font-size:12px;color:var(--mu)">Tap to attach invoice or photo</div>
               <div style="font-size:11px;color:var(--mu);margin-top:2px">JPG, PNG or PDF</div>
             </div>
           </div>
@@ -1666,34 +1687,60 @@ input:checked+.slider::before{transform:translateX(18px);}
         </div>
       </div>
     </div>
-    <div class="mf2"><button class="btn btn-s" onclick="closeM('mf')">Cancel</button><button class="btn btn-p" onclick="saveFuel()">Save Order</button></div>
+    <div class="mf2">
+      <button class="btn btn-s" onclick="closeM('mf')">Cancel</button>
+      <button class="btn btn-p" onclick="saveFuel()">Save Order</button>
+    </div>
   </div>
 </div>
 
 <!-- LPG MODAL -->
 <div class="mo" id="ml">
-  <div class="mdl">
-    <div class="mh"><div style="display:flex;align-items:center"><div class="mac tl"></div><span class="mt2" id="ml-title">🔥 New LPG Order</span></div><button class="xbtn" onclick="closeM('ml')">✕</button></div>
-    <div class="mb2">
+  <div class="mo-box" style="max-width:520px;width:95%">
+    <div class="mh">
+      <div style="display:flex;align-items:center"><div class="mac tl"></div><span class="mt2" id="ml-title">🔥 New LPG Order</span></div>
+      <button class="xbtn" onclick="closeM('ml')">✕</button>
+    </div>
+    <div style="padding:16px;overflow-y:auto;max-height:70vh">
       <input type="hidden" id="l-eid">
       <div class="fg">
+        <div class="fm"><label>Date *</label><input type="date" id="ld"></div>
         <div class="fm"><label>Client *</label>
           <div class="client-ac-wrap">
             <input type="text" id="lc" placeholder="Type or select a client…" autocomplete="off" oninput="acFilter('lc','lac','lpg')" onfocus="acFilter('lc','lac','lpg')" onblur="setTimeout(function(){document.getElementById('lac').classList.remove('open')},180)">
             <div class="client-ac-list" id="lac"></div>
           </div>
         </div>
-        <div class="fm"><label>Date *</label><input type="date" id="ld"></div>
-        <div class="fm"><label>Cylinder Size</label><select id="lsz"><option value="5kg">5 KG</option><option value="9kg">9 KG</option><option value="14kg" selected>14 KG</option><option value="19kg">19 KG</option><option value="48kg">48 KG</option><option value="Bulk (MT)">Bulk (MT)</option></select></div>
+        <div class="fm"><label>Cylinder Size</label>
+          <select id="lsz">
+            <option value="5kg">5 KG</option>
+            <option value="9kg">9 KG</option>
+            <option value="14kg" selected>14 KG</option>
+            <option value="19kg">19 KG</option>
+            <option value="48kg">48 KG</option>
+            <option value="Bulk (MT)">Bulk (MT)</option>
+          </select>
+        </div>
         <div class="fm"><label>Quantity *</label><input type="number" id="lq" placeholder="e.g. 50" min="1"></div>
         <div class="fm"><label>Unit Price (R) *</label><input type="number" id="lpr" placeholder="e.g. 350" min="1"></div>
+        <div class="fm"><label>Status</label>
+          <select id="lst">
+            <option value="pending">Pending</option>
+            <option value="processing">Processing</option>
+            <option value="delivered">Delivered</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
         <div class="fm"><label>Delivery Address</label><input type="text" id="ll" placeholder="e.g. 45 Main Rd"></div>
-        <div class="fm"><label>Status</label><select id="lst"><option value="pending">Pending</option><option value="processing">Processing</option><option value="delivered">Delivered</option><option value="cancelled">Cancelled</option></select></div>
         <div class="fm"><label>Contact Phone</label><input type="tel" id="lp" placeholder="e.g. 071 234 5678"></div>
-        <div class="fm full"><label>Notes</label><textarea id="ln" placeholder="Special instructions…"></textarea></div>
+        <div class="fm full"><label>Order Reference / Invoice No.</label><input type="text" id="l-ref" placeholder="e.g. INV-2026-001"></div>
+        <div class="fm full"><label>Notes</label><textarea id="ln" placeholder="Special instructions…" style="min-height:60px"></textarea></div>
       </div>
     </div>
-    <div class="mf2"><button class="btn btn-s" onclick="closeM('ml')">Cancel</button><button class="btn btn-p" onclick="saveLPG()">Save Order</button></div>
+    <div class="mf2">
+      <button class="btn btn-s" onclick="closeM('ml')">Cancel</button>
+      <button class="btn btn-p" onclick="saveLPG()">Save Order</button>
+    </div>
   </div>
 </div>
 
@@ -2418,7 +2465,7 @@ function saveFuel(){
   var c=document.getElementById("fc").value.trim(),v=parseFloat(document.getElementById("fv").value),p=parseFloat(document.getElementById("fpr").value);
   if(!c||!v||!p){alert("Client, Volume and Price are required.");return;}
   var eid=document.getElementById("f-eid").value;
-  var o={id:eid||nxtId("LE-F-"),date:document.getElementById("fd").value,client:c,product:document.getElementById("fp").value,volume:v,price:p,value:v*p,location:document.getElementById("fl").value,status:document.getElementById("fst").value,truck:document.getElementById("ftr").value,notes:document.getElementById("fn").value,invoice:fAttachData||null};
+  var o={id:eid||nxtId("LE-F-"),date:document.getElementById("fd").value,client:c,product:document.getElementById("fp").value,volume:v,price:p,value:v*p,location:document.getElementById("fl").value,status:document.getElementById("fst").value,truck:document.getElementById("ftr").value,ref:document.getElementById("f-ref").value.trim(),notes:document.getElementById("fn").value,invoice:fAttachData||null};
   if(o.status==="delivered"){
     if(eid)FO=FO.filter(function(x){return x.id!==eid;});
     pushOrderToDebtors(o,"fuel");
@@ -2435,7 +2482,8 @@ function editFuel(id){
   var o=FO.find(function(x){return x.id===id;});if(!o)return;
   document.getElementById("f-eid").value=id;document.getElementById("mf-title").textContent="✏️ Edit Fuel — "+id;
   document.getElementById("fc").value=o.client;document.getElementById("fd").value=o.date;document.getElementById("fp").value=o.product;
-  document.getElementById("fv").value=o.volume;document.getElementById("fpr").value=o.price;document.getElementById("fl").value=o.location||"";
+  document.getElementById("fv").value=o.volume;document.getElementById("fpr").value=o.price;document.getElementById("fl").value=o.location||"";document.getElementById("f-ref").value=o.ref||"";
+
   document.getElementById("fst").value=o.status;document.getElementById("ftr").value=o.truck||"";document.getElementById("fn").value=o.notes||"";
   fLoadAttach(o.invoice||null);
   document.getElementById("mf").classList.add("open");
@@ -2446,7 +2494,7 @@ function saveLPG(){
   var c=document.getElementById("lc").value.trim(),q=parseInt(document.getElementById("lq").value),p=parseFloat(document.getElementById("lpr").value);
   if(!c||!q||!p){alert("Client, Quantity and Price are required.");return;}
   var eid=document.getElementById("l-eid").value;
-  var o={id:eid||nxtId("LE-G-"),date:document.getElementById("ld").value,client:c,size:document.getElementById("lsz").value,qty:q,price:p,value:q*p,location:document.getElementById("ll").value,status:document.getElementById("lst").value,phone:document.getElementById("lp").value,notes:document.getElementById("ln").value};
+  var o={id:eid||nxtId("LE-G-"),date:document.getElementById("ld").value,client:c,size:document.getElementById("lsz").value,qty:q,price:p,value:q*p,location:document.getElementById("ll").value,status:document.getElementById("lst").value,phone:document.getElementById("lp").value,ref:document.getElementById("l-ref").value.trim(),notes:document.getElementById("ln").value};
   if(o.status==="delivered"){
     if(eid)LO=LO.filter(function(x){return x.id!==eid;});
     pushOrderToDebtors(o,"lpg");
@@ -2463,7 +2511,7 @@ function editLPG(id){
   var o=LO.find(function(x){return x.id===id;});if(!o)return;
   document.getElementById("l-eid").value=id;document.getElementById("ml-title").textContent="✏️ Edit LPG — "+id;
   document.getElementById("lc").value=o.client;document.getElementById("ld").value=o.date;document.getElementById("lsz").value=o.size;
-  document.getElementById("lq").value=o.qty;document.getElementById("lpr").value=o.price;document.getElementById("ll").value=o.location||"";
+  document.getElementById("lq").value=o.qty;document.getElementById("lpr").value=o.price;document.getElementById("ll").value=o.location||"";document.getElementById("l-ref").value=o.ref||"";
   document.getElementById("lst").value=o.status;document.getElementById("lp").value=o.phone||"";document.getElementById("ln").value=o.notes||"";
   document.getElementById("ml").classList.add("open");
 }
