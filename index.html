@@ -2191,6 +2191,8 @@ function closeM(id){
   document.body.style.overflow="";
 }
 document.querySelectorAll(".mo").forEach(function(o){o.addEventListener("click",function(e){if(e.target===o)o.classList.remove("open");});});
+// Init leads after all vars declared
+loadLeads(); rDashPipeline();
 function popFSel(selId,sel){
   var el=document.getElementById(selId);
   el.innerHTML='<option value="">Root (No Folder)</option>'+FL.map(function(f){return '<option value="'+f.id+'"'+(f.id===sel?" selected":"")+'>'+f.name+"</option>";}).join("");
@@ -4724,8 +4726,6 @@ function refreshCurPage(){
 }
 
 // Initial pull on startup
-loadLeads();
-rDashPipeline();
 setTimeout(function(){
   pullFromCloud(function(updated){
     if(updated)refreshCurPage();
