@@ -529,6 +529,7 @@ input:checked+.slider::before{transform:translateX(18px);}
     </div>
     <div><span class="nl">Clients</span>
       <div class="ni" id="nav-clients" onclick="goPage('clients',this)"><span class="ic">👥</span>Clients<span class="lbadge" id="lb-clients"></span></div>
+      <div class="ni" id="nav-leads" onclick="goPage('leads',this)"><span class="ic">🎯</span>Sales Pipeline<span class="lbadge" id="lb-leads"></span></div>
     </div>
     <div><span class="nl">Documentation</span>
       <div class="ni" id="nav-documents" onclick="goPage('documents',this)"><span class="ic">📁</span>Documents<span class="lbadge" id="lb-documents"></span></div>
@@ -866,6 +867,26 @@ input:checked+.slider::before{transform:translateX(18px);}
         </table>
       </div>
     </div>
+  </div>
+
+  <!-- LEADS / SALES PIPELINE -->
+  <div class="pg" id="pg-leads">
+    <div class="ph">
+      <div>
+        <h2 class="pt">🎯 Sales Pipeline</h2>
+        <p class="ps">Track potential clients and deals in progress</p>
+      </div>
+      <button class="btn btn-p" onclick="openAddLead()">+ Add Lead</button>
+    </div>
+    <!-- Summary stats -->
+    <div class="grid4" style="margin-bottom:18px">
+      <div class="cd"><div class="cd-bd" style="text-align:center;padding:16px 12px"><div id="leads-stat-total" style="font-size:28px;font-weight:800;color:var(--pk)">0</div><div style="font-size:11px;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin-top:2px">Total Leads</div></div></div>
+      <div class="cd"><div class="cd-bd" style="text-align:center;padding:16px 12px"><div id="leads-stat-new" style="font-size:28px;font-weight:800;color:var(--tl2)">0</div><div style="font-size:11px;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin-top:2px">New</div></div></div>
+      <div class="cd"><div class="cd-bd" style="text-align:center;padding:16px 12px"><div id="leads-stat-quoted" style="font-size:28px;font-weight:800;color:#f59e0b">0</div><div style="font-size:11px;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin-top:2px">Quoted</div></div></div>
+      <div class="cd"><div class="cd-bd" style="text-align:center;padding:16px 12px"><div id="leads-stat-won" style="font-size:28px;font-weight:800;color:#22c55e">0</div><div style="font-size:11px;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin-top:2px">Won</div></div></div>
+    </div>
+    <!-- Kanban Board -->
+    <div id="leads-kanban" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;align-items:start"></div>
   </div>
 
   <!-- CLIENTS -->
@@ -2025,6 +2046,7 @@ function refreshPage(){
     else if(page==="stock-fuel"||page==="stock-lpg"||page==="stock")rStock();
     else if(page==="assets")rAssets();
     else if(page==="clients")rClients();
+    else if(page==="leads")rLeads();
     else if(page==="debtors")rDebtors();
     else if(page==="documents")rDocs();
     else if(page==="sales-report")rRpt();
@@ -2033,6 +2055,7 @@ function refreshPage(){
   else if(page==="lpg-orders") loadLO(done);
   else if(page==="all-orders") loadFO(function(){ loadLO(done); });
   else if(page==="clients") loadCL(done);
+  else if(page==="leads") { loadLeads(); done(); }
   else if(page==="debtors") loadDB(done);
   else if(page==="stock-fuel"||page==="stock-lpg") loadSTOCK(done);
   else if(page==="assets") loadAR(done);
@@ -2040,7 +2063,7 @@ function refreshPage(){
   else done();
 }
 
-var navTitles={dashboard:"DASHBOARD","fuel-orders":"FUEL ORDERS","purchase-orders":"PURCHASE ORDERS","lpg-orders":"LPG ORDERS","all-orders":"ALL ORDERS",stock:"STOCK LEVELS",assets:"ASSET REGISTER",clients:"CLIENTS",documents:"DOCUMENTS","sales-report":"SALES REPORT",debtors:"DEBTORS",settings:"SETTINGS"};
+var navTitles={dashboard:"DASHBOARD","fuel-orders":"FUEL ORDERS","purchase-orders":"PURCHASE ORDERS","lpg-orders":"LPG ORDERS","all-orders":"ALL ORDERS",stock:"STOCK LEVELS",assets:"ASSET REGISTER",clients:"CLIENTS",leads:"SALES PIPELINE",documents:"DOCUMENTS","sales-report":"SALES REPORT",debtors:"DEBTORS",settings:"SETTINGS"};
 
 function goPage(page,el){
   if(LOCKABLE.indexOf(page)>-1&&LOCKS[page]&&unlocked.indexOf(page)===-1){
@@ -4697,6 +4720,8 @@ function refreshCurPage(){
 }
 
 // Initial pull on startup
+loadLeads();
+rDashPipeline();
 setTimeout(function(){
   pullFromCloud(function(updated){
     if(updated)refreshCurPage();
@@ -4751,6 +4776,162 @@ function autoBackupToExcel() {
 
 // Realtime updates handled by Supabase subscription
 
+
+// ══════════════════════════════════════════
+// LEADS / SALES PIPELINE MODULE
+// ══════════════════════════════════════════
+var LEADS = [];
+var LEAD_COLS = [
+  { id: 'new',         label: '🆕 New',         color: 'var(--tl2)',  bg: 'rgba(43,188,208,0.08)' },
+  { id: 'quoted',      label: '💬 Quoted',       color: '#f59e0b',     bg: 'rgba(245,158,11,0.08)' },
+  { id: 'negotiating', label: '🤝 Negotiating',  color: '#a78bfa',     bg: 'rgba(167,139,250,0.08)' },
+  { id: 'won',         label: '✅ Won',           color: '#22c55e',     bg: 'rgba(34,197,94,0.08)'  },
+  { id: 'lost',        label: '❌ Lost',          color: '#ef4444',     bg: 'rgba(239,68,68,0.08)'  }
+];
+
+function loadLeads() {
+  try { LEADS = JSON.parse(localStorage.getItem('le_leads') || '[]'); } catch(e){ LEADS=[]; }
+}
+
+function saveLeads() {
+  localStorage.setItem('le_leads', JSON.stringify(LEADS));
+}
+
+function openAddLead(id) {
+  document.getElementById('lead-edit-id').value = id || '';
+  if (id) {
+    var l = LEADS.find(function(x){ return x.id === id; });
+    if (!l) return;
+    document.getElementById('lead-modal-title').textContent = 'Edit Lead';
+    document.getElementById('lead-name').value = l.name || '';
+    document.getElementById('lead-phone').value = l.phone || '';
+    document.getElementById('lead-product').value = l.product || 'Diesel 50ppm';
+    document.getElementById('lead-volume').value = l.volume || '';
+  } else {
+    document.getElementById('lead-modal-title').textContent = 'Add Lead';
+    document.getElementById('lead-name').value = '';
+    document.getElementById('lead-phone').value = '';
+    document.getElementById('lead-product').value = 'Diesel 50ppm';
+    document.getElementById('lead-volume').value = '';
+  }
+  document.getElementById('m-addlead').classList.add('open');
+}
+
+function saveLead() {
+  var name = document.getElementById('lead-name').value.trim();
+  var phone = document.getElementById('lead-phone').value.trim();
+  if (!name) { alert('Name is required'); return; }
+  var eid = document.getElementById('lead-edit-id').value;
+  if (eid) {
+    var l = LEADS.find(function(x){ return x.id === eid; });
+    if (l) {
+      l.name = name; l.phone = phone;
+      l.product = document.getElementById('lead-product').value;
+      l.volume = document.getElementById('lead-volume').value.trim();
+    }
+  } else {
+    LEADS.push({
+      id: 'LD-' + Date.now(),
+      name: name,
+      phone: phone,
+      product: document.getElementById('lead-product').value,
+      volume: document.getElementById('lead-volume').value.trim(),
+      status: 'new',
+      pricingRequested: false,
+      date: new Date().toISOString().slice(0,10)
+    });
+  }
+  saveLeads();
+  closeM('m-addlead');
+  rLeads();
+  rDashPipeline();
+}
+
+function moveLead(id, newStatus) {
+  var l = LEADS.find(function(x){ return x.id === id; });
+  if (l) { l.status = newStatus; saveLeads(); rLeads(); rDashPipeline(); }
+}
+
+function deleteLead(id) {
+  if (!confirm('Delete this lead?')) return;
+  LEADS = LEADS.filter(function(x){ return x.id !== id; });
+  saveLeads(); rLeads(); rDashPipeline();
+}
+
+function requestPricing(id) {
+  var l = LEADS.find(function(x){ return x.id === id; });
+  if (!l) return;
+  l.pricingRequested = true;
+  saveLeads(); rLeads(); rDashPipeline();
+  alert('Pricing request flagged for: ' + l.name);
+}
+
+function rLeads() {
+  loadLeads();
+  // Stats
+  document.getElementById('leads-stat-total').textContent = LEADS.filter(function(l){ return l.status !== 'lost'; }).length;
+  document.getElementById('leads-stat-new').textContent = LEADS.filter(function(l){ return l.status === 'new'; }).length;
+  document.getElementById('leads-stat-quoted').textContent = LEADS.filter(function(l){ return l.status === 'quoted'; }).length;
+  document.getElementById('leads-stat-won').textContent = LEADS.filter(function(l){ return l.status === 'won'; }).length;
+
+  var kb = document.getElementById('leads-kanban');
+  if (!kb) return;
+  // Show only first 4 cols on kanban (hide lost here, show in a separate list)
+  var cols = LEAD_COLS.slice(0, 4);
+  kb.style.gridTemplateColumns = 'repeat(' + cols.length + ',1fr)';
+  kb.innerHTML = cols.map(function(col) {
+    var leads = LEADS.filter(function(l){ return l.status === col.id; });
+    var cards = leads.length ? leads.map(function(l){
+      return '<div style="background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:12px;margin-bottom:10px;position:relative">'
+        + (l.pricingRequested ? '<div style="position:absolute;top:8px;right:8px;background:#f59e0b;color:#fff;border-radius:4px;font-size:10px;padding:2px 6px;font-weight:700">⚡ PRICING</div>' : '')
+        + '<div style="font-weight:700;font-size:14px;color:var(--tx);margin-bottom:4px;padding-right:' + (l.pricingRequested ? '70px' : '0') + '">' + l.name + '</div>'
+        + '<div style="font-size:12px;color:var(--mu);margin-bottom:2px">📞 ' + (l.phone||'—') + '</div>'
+        + '<div style="font-size:12px;color:var(--mu);margin-bottom:2px">⛽ ' + l.product + '</div>'
+        + (l.volume ? '<div style="font-size:12px;color:var(--mu);margin-bottom:8px">📦 ' + l.volume + '</div>' : '<div style="margin-bottom:8px"></div>')
+        + '<div style="display:flex;gap:6px;flex-wrap:wrap">'
+        + '<select onchange="moveLead('' + l.id + '',this.value)" style="font-size:11px;padding:3px 6px;border-radius:6px;border:1px solid var(--bd);background:var(--lt);color:var(--tx);flex:1">'
+        + LEAD_COLS.map(function(c){ return '<option value="'+c.id+'"'+(l.status===c.id?' selected':'')+'>'+c.label+'</option>'; }).join('')
+        + '</select>'
+        + '</div>'
+        + '<div style="display:flex;gap:6px;margin-top:6px">'
+        + (!l.pricingRequested ? '<button onclick="requestPricing(''+l.id+'')" style="font-size:11px;padding:3px 8px;border-radius:6px;border:1px solid #f59e0b;background:rgba(245,158,11,0.1);color:#f59e0b;cursor:pointer;font-weight:600">💰 Request Pricing</button>' : '<span style="font-size:11px;color:#f59e0b;font-weight:600">💰 Pricing Requested</span>')
+        + '<button onclick="openAddLead(''+l.id+'')" style="font-size:11px;padding:3px 8px;border-radius:6px;border:1px solid var(--bd);background:var(--lt);color:var(--mu);cursor:pointer">✏️</button>'
+        + '<button onclick="deleteLead(''+l.id+'')" style="font-size:11px;padding:3px 8px;border-radius:6px;border:1px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.08);color:#ef4444;cursor:pointer">🗑</button>'
+        + '</div>'
+        + '</div>';
+    }).join('') : '<div style="text-align:center;color:var(--mu);font-size:12px;padding:20px 0">No leads here</div>';
+
+    return '<div style="background:' + col.bg + ';border:1px solid ' + col.color + '33;border-radius:12px;padding:12px">'
+      + '<div style="font-weight:700;font-size:13px;color:' + col.color + ';margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px">' + col.label + ' <span style="font-weight:400;opacity:.7">(' + leads.length + ')</span></div>'
+      + cards
+      + '</div>';
+  }).join('');
+
+  // lb badge
+  var badge = document.getElementById('lb-leads');
+  if (badge) { var active = LEADS.filter(function(l){ return l.status !== 'lost' && l.status !== 'won'; }).length; badge.textContent = active || ''; }
+}
+
+function rDashPipeline() {
+  var el = document.getElementById('dash-pipeline');
+  if (!el) return;
+  loadLeads();
+  var cols = LEAD_COLS.slice(0,4);
+  el.innerHTML = cols.map(function(col){
+    var leads = LEADS.filter(function(l){ return l.status === col.id; });
+    return '<div style="flex:1;min-width:110px">'
+      + '<div style="font-size:11px;font-weight:700;color:'+col.color+';margin-bottom:8px;text-transform:uppercase;letter-spacing:.4px">'+col.label+' ('+leads.length+')</div>'
+      + (leads.length ? leads.slice(0,3).map(function(l){
+          return '<div style="background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:8px 10px;margin-bottom:6px;font-size:12px">'
+            + (l.pricingRequested ? '<span style="background:#f59e0b;color:#fff;border-radius:3px;font-size:9px;padding:1px 5px;font-weight:700;margin-right:4px">⚡</span>' : '')
+            + '<span style="font-weight:600;color:var(--tx)">'+l.name+'</span>'
+            + '<div style="color:var(--mu);font-size:11px;margin-top:2px">'+l.product+'</div>'
+            + '</div>';
+        }).join('') + (leads.length > 3 ? '<div style="font-size:11px;color:var(--mu);text-align:center">+' + (leads.length-3) + ' more</div>' : '')
+        : '<div style="font-size:11px;color:var(--mu);text-align:center;padding:8px 0">Empty</div>')
+      + '</div>';
+  }).join('');
+}
 // ══════════════════════════════════════════
 // DEBTORS MODULE
 // ══════════════════════════════════════════
@@ -5171,6 +5352,39 @@ function rDebtors() {
           <tbody id="cv-orders"></tbody>
         </table>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD LEAD MODAL -->
+<div class="mo" id="m-addlead">
+  <div class="mbox" style="max-width:460px;width:92%">
+    <div class="mh">
+      <span class="mt2" id="lead-modal-title">Add Lead</span>
+      <button class="xbtn" onclick="closeM('m-addlead')">✕</button>
+    </div>
+    <div class="mb">
+      <div class="fm"><label>Name *</label><input id="lead-name" type="text" placeholder="Contact name"></div>
+      <div class="fm"><label>Phone *</label><input id="lead-phone" type="tel" placeholder="+27 ..."></div>
+      <div class="fm"><label>Product Interest</label>
+        <select id="lead-product">
+          <option>Diesel 50ppm</option>
+          <option>Diesel AGO</option>
+          <option>Petrol (ULP 95)</option>
+          <option>Petrol (ULP 93)</option>
+          <option>LPG (9kg)</option>
+          <option>LPG (19kg)</option>
+          <option>LPG (48kg)</option>
+          <option>Burner Fuel</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="fm"><label>Estimated Volume</label><input id="lead-volume" type="text" placeholder="e.g. 5000L / month"></div>
+      <input type="hidden" id="lead-edit-id">
+    </div>
+    <div class="mf2">
+      <button class="btn btn-s" onclick="closeM('m-addlead')">Cancel</button>
+      <button class="btn btn-p" onclick="saveLead()">Save Lead</button>
     </div>
   </div>
 </div>
