@@ -589,13 +589,24 @@ input:checked+.slider::before{transform:translateX(18px);}
         <div class="sc cp2"><div class="sc-ic">🔥</div><div class="sc-lb">LPG Orders</div><div class="sc-vl" id="s2">0</div><div class="sc-sb">Cylinders &amp; bulk gas</div></div>
         <div class="sc ct2"><div class="sc-ic">📁</div><div class="sc-lb">Documents</div><div class="sc-vl" id="s3">0</div><div class="sc-sb">Stored in portal</div></div>
       </div>
-      <div class="cd">
-        <div class="cd-hd" style="display:flex;align-items:center;justify-content:space-between">
-          <span class="cd-ttl"><em>🎯</em> Sales Pipeline</span>
-          <button class="btn btn-p btn-sm" onclick="openAddLead()">+ Add Lead</button>
+      <div class="g3" style="margin-bottom:16px">
+        <div class="cd">
+          <div class="cd-hd"><span class="cd-ttl"><em>⏳</em> Pending Orders</span><button class="btn btn-s btn-sm" onclick="goPage('all-orders',document.getElementById('nav-all-orders'))">View All</button></div>
+          <div class="cd-bd" style="padding:0">
+            <table>
+              <thead><tr><th>Order ID</th><th>Type</th><th>Client</th><th>Product</th><th>Status</th></tr></thead>
+              <tbody id="d-pending"></tbody>
+            </table>
+          </div>
         </div>
-        <div class="cd-bd" style="padding:8px 14px;overflow-x:auto">
-          <div id="dash-pipeline" style="display:flex;gap:12px;min-width:500px"></div>
+        <div class="cd">
+          <div class="cd-hd" style="display:flex;align-items:center;justify-content:space-between">
+            <span class="cd-ttl"><em>🎯</em> Sales Pipeline</span>
+            <button class="btn btn-p btn-sm" onclick="openAddLead()">+ Add Lead</button>
+          </div>
+          <div class="cd-bd" style="padding:8px 14px;overflow-x:auto">
+            <div id="dash-pipeline" style="display:flex;gap:12px;min-width:300px"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -2557,28 +2568,21 @@ function updStats(){
 function rDash(){
   updStats();
   loadLeads(); rDashPipeline();
-  var all=FO.filter(function(o){return o.status!=="delivered";}).map(function(o){return Object.assign({},o,{tp:"fuel"});})
-    .concat(LO.filter(function(o){return o.status!=="delivered";}).map(function(o){return Object.assign({},o,{tp:"lpg"});}));
+  // Pending orders table
+  var all=FO.filter(function(o){return o.status==="pending"||o.status==="processing";}).map(function(o){return Object.assign({},o,{tp:"fuel",prod:o.product||o.type||""});})
+    .concat(LO.filter(function(o){return o.status==="pending"||o.status==="processing";}).map(function(o){return Object.assign({},o,{tp:"lpg",prod:o.size||o.product||""});}));
   all.sort(function(a,b){return b.date.localeCompare(a.date);});
-  document.getElementById("d-recent").innerHTML=all.slice(0,5).map(function(o){
-    return "<tr>"
-      +'<td style="font-size:11px;font-family:monospace;font-weight:700;color:'+(o.tp==="fuel"?"var(--pk)":"var(--tl2)")+'">'+o.id+"</td>"
-      +"<td>"+(o.tp==="fuel"?"⛽":"🔥")+" "+o.tp.charAt(0).toUpperCase()+o.tp.slice(1)+"</td>"
-      +'<td style="font-weight:500">'+o.client+"</td>"
-      +"<td>"+chip(o.status)+"</td></tr>";
-  }).join("")||'<tr><td colspan="4" style="text-align:center;color:var(--mu);padding:16px">No active orders</td></tr>';
-  var allO=FO.concat(LO).filter(function(o){return o.status!=="delivered";});
-  var sc={pending:{l:"Pending",c:"var(--pk)"},processing:{l:"Processing",c:"#d97706"},cancelled:{l:"Cancelled",c:"#64748b"}};
-  document.getElementById("d-status").innerHTML=Object.keys(sc).map(function(s){
-    var cfg2=sc[s];var cnt=allO.filter(function(o){return o.status===s;}).length;
-    var pct=allO.length?Math.round(cnt/allO.length*100):0;
-    return '<div style="padding:10px;background:var(--lt);border-radius:10px;border:1px solid var(--bd)">'
-      +'<div style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--mu);font-weight:600;margin-bottom:4px">'+cfg2.l+"</div>"
-      +'<div style="font-family:var(--fd);font-size:24px;color:'+cfg2.c+';line-height:1">'+cnt+"</div>"
-      +'<div class="pb" style="margin-top:7px"><div class="pf" style="width:'+pct+'%;background:'+cfg2.c+'"></div></div>'
-      +"</div>";
-  }).join("");
-  rAct();
+  var dpend=document.getElementById("d-pending");
+  if(dpend){
+    dpend.innerHTML=all.length ? all.map(function(o){
+      return "<tr>"
+        +"<td style='font-size:11px;font-family:monospace;font-weight:700;color:"+(o.tp==="fuel"?"var(--pk)":"var(--tl2)")+"'"+">"+o.id+"</td>"
+        +"<td>"+(o.tp==="fuel"?"&#9981; Fuel":"&#128293; LPG")+"</td>"
+        +"<td style='font-weight:500'>"+o.client+"</td>"
+        +"<td style='color:var(--mu);font-size:12px'>"+o.prod+"</td>"
+        +"<td>"+chip(o.status)+"</td></tr>";
+    }).join("") : "<tr><td colspan='5' style='text-align:center;color:var(--mu);padding:20px'>No pending orders</td></tr>";
+  }
 }
 
 // ACTIVITY
