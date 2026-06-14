@@ -2367,28 +2367,29 @@ function updSt(type,id,s){
   var o=arr.find(function(x){return x.id===id;});
   if(!o)return;
   if(s==="delivered"){
-    if(!confirm("Mark "+id+" as Delivered?\nIt will move to Debtors as an unpaid invoice."))return;
-    o.status="delivered";
-    // Keep in FO/LO for transaction log — update status in Supabase
-    if(type==="fuel") saveFO_supa(o);
-    else saveLO_supa(o);
-    pushOrderToDebtors(o, type);
-    deductStockForOrder(o, type);
-    sv();
-    localStorage.setItem('le_db', JSON.stringify(DB));
-    addAct(id+" delivered — moved to Debtors","✅","tl");
-    if(type==="fuel"){rFuel();}else{rLPG();}
-    rAll();rDash();
+    showConfirm('Mark as Delivered', 'Mark '+id+' as Delivered? It will move to Debtors as an unpaid invoice.', 'Mark Delivered', function(){
+      o.status="delivered";
+      if(type==="fuel") saveFO_supa(o);
+      else saveLO_supa(o);
+      pushOrderToDebtors(o, type);
+      deductStockForOrder(o, type);
+      sv();
+      localStorage.setItem('le_db', JSON.stringify(DB));
+      addAct(id+" delivered — moved to Debtors","✅","tl");
+      if(type==="fuel"){rFuel();}else{rLPG();}
+      rAll();rDash();
+    });
     return;
   }
   if(s==="cancelled"){
-    if(!confirm("Cancel and DELETE order "+id+"?\nThis cannot be undone."))return;
-    if(type==="fuel"){FO=FO.filter(function(x){return x.id!==id;});delFO_supa(id);}
-    else{LO=LO.filter(function(x){return x.id!==id;});delLO_supa(id);}
-    sv();
-    addAct(id+" cancelled and deleted","🗑","pk");
-    if(type==="fuel"){rFuel();rQB("fuel");}else{rLPG();rQB("lpg");}
-    rAll();rDash();
+    showConfirm('Cancel Order', 'Cancel and DELETE order '+id+'? This cannot be undone.', 'Delete Order', function(){
+      if(type==="fuel"){FO=FO.filter(function(x){return x.id!==id;});delFO_supa(id);}
+      else{LO=LO.filter(function(x){return x.id!==id;});delLO_supa(id);}
+      sv();
+      addAct(id+" cancelled and deleted","🗑","pk");
+      if(type==="fuel"){rFuel();}else{rLPG();}
+      rAll();rDash();
+    });
     return;
   }
   o.status=s;
@@ -2577,19 +2578,21 @@ function saveFolder(){
 // CLEAR / DELETE
 function clearOrds(type){
   var lbl={fuel:"ALL Fuel orders",lpg:"ALL LPG orders",all:"ALL active orders"};
-  if(!confirm("Delete "+lbl[type]+"? This cannot be undone."))return;
+  showConfirm("Delete Orders","Delete all "+lbl[type]+"? This cannot be undone.","Delete",function(){
   if(type==="fuel"||type==="all")FO=[];
   if(type==="lpg"||type==="all")LO=[];
   sv();rFuel();rLPG();rAll();rDash();addAct("Cleared "+lbl[type],"🗑","pk");
+});
 }
 function delOrd(type,id){
-  if(!confirm("Delete order "+id+"?"))return;
+  showConfirm("Delete Order","Delete order "+id+"?","Delete",function(){
   if(type==="fuel"){FO=FO.filter(function(x){return x.id!==id;});delFO_supa(id);}
   else{LO=LO.filter(function(x){return x.id!==id;});delLO_supa(id);}
   sv();rFuel();rLPG();rAll();rDash();
+});
 }
-function delDoc(id){if(!confirm("Delete document?"))return;DO=DO.filter(function(d){return d.id!==id;});sv();rDocs();updStats();}
-function delFolder(id){if(!confirm("Delete folder? Files move to Root."))return;DO.forEach(function(d){if(d.folder===id)d.folder=null;});FL=FL.filter(function(f){return f.id!==id;});sv();rDocs();}
+function delDoc(id){showConfirm("Delete Document","Delete this document?","Delete",function(){DO=DO.filter(function(d){return d.id!==id;});sv();rDocs();updStats();});}
+function delFolder(id){showConfirm("Delete Folder","Delete folder? Files move to Root.","Delete",function(){DO.forEach(function(d){if(d.folder===id)d.folder=null;});FL=FL.filter(function(f){return f.id!==id;});sv();rDocs();});}
 
 // RENDER FUEL (active only)
 function rFuel(){
@@ -2882,10 +2885,11 @@ function saveNewProduct(){
 function delProduct(id){
   var p=STOCK.find(function(s){return s.id===id;});
   if(!p)return;
-  if(!confirm("Remove "+p.name+" from stock?"))return;
+  showConfirm("Remove Product","Remove "+p.name+" from stock?","Remove",function(){
   STOCK=STOCK.filter(function(s){return s.id!==id;});
   delSTOCK_supa(id);
   sv();rStock();addAct("Product removed: "+p.name,"📦","pk");
+});
 }
 
 function openStockEdit(){
@@ -3451,9 +3455,10 @@ function saveClient(){
   sv();closeM("mc");rClients();addAct((eid?"Updated":"Added")+" client: "+c.company,"👥","tl");
 }
 function delClient(id){
-  if(!confirm("Delete this client?"))return;
+  showConfirm("Delete Client","Delete this client? This cannot be undone.","Delete",function(){
   CL=CL.filter(function(x){return x.id!==id;});delCL_supa(id);
   sv();rClients();
+});
 }
 function rClients(){
   var q=(document.getElementById("client-srch")||{}).value||"";q=q.toLowerCase();
@@ -4752,7 +4757,7 @@ function savePO(){
 function receivePO(id){
   var p = PO.find(function(x){return x.id===id;});
   if(!p)return;
-  if(!confirm('Mark '+p.id+' as RECEIVED? '+p.qty+' '+p.product+' will be added to stock.'))return;
+  showConfirm('Receive PO','Mark '+p.id+' as RECEIVED? '+p.qty+' '+p.product+' will be added to stock.','Receive',function(){
 
   // Find matching stock item and increase qty
   var stockItem = (STOCK||[]).find(function(s){return s.name===p.product;});
@@ -4774,14 +4779,16 @@ function receivePO(id){
   sv();
   rPO();
   rStock();
+});
 }
 
 function deletePO(id){
-  if(!confirm('Delete this purchase order?'))return;
+  showConfirm('Delete PO','Delete this purchase order? This cannot be undone.','Delete',function(){
   PO = PO.filter(function(x){return x.id!==id;});
   delPO_supa(id);
   sv();
   rPO();
+});
 }
 
 function rPO(){
@@ -4843,6 +4850,16 @@ function rPO(){
 }
 
 
+
+// ── CUSTOM CONFIRM (replaces browser confirm() for mobile compatibility) ──
+function showConfirm(title, msg, okLabel, onOk){
+  document.getElementById('m-confirm-title').textContent = title;
+  document.getElementById('m-confirm-msg').textContent = msg;
+  document.getElementById('m-confirm-ok').textContent = okLabel || 'Confirm';
+  window._confirmOk = onOk;
+  window._confirmCancel = null;
+  document.getElementById('m-confirm').classList.add('open');
+}
 
 // ── ORDER DOCUMENT ATTACHMENTS (Fuel & LPG transaction logs) ──
 function getOrderDoc(prefix, orderId){
@@ -5190,9 +5207,10 @@ function moveLeadStatus(id, val){
 }
 
 function deleteLead(id){
-  if(!confirm('Delete this lead?'))return;
+  showConfirm('Delete Lead','Delete this lead?','Delete',function(){
   LEADS=LEADS.filter(function(x){return x.id!==id;});
   saveLeads();rLeads();rDashPipeline();
+});
 }
 
 function requestPricing(id){
@@ -5720,6 +5738,20 @@ function rDebtors() {
   </div>
 </div>
 
+<!-- CONFIRM MODAL -->
+<div class="mo" id="m-confirm">
+  <div class="mbox" style="max-width:360px;width:92%">
+    <div class="mh"><span class="mt2" id="m-confirm-title">Confirm</span></div>
+    <div class="mb" style="padding:16px 20px">
+      <p id="m-confirm-msg" style="margin:0;font-size:14px;color:var(--tx);line-height:1.5"></p>
+    </div>
+    <div class="mf2">
+      <button class="btn btn-s" onclick="closeM('m-confirm');if(window._confirmCancel)window._confirmCancel();">Cancel</button>
+      <button class="btn btn-p" id="m-confirm-ok" onclick="closeM('m-confirm');if(window._confirmOk)window._confirmOk();">Confirm</button>
+    </div>
+  </div>
+</div>
+
 <!-- ADD LEAD MODAL -->
 <div class="mo" id="m-addlead">
   <div class="mbox" style="max-width:460px;width:92%">
@@ -5769,6 +5801,7 @@ function rDebtors() {
 
 </body>
 </html>
+
 
 
 
