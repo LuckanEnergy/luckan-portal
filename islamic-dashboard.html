@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Islamic Dashboard — بسم الله</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600&family=Noto+Naskh+Arabic:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #0D1117;
+    --panel:     #131A24;
+    --panel2:    #1A2333;
+    --border:    #2A3A50;
+    --gold:      #C9A84C;
+    --gold-dim:  #8A6E2F;
+    --teal:      #2ABCD0;
+    --teal-dim:  #1A7A8A;
+    --rose:      #C45C5C;
+    --green:     #4CAF7D;
+    --text:      #E8E4DC;
+    --muted:     #8A9BB0;
+    --radius:    12px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── Geometric SVG background ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%232A3A50' stroke-width='0.6'%3E%3Cpolygon points='40,2 78,21 78,59 40,78 2,59 2,21'/%3E%3Cpolygon points='40,14 66,28 66,52 40,66 14,52 14,28'/%3E%3Cline x1='40' y1='2' x2='40' y2='14'/%3E%3Cline x1='78' y1='21' x2='66' y2='28'/%3E%3Cline x1='78' y1='59' x2='66' y2='52'/%3E%3Cline x1='40' y1='78' x2='40' y2='66'/%3E%3Cline x1='2' y1='59' x2='14' y2='52'/%3E%3Cline x1='2' y1='21' x2='14' y2='28'/%3E%3C/g%3E%3C/svg%3E");
+    background-size: 80px 80px;
+    opacity: 0.4;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .app { position: relative; z-index: 1; max-width: 1300px; margin: 0 auto; padding: 20px 16px 60px; }
+
+  /* ── Header ── */
+  header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 32px 20px 24px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 24px;
+    position: relative;
+  }
+
+  .basmalah {
+    font-family: 'Noto Naskh Arabic', serif;
+    font-size: 28px;
+    color: var(--gold);
+    letter-spacing: 0.05em;
+    margin-bottom: 8px;
+    line-height: 1.4;
+  }
+
+  header h1 {
+    font-family: 'Amiri', serif;
+    font-size: 22px;
+    color: var(--text);
+    font-weight: 400;
+    margin-bottom: 4px;
+  }
+
+  .date-strip {
+    font-size: 12px;
+    color: var(--muted);
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    margin-top: 6px;
+  }
+
+  .date-strip span { display: flex; align-items: center; gap: 4px; }
+
+  .gold-line {
+    width: 80px; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    margin: 12px auto 0;
+  }
+
+  /* ── Prayer time bar ── */
+  .prayer-bar {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 20px;
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    margin-bottom: 20px;
+    scrollbar-width: none;
+  }
+
+  .prayer-bar::-webkit-scrollbar { display: none; }
+
+  .prayer-item {
+    flex: 1;
+    min-width: 80px;
+    text-align: center;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all .2s;
+  }
+
+  .prayer-item.current {
+    background: linear-gradient(135deg, #1E2D1A, #243320);
+    border-color: var(--green);
+  }
+
+  .prayer-item .p-name { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+  .prayer-item .p-time { font-size: 16px; font-weight: 600; color: var(--text); margin: 2px 0; }
+  .prayer-item.current .p-name { color: var(--green); }
+  .prayer-item.current .p-time { color: var(--green); }
+  .prayer-item .p-check { font-size: 11px; }
+
+  /* ── Grid layout ── */
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: auto;
+    gap: 16px;
+  }
+
+  @media (max-width: 900px) { .grid { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 580px) { .grid { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .card.wide { grid-column: span 2; }
+  .card.full { grid-column: 1 / -1; }
+
+  @media (max-width: 580px) { .card.wide, .card.full { grid-column: 1; } }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .card-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .card-title .icon { font-size: 14px; }
+
+  .card-title.gold .icon, .card-title.gold { color: var(--gold); }
+  .card-title.teal .icon, .card-title.teal { color: var(--teal); }
+  .card-title.green .icon, .card-title.green { color: var(--green); }
+  .card-title.rose .icon, .card-title.rose { color: var(--rose); }
+
+  /* ── Daily Goals ── */
+  .goal-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--panel2);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: border-color .2s;
+    user-select: none;
+  }
+
+  .goal-item:hover { border-color: var(--gold-dim); }
+
+  .goal-check {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    border: 2px solid var(--gold-dim);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    font-size: 11px;
+    transition: all .2s;
+  }
+
+  .goal-item.done .goal-check {
+    background: var(--green);
+    border-color: var(--green);
+    color: #fff;
+  }
+
+  .goal-item.done .goal-text { text-decoration: line-through; color: var(--muted); }
+
+  .goal-text { flex: 1; font-size: 13px; }
+  .goal-meta { font-size: 10px; color: var(--muted); }
+
+  .goal-progress {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .progress-bar { flex: 1; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, var(--gold-dim), var(--gold)); border-radius: 2px; transition: width .4s; }
+
+  /* ── Ayah of the Day ── */
+  .ayah-ar {
+    font-family: 'Noto Naskh Arabic', serif;
+    font-size: 20px;
+    text-align: right;
+    direction: rtl;
+    line-height: 1.8;
+    color: var(--gold);
+    padding: 12px;
+    background: var(--panel2);
+    border-radius: 8px;
+    border-left: 3px solid var(--gold);
+  }
+
+  .ayah-tr {
+    font-style: italic;
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.6;
+    padding: 0 4px;
+  }
+
+  .ayah-ref {
+    font-size: 11px;
+    color: var(--gold);
+    text-align: right;
+  }
+
+  /* ── Reminders ── */
+  .reminder-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .reminder {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--panel2);
+    border-radius: 8px;
+    border-left: 3px solid var(--teal-dim);
+    font-size: 13px;
+    line-height: 1.5;
+    position: relative;
+  }
+
+  .reminder.urgent { border-left-color: var(--rose); }
+  .reminder .r-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+  .reminder .r-body { flex: 1; }
+  .reminder .r-time { font-size: 10px; color: var(--muted); }
+  .reminder .r-del { position: absolute; top: 6px; right: 8px; background: none; border: none; color: var(--muted); cursor: pointer; font-size: 14px; opacity: 0; transition: opacity .2s; }
+  .reminder:hover .r-del { opacity: 1; }
+
+  /* ── Resource Links ── */
+  .link-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+  .res-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--text);
+    font-size: 12px;
+    font-weight: 500;
+    transition: all .2s;
+  }
+
+  .res-link:hover { border-color: var(--teal-dim); color: var(--teal); transform: translateY(-1px); }
+  .res-link .r-emoji { font-size: 18px; }
+
+  /* ── Notes / Snippets ── */
+  .snippet-list { display: flex; flex-direction: column; gap: 8px; max-height: 280px; overflow-y: auto; padding-right: 4px; }
+  .snippet-list::-webkit-scrollbar { width: 4px; }
+  .snippet-list::-webkit-scrollbar-track { background: transparent; }
+  .snippet-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .snippet {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 12px;
+    line-height: 1.6;
+    position: relative;
+  }
+
+  .snippet .s-type {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    margin-bottom: 4px;
+  }
+
+  .snippet.video .s-type { color: var(--rose); }
+  .snippet.text .s-type { color: var(--teal); }
+  .snippet.hadith .s-type { color: var(--gold); }
+
+  .snippet .s-del { position: absolute; top: 6px; right: 8px; background: none; border: none; color: var(--muted); cursor: pointer; font-size: 13px; opacity: 0; transition: opacity .2s; }
+  .snippet:hover .s-del { opacity: 1; }
+
+  .snippet a { color: var(--teal); text-decoration: none; }
+  .snippet a:hover { text-decoration: underline; }
+
+  /* ── Streak tracker ── */
+  .streak-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .streak-day {
+    width: 32px; height: 32px;
+    border-radius: 6px;
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px;
+    color: var(--muted);
+    position: relative;
+  }
+
+  .streak-day.done { background: #1E2D1A; border-color: var(--green); color: var(--green); }
+  .streak-day.partial { background: #2D2918; border-color: var(--gold-dim); color: var(--gold); }
+  .streak-day.today { outline: 2px solid var(--teal); outline-offset: 2px; }
+
+  .big-streak {
+    font-family: 'Amiri', serif;
+    font-size: 42px;
+    color: var(--gold);
+    line-height: 1;
+  }
+  .big-streak span { font-size: 14px; color: var(--muted); }
+
+  /* ── Add form ── */
+  .add-row { display: flex; gap: 8px; }
+
+  .add-row input, .add-row select, .add-row textarea {
+    flex: 1;
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    padding: 8px 12px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    outline: none;
+    transition: border-color .2s;
+  }
+
+  .add-row input:focus, .add-row select:focus, .add-row textarea:focus { border-color: var(--gold-dim); }
+  .add-row select option { background: var(--panel2); }
+
+  .btn {
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all .2s;
+  }
+
+  .btn-gold { background: var(--gold); color: #0D1117; }
+  .btn-gold:hover { background: #D9B85C; }
+  .btn-teal { background: var(--teal-dim); color: var(--text); }
+  .btn-teal:hover { background: var(--teal); color: #0D1117; }
+  .btn-sm { padding: 5px 10px; font-size: 11px; }
+
+  /* ── Dhikr counter ── */
+  .dhikr-section { display: flex; flex-direction: column; gap: 10px; }
+
+  .dhikr-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: var(--panel2);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+
+  .dhikr-ar {
+    font-family: 'Noto Naskh Arabic', serif;
+    font-size: 15px;
+    flex: 1;
+    text-align: right;
+    direction: rtl;
+    color: var(--gold);
+  }
+
+  .dhikr-count {
+    font-size: 20px;
+    font-weight: 700;
+    min-width: 36px;
+    text-align: center;
+    color: var(--text);
+  }
+
+  .dhikr-target { font-size: 10px; color: var(--muted); }
+
+  .dhikr-btn {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 2px solid var(--gold-dim);
+    background: none;
+    color: var(--gold);
+    font-size: 20px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all .2s;
+    flex-shrink: 0;
+  }
+
+  .dhikr-btn:hover { background: var(--gold); color: #0D1117; }
+  .dhikr-btn.done-btn { border-color: var(--green); color: var(--green); background: #1E2D1A; }
+
+  /* ── Modal ── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.7);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    width: 100%;
+    max-width: 480px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .modal h3 { font-family: 'Amiri', serif; font-size: 18px; }
+
+  .modal textarea {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    padding: 10px 12px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    resize: vertical;
+    min-height: 80px;
+    outline: none;
+    width: 100%;
+  }
+
+  .modal input, .modal select {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    padding: 8px 12px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    width: 100%;
+    outline: none;
+  }
+
+  .modal-row { display: flex; gap: 8px; }
+
+  /* ── Utilities ── */
+  .sep { height: 1px; background: var(--border); }
+  .muted { color: var(--muted); }
+  .mt4 { margin-top: 4px; }
+  .flex-between { display: flex; align-items: center; justify-content: space-between; }
+  .badge {
+    padding: 2px 7px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 600;
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+
+  .badge.shafii { border-color: var(--gold-dim); color: var(--gold); }
+
+  /* ── Quran progress ── */
+  .juz-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; }
+  .juz {
+    aspect-ratio: 1;
+    border-radius: 4px;
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px;
+    cursor: pointer;
+    transition: all .2s;
+    color: var(--muted);
+  }
+  .juz:hover { border-color: var(--gold-dim); }
+  .juz.read { background: #1E2D1A; border-color: var(--green); color: var(--green); font-weight: 700; }
+  .juz.partial { background: #2D2918; border-color: var(--gold-dim); color: var(--gold); }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--panel);
+    border: 1px solid var(--gold-dim);
+    color: var(--text);
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 13px;
+    z-index: 200;
+    transition: transform .3s;
+    pointer-events: none;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ── Header ── -->
+  <header>
+    <div class="basmalah">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>
+    <h1>My Islamic Dashboard</h1>
+    <div class="date-strip">
+      <span>📅 <span id="greg-date"></span></span>
+      <span>🌙 <span id="hijri-date"></span></span>
+      <span class="badge shafii">Shāfiʿī Madhhab</span>
+    </div>
+    <div class="gold-line"></div>
+  </header>
+
+  <!-- ── Prayer Times ── -->
+  <div class="prayer-bar" id="prayer-bar">
+    <!-- JS generated -->
+  </div>
+
+  <!-- ── Main Grid ── -->
+  <div class="grid">
+
+    <!-- Daily Goals -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title gold"><span class="icon">☑</span> Daily Goals</div>
+        <button class="btn btn-gold btn-sm" onclick="openGoalModal()">+ Add</button>
+      </div>
+      <div class="goal-progress">
+        <span id="goal-count">0/0</span>
+        <div class="progress-bar"><div class="progress-fill" id="goal-fill" style="width:0%"></div></div>
+      </div>
+      <div id="goal-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+    </div>
+
+    <!-- Dhikr Counter -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title gold"><span class="icon">📿</span> Dhikr Counter</div>
+        <button class="btn btn-gold btn-sm" onclick="resetDhikr()">Reset</button>
+      </div>
+      <div class="dhikr-section" id="dhikr-section">
+        <!-- JS generated -->
+      </div>
+    </div>
+
+    <!-- Ayah of the Day -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title gold"><span class="icon">📖</span> Āyah of the Day</div>
+        <button class="btn btn-sm" style="background:var(--panel2);border:1px solid var(--border);color:var(--muted);" onclick="nextAyah()">↻</button>
+      </div>
+      <div class="ayah-ar" id="ayah-ar"></div>
+      <div class="ayah-tr" id="ayah-tr"></div>
+      <div class="ayah-ref" id="ayah-ref"></div>
+    </div>
+
+    <!-- Reminders — wide -->
+    <div class="card wide">
+      <div class="card-header">
+        <div class="card-title teal"><span class="icon">🔔</span> Reminders</div>
+        <button class="btn btn-teal btn-sm" onclick="openReminderModal()">+ Add</button>
+      </div>
+      <div class="reminder-list" id="reminder-list"></div>
+    </div>
+
+    <!-- Streak -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title green"><span class="icon">🔥</span> Consistency Streak</div>
+      </div>
+      <div style="display:flex;align-items:flex-end;gap:12px;margin-bottom:8px;">
+        <div class="big-streak" id="streak-num">0<span> days</span></div>
+        <div style="font-size:11px;color:var(--muted);padding-bottom:8px;">Keep it going,<br>bi-idhnillāh 🤲</div>
+      </div>
+      <div class="streak-row" id="streak-row"></div>
+    </div>
+
+    <!-- Quran Progress -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title gold"><span class="icon">📗</span> Quran — Juz Tracker</div>
+        <span class="muted" style="font-size:11px;" id="juz-count">0 / 30</span>
+      </div>
+      <div class="juz-grid" id="juz-grid"></div>
+      <div class="muted" style="font-size:11px;margin-top:4px;">Tap to toggle read (green) / partial (gold)</div>
+    </div>
+
+    <!-- Resources -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title teal"><span class="icon">🔗</span> Resources</div>
+      </div>
+      <div class="link-grid">
+        <a href="https://quranquiz.me" target="_blank" class="res-link"><span class="r-emoji">📖</span>Quran Hive</a>
+        <a href="https://sunnah.com" target="_blank" class="res-link"><span class="r-emoji">📜</span>Sunnah.com</a>
+        <a href="https://hadithcollection.com" target="_blank" class="res-link"><span class="r-emoji">🕌</span>Hadith Collection</a>
+        <a href="https://islamqa.info" target="_blank" class="res-link"><span class="r-emoji">🤲</span>IslamQA</a>
+        <a href="https://seekersguidance.org" target="_blank" class="res-link"><span class="r-emoji">🎓</span>SeekersGuidance</a>
+        <a href="https://shafii.net" target="_blank" class="res-link"><span class="r-emoji">📚</span>Shāfiʿī Fiqh</a>
+        <a href="https://duaa.app" target="_blank" class="res-link"><span class="r-emoji">🙏</span>Duʿāʾ App</a>
+        <a href="https://quranicaudio.com" target="_blank" class="res-link"><span class="r-emoji">🎧</span>Quranic Audio</a>
+      </div>
+    </div>
+
+    <!-- Snippets / Notes — full width -->
+    <div class="card full">
+      <div class="card-header">
+        <div class="card-title teal"><span class="icon">📌</span> Notes, Videos & Hadiths</div>
+        <button class="btn btn-teal btn-sm" onclick="openSnippetModal()">+ Add</button>
+      </div>
+      <div class="snippet-list" id="snippet-list"></div>
+    </div>
+
+  </div><!-- /grid -->
+</div><!-- /app -->
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- ── Modals ── -->
+<!-- Goal Modal -->
+<div class="modal-overlay" id="goal-modal">
+  <div class="modal">
+    <h3>Add Daily Goal</h3>
+    <input id="goal-input" type="text" placeholder="e.g. Read 1 page of Quran after Fajr">
+    <div class="modal-row">
+      <select id="goal-cat">
+        <option value="📖 Quran">📖 Quran</option>
+        <option value="🕌 Salah">🕌 Salah</option>
+        <option value="📿 Dhikr">📿 Dhikr</option>
+        <option value="📚 Learning">📚 Learning</option>
+        <option value="🤲 Duʿāʾ">🤲 Duʿāʾ</option>
+        <option value="🌙 Fasting">🌙 Fasting</option>
+        <option value="💰 Sadaqah">💰 Sadaqah</option>
+        <option value="⚙ Other">⚙ Other</option>
+      </select>
+      <button class="btn btn-gold" onclick="addGoal()">Save</button>
+      <button class="btn" style="background:var(--panel2);border:1px solid var(--border);color:var(--muted);" onclick="closeModal('goal-modal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Reminder Modal -->
+<div class="modal-overlay" id="reminder-modal">
+  <div class="modal">
+    <h3>Add Reminder</h3>
+    <input id="r-text" type="text" placeholder="Reminder text…">
+    <div class="modal-row">
+      <input id="r-time" type="time">
+      <select id="r-urgent">
+        <option value="0">Normal</option>
+        <option value="1">Urgent</option>
+      </select>
+    </div>
+    <div class="modal-row">
+      <button class="btn btn-teal" onclick="addReminder()">Save</button>
+      <button class="btn" style="background:var(--panel2);border:1px solid var(--border);color:var(--muted);" onclick="closeModal('reminder-modal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Snippet Modal -->
+<div class="modal-overlay" id="snippet-modal">
+  <div class="modal">
+    <h3>Add Note / Video / Hadith</h3>
+    <select id="s-type">
+      <option value="text">📝 Note / Text</option>
+      <option value="video">▶ YouTube Link</option>
+      <option value="hadith">📜 Hadith</option>
+    </select>
+    <textarea id="s-content" placeholder="Paste text, URL, or hadith here…" rows="4"></textarea>
+    <input id="s-label" type="text" placeholder="Label / title (optional)">
+    <div class="modal-row">
+      <button class="btn btn-teal" onclick="addSnippet()">Save</button>
+      <button class="btn" style="background:var(--panel2);border:1px solid var(--border);color:var(--muted);" onclick="closeModal('snippet-modal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+const KEY = 'islamic_dash_v2';
+let S = load();
+
+function load() {
+  try {
+    const raw = localStorage.getItem(KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return {
+    goals: [
+      { id: 1, text: 'Pray all 5 Salāh on time', cat: '🕌 Salah', done: false },
+      { id: 2, text: 'Read 1 page of Quran', cat: '📖 Quran', done: false },
+      { id: 3, text: 'Morning Adhkār (33×SubhānAllāh, 33×Alhamdulillāh, 33×Allāhu Akbar)', cat: '📿 Dhikr', done: false },
+      { id: 4, text: 'Evening Adhkār', cat: '📿 Dhikr', done: false },
+      { id: 5, text: 'Give Sadaqah (even a smile 😊)', cat: '💰 Sadaqah', done: false },
+    ],
+    reminders: [
+      { id: 1, text: 'Make wuḍūʾ before Fajr and read the morning duʿāʾ', time: '05:00', urgent: false },
+      { id: 2, text: 'Listen to a 10-min Islamic lecture after Asr', time: '16:00', urgent: false },
+      { id: 3, text: "Check tonight's lesson on SeekersGuidance", time: '20:00', urgent: true },
+    ],
+    snippets: [],
+    dhikr: { subhan: 0, alhamdu: 0, allahu: 0 },
+    streakDays: [],
+    juzRead: [],
+    todayDone: false,
+    ayahIndex: 0,
+  };
+}
+
+function save() { localStorage.setItem(KEY, JSON.stringify(S)); }
+
+// ── Date ──────────────────────────────────────────────────────────────────
+const now = new Date();
+const gregStr = now.toLocaleDateString('en-ZA', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+document.getElementById('greg-date').textContent = gregStr;
+
+// Approximate Hijri conversion
+function toHijri(d) {
+  const jd = Math.floor((d / 86400000) + 2440587.5);
+  let l = jd - 1948440 + 10632;
+  const n = Math.floor((l - 1) / 10631);
+  l -= 10631 * n - 354;
+  const j = Math.floor((10985 - l) / 5316) * Math.floor((50 * l) / 17719) + Math.floor(l / 5670) * Math.floor((43 * l) / 15238);
+  l -= Math.floor((30 - j) / 15) * Math.floor((17719 * j) / 50) + Math.floor(j / 16) * Math.floor((15238 * j) / 43);
+  const yr = 30 * n + j - 30;
+  const mo = Math.floor((24 * (l - 1)) / 709);
+  const dy = l - Math.floor((709 * mo) / 24);
+  const MONTHS = ['Muḥarram','Ṣafar','Rabīʿ al-Awwal','Rabīʿ al-Thānī','Jumādā al-Ūlā','Jumādā al-Ākhirah','Rajab','Shaʿbān','Ramaḍān','Shawwāl','Dhū al-Qaʿdah','Dhū al-Ḥijjah'];
+  return `${dy} ${MONTHS[mo]} ${yr} AH`;
+}
+document.getElementById('hijri-date').textContent = toHijri(now);
+
+// ── Prayer Times — Wembley Calendar (Cape Town) ───────────────────────────
+// Source: masjids.co.za/salaahtimes/capetown — Shāfiʿī Asr (S) column used
+// Columns: Fajr | Ẓuhr | Asr(S) | Asr(H) | Maghrib | ʿIshāʾ
+// Shuruq computed as Fajr + ~75 min (approximate for Cape Town winter)
+const WEMBLEY = {
+  // June 2026
+  '2026-06-01': ['06:22','07:37','12:47','15:27','17:48','19:01'],
+  '2026-06-02': ['06:22','07:37','12:47','15:26','17:48','19:01'],
+  '2026-06-03': ['06:23','07:38','12:47','15:26','17:48','19:01'],
+  '2026-06-04': ['06:23','07:38','12:47','15:26','17:47','19:01'],
+  '2026-06-05': ['06:24','07:39','12:48','15:26','17:47','19:01'],
+  '2026-06-06': ['06:24','07:39','12:48','15:26','17:47','19:00'],
+  '2026-06-07': ['06:24','07:39','12:48','15:26','17:47','19:00'],
+  '2026-06-08': ['06:25','07:40','12:48','15:26','17:47','19:00'],
+  '2026-06-09': ['06:25','07:40','12:48','15:26','17:47','19:00'],
+  '2026-06-10': ['06:26','07:41','12:48','15:26','17:47','19:00'],
+  '2026-06-11': ['06:26','07:41','12:49','15:26','17:47','19:00'],
+  '2026-06-12': ['06:26','07:41','12:49','15:26','17:47','19:00'],
+  '2026-06-13': ['06:27','07:42','12:49','15:26','17:47','19:00'],
+  '2026-06-14': ['06:27','07:42','12:49','15:26','17:47','19:00'],
+  '2026-06-15': ['06:27','07:42','12:49','15:26','17:47','19:00'],
+  '2026-06-16': ['06:28','07:43','12:50','15:26','17:47','19:01'],
+  '2026-06-17': ['06:28','07:43','12:50','15:26','17:47','19:01'],
+  '2026-06-18': ['06:28','07:43','12:50','15:26','17:47','19:01'],
+  '2026-06-19': ['06:29','07:44','12:50','15:26','17:47','19:01'],
+  '2026-06-20': ['06:29','07:44','12:51','15:26','17:47','19:01'],
+  '2026-06-21': ['06:29','07:44','12:51','15:27','17:48','19:01'],
+  '2026-06-22': ['06:29','07:44','12:51','15:27','17:48','19:02'],
+  '2026-06-23': ['06:30','07:45','12:51','15:27','17:48','19:02'],
+  '2026-06-24': ['06:30','07:45','12:51','15:27','17:48','19:02'],
+  '2026-06-25': ['06:30','07:45','12:52','15:28','17:49','19:02'],
+  '2026-06-26': ['06:30','07:45','12:52','15:28','17:49','19:03'],
+  '2026-06-27': ['06:30','07:45','12:52','15:28','17:49','19:03'],
+  '2026-06-28': ['06:30','07:45','12:52','15:29','17:49','19:03'],
+  '2026-06-29': ['06:30','07:45','12:52','15:29','17:50','19:04'],
+  '2026-06-30': ['06:30','07:45','12:53','15:29','17:50','19:04'],
+  // July 2026 — approximate (will update when Wembley publishes)
+  '2026-07-01': ['06:30','07:45','12:53','15:30','17:50','19:04'],
+  '2026-07-02': ['06:30','07:45','12:53','15:30','17:51','19:04'],
+  '2026-07-03': ['06:30','07:45','12:53','15:31','17:51','19:05'],
+  '2026-07-04': ['06:30','07:45','12:54','15:31','17:52','19:05'],
+  '2026-07-05': ['06:30','07:44','12:54','15:32','17:52','19:06'],
+  '2026-07-06': ['06:30','07:44','12:54','15:32','17:53','19:06'],
+  '2026-07-07': ['06:30','07:44','12:54','15:33','17:53','19:07'],
+};
+
+function todayKey() {
+  const d = new Date();
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  const dd = String(d.getDate()).padStart(2,'0');
+  return `${d.getFullYear()}-${mm}-${dd}`;
+}
+
+function buildPrayers() {
+  const key = todayKey();
+  const row = WEMBLEY[key];
+  const NAMES = ['Fajr','Shuruq','Ẓuhr','ʿAsr','Maghrib','ʿIshāʾ'];
+  const times = row || ['06:27','07:42','12:49','15:26','17:47','19:00']; // fallback = today
+
+  const nowMins = now.getHours() * 60 + now.getMinutes();
+  let cur = 0;
+  for (let i = 0; i < times.length; i++) {
+    const [h, m] = times[i].split(':').map(Number);
+    if (nowMins >= h * 60 + m) cur = i;
+  }
+
+  const bar = document.getElementById('prayer-bar');
+  bar.innerHTML = '';
+
+  // Masjid label
+  const label = document.createElement('a');
+  label.href = 'https://www.masjids.co.za/directory/darun-naim';
+  label.target = '_blank';
+  label.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:80px;text-decoration:none;padding:6px 10px;border-right:1px solid var(--border);margin-right:4px;gap:2px;';
+  label.innerHTML = `<span style="font-size:16px;">🕌</span><span style="font-size:9px;color:var(--gold);text-align:center;line-height:1.3;font-weight:600;">Dārun<br>Naʿīm</span><span style="font-size:8px;color:var(--muted);">Wynberg</span>`;
+  bar.appendChild(label);
+
+  NAMES.forEach((name, i) => {
+    const div = document.createElement('div');
+    div.className = 'prayer-item' + (i === cur ? ' current' : '');
+    const passed = i < cur;
+    div.innerHTML = `<div class="p-name">${name}</div><div class="p-time">${times[i]}</div><div class="p-check">${passed ? '✅' : ''}</div>`;
+    bar.appendChild(div);
+  });
+
+  // Wembley source link
+  const src = document.createElement('a');
+  const ym = key.substring(0,7);
+  src.href = `https://www.masjids.co.za/salaahtimes/capetown/${ym}`;
+  src.target = '_blank';
+  src.style.cssText = 'display:flex;align-items:center;justify-content:center;min-width:60px;text-decoration:none;padding:6px 10px;border-left:1px solid var(--border);margin-left:4px;';
+  src.innerHTML = `<span style="font-size:9px;color:var(--muted);text-align:center;line-height:1.5;">📅<br>Full<br>calendar</span>`;
+  bar.appendChild(src);
+}
+buildPrayers();
+
+// ── Āyah of the Day ───────────────────────────────────────────────────────
+const AYAT = [
+  { ar: 'وَمَن يَتَّقِ اللَّهَ يَجْعَل لَّهُ مَخْرَجًا', tr: 'And whoever fears Allah — He will make for him a way out.', ref: 'Sūrah al-Ṭalāq 65:2' },
+  { ar: 'إِنَّ مَعَ الْعُسْرِ يُسْرًا', tr: 'Indeed, with hardship will be ease.', ref: 'Sūrah al-Sharḥ 94:6' },
+  { ar: 'وَاذْكُرُوا اللَّهَ كَثِيرًا لَّعَلَّكُمْ تُفْلِحُونَ', tr: 'And remember Allah often that you may succeed.', ref: 'Sūrah al-Jumuʿah 62:10' },
+  { ar: 'وَلَا تَيْأَسُوا مِن رَّوْحِ اللَّهِ', tr: 'Do not despair of the mercy of Allah.', ref: 'Sūrah Yūsuf 12:87' },
+  { ar: 'إِنَّ اللَّهَ مَعَ الصَّابِرِينَ', tr: 'Indeed, Allah is with the patient.', ref: 'Sūrah al-Baqarah 2:153' },
+  { ar: 'حَسْبُنَا اللَّهُ وَنِعْمَ الْوَكِيلُ', tr: 'Allah is sufficient for us, and He is the best Disposer of affairs.', ref: 'Sūrah Āl ʿImrān 3:173' },
+  { ar: 'وَفِي ذَٰلِكَ فَلْيَتَنَافَسِ الْمُتَنَافِسُونَ', tr: 'For this let the competitors compete.', ref: 'Sūrah al-Muṭaffifīn 83:26' },
+];
+
+function showAyah() {
+  const a = AYAT[S.ayahIndex % AYAT.length];
+  document.getElementById('ayah-ar').textContent = a.ar;
+  document.getElementById('ayah-tr').textContent = a.tr;
+  document.getElementById('ayah-ref').textContent = '— ' + a.ref;
+}
+
+function nextAyah() {
+  S.ayahIndex = (S.ayahIndex + 1) % AYAT.length;
+  save();
+  showAyah();
+}
+
+showAyah();
+
+// ── Goals ─────────────────────────────────────────────────────────────────
+function renderGoals() {
+  const list = document.getElementById('goal-list');
+  const done = S.goals.filter(g => g.done).length;
+  const total = S.goals.length;
+  document.getElementById('goal-count').textContent = `${done}/${total}`;
+  document.getElementById('goal-fill').style.width = total ? (done/total*100)+'%' : '0%';
+  list.innerHTML = '';
+  S.goals.forEach(g => {
+    const div = document.createElement('div');
+    div.className = 'goal-item' + (g.done ? ' done' : '');
+    div.innerHTML = `
+      <div class="goal-check">${g.done ? '✓' : ''}</div>
+      <div style="flex:1">
+        <div class="goal-text">${g.text}</div>
+        <div class="goal-meta">${g.cat}</div>
+      </div>
+      <button onclick="delGoal(${g.id})" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;opacity:0.5;padding:4px;">✕</button>`;
+    div.querySelector('.goal-check').parentElement.querySelector('.goal-check').addEventListener('click', () => toggleGoal(g.id));
+    div.querySelector('.goal-text').addEventListener('click', () => toggleGoal(g.id));
+    list.appendChild(div);
+  });
+}
+
+function toggleGoal(id) {
+  const g = S.goals.find(x => x.id === id);
+  if (g) { g.done = !g.done; save(); renderGoals(); checkStreak(); }
+}
+
+function delGoal(id) {
+  S.goals = S.goals.filter(x => x.id !== id);
+  save(); renderGoals();
+}
+
+function openGoalModal() { document.getElementById('goal-modal').classList.add('open'); }
+
+function addGoal() {
+  const txt = document.getElementById('goal-input').value.trim();
+  if (!txt) return;
+  S.goals.push({ id: Date.now(), text: txt, cat: document.getElementById('goal-cat').value, done: false });
+  document.getElementById('goal-input').value = '';
+  save(); renderGoals();
+  closeModal('goal-modal');
+  toast('Goal added ✓');
+}
+
+renderGoals();
+
+// ── Dhikr ─────────────────────────────────────────────────────────────────
+const DHIKR = [
+  { key: 'subhan', ar: 'سُبْحَانَ اللَّهِ', label: 'SubḥānAllāh', target: 33 },
+  { key: 'alhamdu', ar: 'الْحَمْدُ لِلَّهِ', label: 'Alḥamdulillāh', target: 33 },
+  { key: 'allahu', ar: 'اللَّهُ أَكْبَرُ', label: 'Allāhu Akbar', target: 33 },
+];
+
+function renderDhikr() {
+  const sec = document.getElementById('dhikr-section');
+  sec.innerHTML = '';
+  DHIKR.forEach(d => {
+    const cnt = S.dhikr[d.key] || 0;
+    const done = cnt >= d.target;
+    const div = document.createElement('div');
+    div.className = 'dhikr-item';
+    div.innerHTML = `
+      <button class="dhikr-btn ${done?'done-btn':''}" onclick="tapDhikr('${d.key}')">${done?'✓':'+'}</button>
+      <div style="flex:1">
+        <div class="dhikr-ar">${d.ar}</div>
+        <div class="dhikr-target" style="text-align:right;">${d.label} · ${cnt}/${d.target}</div>
+      </div>
+      <div class="dhikr-count" style="color:${done?'var(--green)':'var(--text)'}">${cnt}</div>`;
+    sec.appendChild(div);
+  });
+}
+
+function tapDhikr(k) {
+  const d = DHIKR.find(x => x.key === k);
+  if (S.dhikr[k] < d.target) {
+    S.dhikr[k]++;
+    save(); renderDhikr();
+    if (S.dhikr[k] === d.target) toast(d.label + ' complete! 🤲');
+  }
+}
+
+function resetDhikr() {
+  S.dhikr = { subhan: 0, alhamdu: 0, allahu: 0 };
+  save(); renderDhikr();
+}
+
+renderDhikr();
+
+// ── Reminders ─────────────────────────────────────────────────────────────
+function renderReminders() {
+  const list = document.getElementById('reminder-list');
+  if (!S.reminders.length) {
+    list.innerHTML = '<div class="muted" style="font-size:13px;padding:8px;">No reminders yet — add one above.</div>';
+    return;
+  }
+  list.innerHTML = '';
+  S.reminders.slice().sort((a,b)=>a.time.localeCompare(b.time)).forEach(r => {
+    const div = document.createElement('div');
+    div.className = 'reminder' + (r.urgent ? ' urgent' : '');
+    div.innerHTML = `
+      <span class="r-icon">${r.urgent ? '❗' : '🔔'}</span>
+      <div class="r-body">
+        <div>${r.text}</div>
+        <div class="r-time">${r.time || 'No time set'}</div>
+      </div>
+      <button class="r-del" onclick="delReminder(${r.id})">✕</button>`;
+    list.appendChild(div);
+  });
+}
+
+function delReminder(id) {
+  S.reminders = S.reminders.filter(x => x.id !== id);
+  save(); renderReminders();
+}
+
+function openReminderModal() { document.getElementById('reminder-modal').classList.add('open'); }
+
+function addReminder() {
+  const txt = document.getElementById('r-text').value.trim();
+  if (!txt) return;
+  S.reminders.push({ id: Date.now(), text: txt, time: document.getElementById('r-time').value, urgent: document.getElementById('r-urgent').value === '1' });
+  document.getElementById('r-text').value = '';
+  save(); renderReminders();
+  closeModal('reminder-modal');
+  toast('Reminder saved ✓');
+}
+
+renderReminders();
+
+// ── Snippets ──────────────────────────────────────────────────────────────
+function renderSnippets() {
+  const list = document.getElementById('snippet-list');
+  if (!S.snippets.length) {
+    list.innerHTML = '<div class="muted" style="font-size:13px;padding:8px;">Add notes, YouTube links, or hadiths to save them here.</div>';
+    return;
+  }
+  list.innerHTML = '';
+  [...S.snippets].reverse().forEach(s => {
+    const div = document.createElement('div');
+    div.className = `snippet ${s.type}`;
+    const icons = { text:'📝 Note', video:'▶ Video', hadith:'📜 Hadith' };
+    let body = s.content;
+    if (s.type === 'video' && s.content.includes('youtube')) {
+      const vid = s.content.match(/(?:v=|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+      if (vid) body = `<a href="${s.content}" target="_blank">▶ ${s.label || s.content}</a><br><iframe style="margin-top:6px;border-radius:6px;border:none;width:100%;max-width:400px;aspect-ratio:16/9" src="https://www.youtube.com/embed/${vid[1]}" allowfullscreen></iframe>`;
+      else body = `<a href="${s.content}" target="_blank">${s.label || s.content}</a>`;
+    } else {
+      body = `<span>${s.label ? '<strong>'+s.label+'</strong><br>' : ''}${s.content}</span>`;
+    }
+    div.innerHTML = `<div class="s-type">${icons[s.type]||'📌 Note'}</div>${body}<button class="s-del" onclick="delSnippet(${s.id})">✕</button>`;
+    list.appendChild(div);
+  });
+}
+
+function delSnippet(id) {
+  S.snippets = S.snippets.filter(x => x.id !== id);
+  save(); renderSnippets();
+}
+
+function openSnippetModal() { document.getElementById('snippet-modal').classList.add('open'); }
+
+function addSnippet() {
+  const content = document.getElementById('s-content').value.trim();
+  if (!content) return;
+  S.snippets.push({ id: Date.now(), type: document.getElementById('s-type').value, content, label: document.getElementById('s-label').value.trim() });
+  document.getElementById('s-content').value = '';
+  document.getElementById('s-label').value = '';
+  save(); renderSnippets();
+  closeModal('snippet-modal');
+  toast('Saved ✓');
+}
+
+renderSnippets();
+
+// ── Juz Grid ──────────────────────────────────────────────────────────────
+function renderJuz() {
+  const grid = document.getElementById('juz-grid');
+  grid.innerHTML = '';
+  for (let i = 1; i <= 30; i++) {
+    const div = document.createElement('div');
+    const state = S.juzRead.includes('full_'+i) ? 'read' : S.juzRead.includes('partial_'+i) ? 'partial' : '';
+    div.className = 'juz ' + state;
+    div.title = 'Juz ' + i;
+    div.textContent = i;
+    div.addEventListener('click', () => cycleJuz(i));
+    grid.appendChild(div);
+  }
+  const readCount = S.juzRead.filter(x => x.startsWith('full_')).length;
+  document.getElementById('juz-count').textContent = readCount + ' / 30';
+}
+
+function cycleJuz(n) {
+  if (S.juzRead.includes('full_'+n)) {
+    S.juzRead = S.juzRead.filter(x => x !== 'full_'+n);
+  } else if (S.juzRead.includes('partial_'+n)) {
+    S.juzRead = S.juzRead.filter(x => x !== 'partial_'+n);
+    S.juzRead.push('full_'+n);
+    toast('Juz '+n+' marked complete ✓ ما شاء الله');
+  } else {
+    S.juzRead.push('partial_'+n);
+  }
+  save(); renderJuz();
+}
+
+renderJuz();
+
+// ── Streak ────────────────────────────────────────────────────────────────
+function checkStreak() {
+  const today = now.toDateString();
+  const allDone = S.goals.length > 0 && S.goals.every(g => g.done);
+  if (allDone && !S.streakDays.includes(today)) {
+    S.streakDays.push(today);
+    save();
+    toast('All goals done! Streak +1 🔥 Allāhu Akbar!');
+  }
+  renderStreak();
+}
+
+function renderStreak() {
+  const row = document.getElementById('streak-row');
+  row.innerHTML = '';
+  const last14 = [];
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date(now); d.setDate(d.getDate() - i);
+    last14.push(d);
+  }
+  const streak = (() => {
+    let cnt = 0;
+    const today = now.toDateString();
+    for (let i = 0; i < 365; i++) {
+      const d = new Date(now); d.setDate(d.getDate() - i);
+      if (S.streakDays.includes(d.toDateString())) cnt++;
+      else if (d.toDateString() !== today) break;
+    }
+    return cnt;
+  })();
+  document.getElementById('streak-num').innerHTML = streak + '<span> days</span>';
+  last14.forEach(d => {
+    const div = document.createElement('div');
+    const ds = d.toDateString();
+    const isToday = ds === now.toDateString();
+    const done = S.streakDays.includes(ds);
+    div.className = 'streak-day' + (done?' done':'') + (isToday?' today':'');
+    div.title = d.toLocaleDateString('en-ZA', { weekday:'short', day:'numeric', month:'short' });
+    div.textContent = d.getDate();
+    row.appendChild(div);
+  });
+}
+
+renderStreak();
+
+// ── Modal helpers ──────────────────────────────────────────────────────────
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.open').forEach(el => el.classList.remove('open'));
+});
+
+// ── Toast ─────────────────────────────────────────────────────────────────
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ── Daily reset at midnight ────────────────────────────────────────────────
+const lastReset = localStorage.getItem('islamic_last_reset');
+const todayKey = now.toDateString();
+if (lastReset !== todayKey) {
+  S.goals.forEach(g => g.done = false);
+  S.dhikr = { subhan: 0, alhamdu: 0, allahu: 0 };
+  localStorage.setItem('islamic_last_reset', todayKey);
+  save();
+  renderGoals(); renderDhikr();
+}
+</script>
+</body>
+</html>
