@@ -2371,13 +2371,16 @@ function updSt(type,id,s){
       o.status="delivered";
       if(type==="fuel") saveFO_supa(o);
       else saveLO_supa(o);
-      pushOrderToDebtors(o, type);
       deductStockForOrder(o, type);
-      sv();
-      localStorage.setItem('le_db', JSON.stringify(DB));
-      addAct(id+" delivered — moved to Debtors","✅","tl");
-      if(type==="fuel"){rFuel();}else{rLPG();}
-      rAll();rDash();
+      // Always load fresh DB from Supabase before pushing to debtors
+      loadDB(function(){
+        pushOrderToDebtors(o, type);
+        sv();
+        localStorage.setItem('le_db', JSON.stringify(DB));
+        addAct(id+" delivered — moved to Debtors","✅","tl");
+        if(type==="fuel"){rFuel();}else{rLPG();}
+        rAll();rDash();
+      });
     });
     return;
   }
@@ -2468,8 +2471,12 @@ function saveFuel(){
   if(o.status==="delivered"){
     if(eid){var i=FO.findIndex(function(x){return x.id===eid;});if(i>-1)FO[i]=o;}else FO.unshift(o);
     saveFO_supa(o);
-    pushOrderToDebtors(o,"fuel");
-    addAct((eid?"Edited":"New")+" fuel order "+o.id+" — delivered, moved to Debtors","⛽","tl");
+    loadDB(function(){
+      pushOrderToDebtors(o,"fuel");
+      sv();closeM("mf");rFuel();rDash();
+      addAct((eid?"Edited":"New")+" fuel order "+o.id+" — delivered, moved to Debtors","⛽","tl");
+    });
+    return;
   }else{
     if(eid){var i=FO.findIndex(function(x){return x.id===eid;});if(i>-1)FO[i]=o;}else FO.unshift(o);
     saveFO_supa(o);
@@ -2498,8 +2505,12 @@ function saveLPG(){
   if(o.status==="delivered"){
     if(eid){var i=LO.findIndex(function(x){return x.id===eid;});if(i>-1)LO[i]=o;}else LO.unshift(o);
     saveLO_supa(o);
-    pushOrderToDebtors(o,"lpg");
-    addAct((eid?"Edited":"New")+" LPG order "+o.id+" — delivered, moved to Debtors","🔥","pk");
+    loadDB(function(){
+      pushOrderToDebtors(o,"lpg");
+      sv();closeM("ml");rLPG();rDash();
+      addAct((eid?"Edited":"New")+" LPG order "+o.id+" — delivered, moved to Debtors","🔥","pk");
+    });
+    return;
   }else{
     if(eid){var i=LO.findIndex(function(x){return x.id===eid;});if(i>-1)LO[i]=o;}else LO.unshift(o);
     saveLO_supa(o);
@@ -5801,6 +5812,7 @@ function rDebtors() {
 
 </body>
 </html>
+
 
 
 
