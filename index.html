@@ -1971,15 +1971,30 @@ function setupRealtime() {
 }
 
 // ── LOAD functions (read from Supabase) ──
+function syncCTR(orders){
+  // Ensure CTR is always higher than any existing order number
+  orders.forEach(function(o){
+    var n=parseInt((o.id||'').replace(/[^0-9]/g,''));
+    if(!isNaN(n)&&n>=CTR){ CTR=n+1; localStorage.setItem('le_ctr',String(CTR)); }
+  });
+}
 function loadFO(cb) {
   dbGet('fuel_orders','order=created_at.desc').then(function(rows){
-    if(Array.isArray(rows)){ FO=rows.map(function(r){ return {id:r.id,client:r.client,product:r.product,volume:r.volume,price:r.price,value:r.value,status:r.status,date:r.date,notes:r.notes,truck:r.truck||'',location:r.location||'',invoice:r.invoice||null}; }); localStorage.setItem('le_fo',JSON.stringify(FO)); }
+    if(Array.isArray(rows)){
+      FO=rows.map(function(r){ return {id:r.id,client:r.client,product:r.product,volume:r.volume,price:r.price,value:r.value,status:r.status,date:r.date,notes:r.notes,truck:r.truck||'',location:r.location||'',invoice:r.invoice||null}; });
+      localStorage.setItem('le_fo',JSON.stringify(FO));
+      syncCTR(FO);
+    }
     if(cb)cb();
   }).catch(function(e){console.error('loadFO',e);if(cb)cb();});
 }
 function loadLO(cb) {
   dbGet('lpg_orders','order=created_at.desc').then(function(rows){
-    if(Array.isArray(rows)){ LO=rows.map(function(r){ return {id:r.id,client:r.client,size:r.size,qty:r.qty,price:r.price,value:r.value,status:r.status,date:r.date,notes:r.notes}; }); localStorage.setItem('le_lo',JSON.stringify(LO)); }
+    if(Array.isArray(rows)){
+      LO=rows.map(function(r){ return {id:r.id,client:r.client,size:r.size,qty:r.qty,price:r.price,value:r.value,status:r.status,date:r.date,notes:r.notes}; });
+      localStorage.setItem('le_lo',JSON.stringify(LO));
+      syncCTR(LO);
+    }
     if(cb)cb();
   }).catch(function(e){console.error('loadLO',e);if(cb)cb();});
 }
@@ -4718,6 +4733,7 @@ function loadPO(cb){
     if(Array.isArray(rows)){
       PO=rows.map(function(r){return {id:r.id,date:r.date,supplier:r.supplier,cat:r.cat,product:r.product,qty:parseFloat(r.qty)||0,cost:parseFloat(r.cost)||0,total:parseFloat(r.total)||0,ref:r.ref||'',notes:r.notes||'',status:r.status||'pending'};});
       localStorage.setItem('le_po',JSON.stringify(PO));
+      syncCTR(PO);
     }
     if(cb)cb();
   }).catch(function(e){console.error('loadPO',e);if(cb)cb();});
