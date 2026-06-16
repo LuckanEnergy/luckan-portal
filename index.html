@@ -707,7 +707,7 @@ input:checked+.slider::before{transform:translateX(18px);}
     <div class="cd" style="margin-top:18px">
       <div class="cd-hd"><span class="cd-ttl">📋 Transaction Log — Delivered Orders</span></div>
       <div class="cd-bd" style="padding:0;overflow-x:auto">
-        <table><thead><tr><th>Order ID</th><th>Date</th><th>Client</th><th>Product</th><th>Volume</th><th>Value</th><th>Status</th><th>Document</th></tr></thead>
+        <table><thead><tr><th>Order ID</th><th>Date</th><th>Client</th><th>Product</th><th>Volume</th><th>Value</th><th>Status</th><th>Document</th><th>Notes</th></tr></thead>
         <tbody id="fo-txlog"></tbody></table>
       </div>
     </div>
@@ -745,7 +745,7 @@ input:checked+.slider::before{transform:translateX(18px);}
     <div class="cd" style="margin-top:18px">
       <div class="cd-hd"><span class="cd-ttl">📋 Transaction Log — Delivered Orders</span></div>
       <div class="cd-bd" style="padding:0;overflow-x:auto">
-        <table><thead><tr><th>Order ID</th><th>Date</th><th>Client</th><th>Cylinder</th><th>Qty</th><th>Value</th><th>Status</th><th>Document</th></tr></thead>
+        <table><thead><tr><th>Order ID</th><th>Date</th><th>Client</th><th>Cylinder</th><th>Qty</th><th>Value</th><th>Status</th><th>Document</th><th>Notes</th></tr></thead>
         <tbody id="lo-txlog"></tbody></table>
       </div>
     </div>
@@ -2676,6 +2676,7 @@ function rFuel(){
         +(o.invoice?'<button class="btn btn-t btn-sm" onclick="viewInvoice(&quot;'+o.id+'&quot;)">&#128206;</button>':'')
         +'<button class="btn btn-s btn-sm" onclick="viewOrd(&quot;fuel&quot;,&quot;'+o.id+'&quot;)">View</button>'
         +'<button class="btn btn-t btn-sm" onclick="editFuel(&quot;'+o.id+'&quot;)">&#9998;</button>'
+        +'<button class="btn btn-s btn-sm" onclick="openOrderNote(&quot;fuel&quot;,&quot;'+o.id+'&quot;,&quot;'+o.client+'&quot;)">&#128221;'+(getOrderNoteCount('fuel',o.id)>0?' ('+getOrderNoteCount('fuel',o.id)+')':'')+"</button>"
         +'<button class="btn btn-d btn-sm" onclick="delOrd(&quot;fuel&quot;,&quot;'+o.id+'&quot;)">&#128465;</button>'
       +"</div></td></tr>";
   }).join(""):'<tr><td colspan="8" style="text-align:center;color:var(--mu);padding:28px">No orders found</td></tr>';
@@ -2698,6 +2699,7 @@ function rFuel(){
         +'<td style="font-weight:700;color:var(--tl2)">'+fR(V(o))+"</td>"
         +'<td><span style="background:rgba(34,197,94,0.1);color:#16a34a;border:1px solid rgba(34,197,94,0.3);border-radius:6px;padding:2px 8px;font-size:11px;font-weight:600">Delivered</span></td>'
         +'<td>'+docBtn+'</td>'
+        +'<td><button class="btn btn-s btn-sm" onclick="openOrderNote(&quot;fuel&quot;,&quot;'+o.id+'&quot;,&quot;'+o.client+'&quot;)">&#128221;'+(getOrderNoteCount('fuel',o.id)>0?' ('+getOrderNoteCount('fuel',o.id)+')':'')+"</button></td>"
         +"</tr>";
     }).join(""):'<tr><td colspan="8" style="text-align:center;color:var(--mu);padding:20px">No delivered orders yet</td></tr>';
   }
@@ -2729,11 +2731,7 @@ function rLPG(){
       +'<td>'+fm(o.qty)+"</td>"
       +'<td style="font-weight:700">'+fR(V(o))+"</td>"
       +"<td>"+sSel("lpg",o.id,o.status)+"</td>"
-      +'<td><div style="display:flex;gap:4px;align-items:center">'
-        +'<button class="btn btn-s btn-sm" onclick="viewOrd('+"'lpg'"+",'"+o.id+"'"+')">View</button>'
-        +'<button class="btn btn-t btn-sm" onclick="editLPG('+"'"+o.id+"'"+')">✏</button>'
-        +'<button class="btn btn-d btn-sm" onclick="delOrd('+"'lpg'"+",'"+o.id+"'"+')">🗑</button>'
-      +"</div></td></tr>";
+      +'<td><div style="display:flex;gap:4px;align-items:center">'        +'<button class="btn btn-s btn-sm" onclick="viewOrd(\'lpg\',\''+o.id+'\')">View</button>'        +'<button class="btn btn-t btn-sm" onclick="editLPG(\''+o.id+'\')">✏</button>'        +'<button class="btn btn-s btn-sm" onclick="openOrderNote(&quot;lpg&quot;,&quot;'+o.id+'&quot;,&quot;'+o.client+'&quot;)">&#128221;'+(getOrderNoteCount('lpg',o.id)>0?' ('+getOrderNoteCount('lpg',o.id)+')':'')+"</button>"        +'<button class="btn btn-d btn-sm" onclick="delOrd(\'lpg\',\''+o.id+'\')">🗑</button>'      +"</div></td></tr>";
   }).join(""):'<tr><td colspan="8" style="text-align:center;color:var(--mu);padding:28px">No orders found</td></tr>';
   // Transaction log — delivered only
   var txbody=document.getElementById("lo-txlog");
@@ -2754,6 +2752,7 @@ function rLPG(){
         +'<td style="font-weight:700;color:var(--tl2)">'+fR(V(o))+"</td>"
         +'<td><span style="background:rgba(34,197,94,0.1);color:#16a34a;border:1px solid rgba(34,197,94,0.3);border-radius:6px;padding:2px 8px;font-size:11px;font-weight:600">Delivered</span></td>'
         +'<td>'+docBtn+'</td>'
+        +'<td><button class="btn btn-s btn-sm" onclick="openOrderNote(&quot;lpg&quot;,&quot;'+o.id+'&quot;,&quot;'+o.client+'&quot;)">&#128221;'+(getOrderNoteCount('lpg',o.id)>0?' ('+getOrderNoteCount('lpg',o.id)+')':'')+"</button></td>"
         +"</tr>";
     }).join(""):'<tr><td colspan="8" style="text-align:center;color:var(--mu);padding:20px">No delivered orders yet</td></tr>';
   }
