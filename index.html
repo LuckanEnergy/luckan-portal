@@ -1045,6 +1045,7 @@ input:checked+.slider::before{transform:translateX(18px);}
       <div style="padding:16px;overflow-y:auto;max-height:70vh">
         <input type="hidden" id="po-eid">
         <div class="fg">
+          <div class="fm" id="po-id-row" style="display:none"><label>PO Number</label><input type="text" id="po-edit-id" placeholder="e.g. PO-001" style="font-family:monospace;font-weight:700"></div>
           <div class="fm"><label>PO Date</label><input type="date" id="po-date"></div>
           <div class="fm"><label>Supplier</label><input type="text" id="po-supplier" placeholder="Supplier name"></div>
           <div class="fm"><label>Category</label>
@@ -1639,6 +1640,7 @@ input:checked+.slider::before{transform:translateX(18px);}
     <div style="padding:16px;overflow-y:auto;max-height:70vh">
       <input type="hidden" id="f-eid">
       <div class="fg">
+        <div class="fm" id="f-id-row" style="display:none"><label>Order ID</label><input type="text" id="f-edit-id" placeholder="e.g. LE-F-1001" style="font-family:monospace;font-weight:700"></div>
         <div class="fm"><label>Date *</label><input type="date" id="fd"></div>
         <div class="fm"><label>Client *</label>
           <div class="client-ac-wrap">
@@ -1711,6 +1713,7 @@ input:checked+.slider::before{transform:translateX(18px);}
     <div style="padding:16px;overflow-y:auto;max-height:70vh">
       <input type="hidden" id="l-eid">
       <div class="fg">
+        <div class="fm" id="l-id-row" style="display:none"><label>Order ID</label><input type="text" id="l-edit-id" placeholder="e.g. LE-G-1001" style="font-family:monospace;font-weight:700"></div>
         <div class="fm"><label>Date *</label><input type="date" id="ld"></div>
         <div class="fm"><label>Client *</label>
           <div class="client-ac-wrap">
@@ -2344,6 +2347,7 @@ function openM(type){
   var td=new Date().toISOString().split("T")[0];
   if(type==="fuel"){
     document.getElementById("f-eid").value="";
+  document.getElementById("f-id-row").style.display="none";
     document.getElementById("mf-title").textContent="⛽ New Fuel Order";
     ["fc","fv","fpr","fl","ftr","fn"].forEach(function(id){document.getElementById(id).value="";});
     document.getElementById("fd").value=td;document.getElementById("fst").value="pending";
@@ -2351,6 +2355,7 @@ function openM(type){
     document.getElementById("mf").classList.add("open");document.body.style.overflow="hidden";
   }else{
     document.getElementById("l-eid").value="";
+  document.getElementById("l-id-row").style.display="none";
     document.getElementById("ml-title").textContent="🔥 New LPG Order";
     ["lc","lq","lpr","ll","lp","ln"].forEach(function(id){document.getElementById(id).value="";});
     document.getElementById("ld").value=td;document.getElementById("lst").value="pending";
@@ -2504,7 +2509,13 @@ function saveFuel(){
   var c=document.getElementById("fc").value.trim(),v=parseFloat(document.getElementById("fv").value),p=parseFloat(document.getElementById("fpr").value);
   if(!c||!v||!p){alert("Client, Volume and Price are required.");return;}
   var eid=document.getElementById("f-eid").value;
-  var o={id:eid||nxtId("LE-F-"),date:document.getElementById("fd").value,client:c,product:document.getElementById("fp").value,volume:v,price:p,value:v*p,location:document.getElementById("fl").value,status:document.getElementById("fst").value,truck:document.getElementById("ftr").value,ref:document.getElementById("f-ref").value.trim(),notes:document.getElementById("fn").value,invoice:fAttachData||null};
+  var newId=(eid && document.getElementById("f-edit-id").value.trim()) ? document.getElementById("f-edit-id").value.trim() : (eid||nxtId("LE-F-"));
+  if(eid && newId!==eid){
+    // ID changed — delete old record from Supabase
+    delFO_supa(eid);
+    FO=FO.filter(function(x){return x.id!==eid;});
+  }
+  var o={id:newId||nxtId("LE-F-"),date:document.getElementById("fd").value,client:c,product:document.getElementById("fp").value,volume:v,price:p,value:v*p,location:document.getElementById("fl").value,status:document.getElementById("fst").value,truck:document.getElementById("ftr").value,ref:document.getElementById("f-ref").value.trim(),notes:document.getElementById("fn").value,invoice:fAttachData||null};
   if(o.status==="delivered"){
     if(eid){var i=FO.findIndex(function(x){return x.id===eid;});if(i>-1)FO[i]=o;}else FO.unshift(o);
     Promise.resolve(saveFO_supa(o)).then(function(){
@@ -2529,8 +2540,9 @@ function editFuel(id){
   document.getElementById("f-eid").value=id;document.getElementById("mf-title").textContent="✏️ Edit Fuel — "+id;
   document.getElementById("fc").value=o.client;document.getElementById("fd").value=o.date;document.getElementById("fp").value=o.product;
   document.getElementById("fv").value=o.volume;document.getElementById("fpr").value=o.price;document.getElementById("fl").value=o.location||"";document.getElementById("f-ref").value=o.ref||"";
-
   document.getElementById("fst").value=o.status;document.getElementById("ftr").value=o.truck||"";document.getElementById("fn").value=o.notes||"";
+  document.getElementById("f-edit-id").value=id;
+  document.getElementById("f-id-row").style.display="";
   fLoadAttach(o.invoice||null);
   document.getElementById("mf").classList.add("open");
 }
@@ -2540,7 +2552,12 @@ function saveLPG(){
   var c=document.getElementById("lc").value.trim(),q=parseInt(document.getElementById("lq").value),p=parseFloat(document.getElementById("lpr").value);
   if(!c||!q||!p){alert("Client, Quantity and Price are required.");return;}
   var eid=document.getElementById("l-eid").value;
-  var o={id:eid||nxtId("LE-G-"),date:document.getElementById("ld").value,client:c,size:document.getElementById("lsz").value,qty:q,price:p,value:q*p,location:document.getElementById("ll").value,status:document.getElementById("lst").value,phone:document.getElementById("lp").value,ref:document.getElementById("l-ref").value.trim(),notes:document.getElementById("ln").value};
+  var newLId=(eid && document.getElementById("l-edit-id").value.trim()) ? document.getElementById("l-edit-id").value.trim() : (eid||nxtId("LE-G-"));
+  if(eid && newLId!==eid){
+    delLO_supa(eid);
+    LO=LO.filter(function(x){return x.id!==eid;});
+  }
+  var o={id:newLId||nxtId("LE-G-"),date:document.getElementById("ld").value,client:c,size:document.getElementById("lsz").value,qty:q,price:p,value:q*p,location:document.getElementById("ll").value,status:document.getElementById("lst").value,phone:document.getElementById("lp").value,ref:document.getElementById("l-ref").value.trim(),notes:document.getElementById("ln").value};
   if(o.status==="delivered"){
     if(eid){var i=LO.findIndex(function(x){return x.id===eid;});if(i>-1)LO[i]=o;}else LO.unshift(o);
     Promise.resolve(saveLO_supa(o)).then(function(){
@@ -2566,6 +2583,8 @@ function editLPG(id){
   document.getElementById("lc").value=o.client;document.getElementById("ld").value=o.date;document.getElementById("lsz").value=o.size;
   document.getElementById("lq").value=o.qty;document.getElementById("lpr").value=o.price;document.getElementById("ll").value=o.location||"";document.getElementById("l-ref").value=o.ref||"";
   document.getElementById("lst").value=o.status;document.getElementById("lp").value=o.phone||"";document.getElementById("ln").value=o.notes||"";
+  document.getElementById("l-edit-id").value=id;
+  document.getElementById("l-id-row").style.display="";
   document.getElementById("ml").classList.add("open");
 }
 
@@ -4745,6 +4764,8 @@ function openPOModal(id){
     var p = PO.find(function(x){return x.id===id;});
     if(!p)return;
     document.getElementById('po-eid').value = p.id;
+    document.getElementById('po-edit-id').value = p.id;
+    document.getElementById('po-id-row').style.display = '';
     document.getElementById('po-date').value = p.date;
     document.getElementById('po-supplier').value = p.supplier;
     document.getElementById('po-cat').value = p.cat;
@@ -4756,6 +4777,7 @@ function openPOModal(id){
     document.getElementById('po-notes').value = p.notes||'';
   } else {
     document.getElementById('po-eid').value = '';
+    document.getElementById('po-id-row').style.display = 'none';
     document.getElementById('po-date').value = today;
     document.getElementById('po-supplier').value = '';
     document.getElementById('po-cat').value = 'Fuel';
@@ -4784,9 +4806,11 @@ function savePO(){
   var ref2=document.getElementById('po-ref').value.trim();
   if(!supplier||!qty||!cost||!ref2){alert('Supplier, Invoice Number, Quantity and Unit Cost are required.');return;}
   var eid = document.getElementById('po-eid').value;
+  var newPOId = (eid && document.getElementById('po-edit-id').value.trim()) ? document.getElementById('po-edit-id').value.trim() : '';
+  if(eid && newPOId && newPOId!==eid){ delPO_supa(eid); PO=PO.filter(function(x){return x.id!==eid;}); }
   var ref = document.getElementById('po-ref').value.trim();
   var p = {
-    id: eid || (ref || nxtPOId()),
+    id: (eid && newPOId ? newPOId : (eid || (ref || nxtPOId()))),
     date: document.getElementById('po-date').value,
     supplier: supplier,
     cat: document.getElementById('po-cat').value,
@@ -5995,6 +6019,7 @@ function rDebtors() {
 
 </body>
 </html>
+
 
 
 
