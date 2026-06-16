@@ -2781,6 +2781,7 @@ function rAll(){
       +'<td><div style="display:flex;gap:4px">'
         +'<button class="btn btn-s btn-sm" onclick="viewOrd('+"'"+o.type+"'"+",'"+o.id+"'"+')">View</button>'
         +'<button class="btn btn-t btn-sm" onclick="'+ef+"('"+o.id+"'"+')">✏</button>'
+        +'<button class="btn btn-s btn-sm" style="font-size:11px" onclick="openOrderNote(&quot;'+o.type+'&quot;,&quot;'+o.id+'&quot;,&quot;'+o.client+'&quot;)">📝 Note'+(getOrderNoteCount(o.type,o.id)>0?' ('+getOrderNoteCount(o.type,o.id)+')':'')+"</button>"
       +"</div></td></tr>";
   }).join(""):'<tr><td colspan="8" style="text-align:center;color:var(--mu);padding:28px">No active orders</td></tr>';
 }
@@ -4905,6 +4906,51 @@ function rPO(){
 
 
 
+
+// ── ORDER NOTES ──
+function getOrderNotes(type, orderId){
+  try{ return JSON.parse(localStorage.getItem('le_note_'+type+'_'+orderId)||'[]'); }catch(e){ return []; }
+}
+function getOrderNoteCount(type, orderId){
+  return getOrderNotes(type, orderId).length;
+}
+var _noteCtx = {};
+function openOrderNote(type, orderId, client){
+  _noteCtx = {type:type, orderId:orderId};
+  document.getElementById('note-modal-title').textContent = '📝 ' + orderId + ' — ' + client;
+  var notes = getOrderNotes(type, orderId);
+  var hist = document.getElementById('note-history');
+  hist.innerHTML = notes.length
+    ? notes.map(function(n){
+        return '<div style="border-bottom:1px solid var(--bd);padding:4px 0;last-child:border:none">'
+          +'<span style="font-size:10px;color:var(--mu);margin-right:6px">'+n.ts+'</span>'
+          +'<span>'+n.text+'</span></div>';
+      }).join('')
+    : '<span style="color:var(--mu);font-size:12px">No notes yet</span>';
+  document.getElementById('note-input').value = '';
+  document.getElementById('m-order-note').classList.add('open');
+  setTimeout(function(){ document.getElementById('note-input').focus(); }, 100);
+}
+function saveOrderNote(){
+  var text = document.getElementById('note-input').value.trim();
+  if(!text) return;
+  var notes = getOrderNotes(_noteCtx.type, _noteCtx.orderId);
+  var now = new Date();
+  var ts = now.toLocaleDateString('en-ZA',{day:'2-digit',month:'short'})+' '+now.toLocaleTimeString('en-ZA',{hour:'2-digit',minute:'2-digit'});
+  notes.push({ts:ts, text:text});
+  localStorage.setItem('le_note_'+_noteCtx.type+'_'+_noteCtx.orderId, JSON.stringify(notes));
+  // Update history display
+  var hist = document.getElementById('note-history');
+  hist.innerHTML = notes.map(function(n){
+    return '<div style="border-bottom:1px solid var(--bd);padding:4px 0">'
+      +'<span style="font-size:10px;color:var(--mu);margin-right:6px">'+n.ts+'</span>'
+      +'<span>'+n.text+'</span></div>';
+  }).join('');
+  document.getElementById('note-input').value = '';
+  hist.scrollTop = hist.scrollHeight;
+  rAll();
+}
+
 // ── AUTO UPDATE CHECKER ──
 var CURRENT_VERSION = '202506141024';
 
@@ -5810,6 +5856,28 @@ function rDebtors() {
           <tbody id="cv-orders"></tbody>
         </table>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ORDER NOTE MODAL -->
+<div class="mo" id="m-order-note">
+  <div class="mbox" style="max-width:420px;width:92%">
+    <div class="mh">
+      <span class="mt2" id="note-modal-title">📝 Order Note</span>
+      <button class="xbtn" onclick="closeM('m-order-note')">✕</button>
+    </div>
+    <div class="mb" style="padding:16px">
+      <div style="font-size:11px;color:var(--mu);margin-bottom:6px">Previous notes:</div>
+      <div id="note-history" style="background:var(--lt);border:1px solid var(--bd);border-radius:8px;padding:10px;min-height:48px;max-height:160px;overflow-y:auto;font-size:12px;color:var(--tx);margin-bottom:12px;line-height:1.6"></div>
+      <div class="fm" style="margin-bottom:0">
+        <label>Add a note</label>
+        <textarea id="note-input" placeholder="Type your note here…" style="min-height:72px;resize:vertical"></textarea>
+      </div>
+    </div>
+    <div class="mf2">
+      <button class="btn btn-s" onclick="closeM('m-order-note')">Cancel</button>
+      <button class="btn btn-p" onclick="saveOrderNote()">Save Note</button>
     </div>
   </div>
 </div>
