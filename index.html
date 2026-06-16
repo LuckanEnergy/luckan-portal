@@ -1909,16 +1909,17 @@ function dbHeaders() {
 
 // Generic Supabase REST helpers
 function dbGet(table, params) {
-  var url = SUPA_URL + '/rest/v1/' + table + '?select=*';
+  var url = SUPA_URL + '/rest/v1/' + table + '?select=*&limit=1000&offset=0';
   if(params) url += '&' + params;
   var getHeaders = {
     'apikey': SUPA_KEY,
     'Authorization': 'Bearer ' + SUPA_KEY,
-    'Content-Type': 'application/json',
-    'Range-Unit': 'items',
-    'Range': '0-999'
+    'Content-Type': 'application/json'
   };
-  return fetch(url, { headers: getHeaders }).then(function(r){ return r.json(); });
+  return fetch(url, { headers: getHeaders }).then(function(r){
+    if(!r.ok){ console.error('dbGet error',table,r.status,r.statusText); return []; }
+    return r.json();
+  });
 }
 
 function dbUpsert(table, data) {
