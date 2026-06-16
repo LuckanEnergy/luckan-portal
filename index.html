@@ -1028,7 +1028,7 @@ input:checked+.slider::before{transform:translateX(18px);}
       </div>
       <div class="cd-bd" style="padding:0;overflow-x:auto">
         <table>
-          <thead><tr><th>Date</th><th>PO Number</th><th>Supplier</th><th>Product</th><th>Qty</th><th>Total</th><th>Status</th><th>Document</th></tr></thead>
+          <thead><tr><th>Date</th><th>PO Number</th><th>Supplier</th><th>Product</th><th>Qty</th><th>Total</th><th>Status</th><th>Document</th><th>Notes</th></tr></thead>
           <tbody id="po-txlog"></tbody>
         </table>
       </div>
@@ -4872,6 +4872,7 @@ function rPO(){
       +'<td><div style="display:flex;gap:4px">'
         +(isPending?'<button class="btn btn-p btn-sm" onclick="receivePO(&quot;'+p.id+'&quot;)">✅ Receive</button>':'')
         +'<button class="btn btn-t btn-sm" onclick="openPOModal(&quot;'+p.id+'&quot;)">✏</button>'
+        +'<button class="btn btn-s btn-sm" onclick="openOrderNote(&quot;po&quot;,&quot;'+p.id+'&quot;,&quot;'+p.supplier+'&quot;)">📝'+(getOrderNoteCount('po',p.id)>0?' ('+getOrderNoteCount('po',p.id)+')':'')+"</button>"
         +'<button class="btn btn-d btn-sm" onclick="deletePO(&quot;'+p.id+'&quot;)">🗑</button>'
       +'</div></td>'
       +'</tr>';
@@ -4897,6 +4898,7 @@ function rPO(){
         +'<td style="font-weight:700;color:var(--tl2)">'+fR(p.total)+'</td>'
         +'<td><span style="background:rgba(20,184,166,0.1);color:var(--tl2);border:1px solid rgba(20,184,166,0.3);border-radius:6px;padding:2px 8px;font-size:11px;font-weight:600">&#10003; Received</span></td>'
         +'<td>'+docBtn+'</td>'
+        +'<td><button class="btn btn-s btn-sm" onclick="openOrderNote(&quot;po&quot;,&quot;'+p.id+'&quot;,&quot;'+p.supplier+'&quot;)">📝'+(getOrderNoteCount('po',p.id)>0?' ('+getOrderNoteCount('po',p.id)+')':'')+"</button></td>"
         +'</tr>';
     }).join('') : '<tr><td colspan="8" style="text-align:center;color:var(--mu);padding:20px">No received orders yet</td></tr>';
   }
@@ -4938,16 +4940,19 @@ function saveOrderNote(){
   var ts = now.toLocaleDateString('en-ZA',{day:'2-digit',month:'short'})+' '+now.toLocaleTimeString('en-ZA',{hour:'2-digit',minute:'2-digit'});
   notes.push({ts:ts, text:text});
   localStorage.setItem('le_note_'+_noteCtx.type+'_'+_noteCtx.orderId, JSON.stringify(notes));
-  // Update history display
   var hist = document.getElementById('note-history');
   hist.innerHTML = notes.map(function(n){
-    return '<div style="border-bottom:1px solid var(--bd);padding:4px 0">'
-      +'<span style="font-size:10px;color:var(--mu);margin-right:6px">'+n.ts+'</span>'
-      +'<span>'+n.text+'</span></div>';
+    return '<div style="border-bottom:1px solid var(--bd);padding:4px 0">'      +'<span style="font-size:10px;color:var(--mu);margin-right:6px">'+n.ts+'</span>'      +'<span>'+n.text+'</span></div>';
   }).join('');
   document.getElementById('note-input').value = '';
   hist.scrollTop = hist.scrollHeight;
-  rAll();
+  var t = _noteCtx.type;
+  if(t==='fuel') rFuel();
+  else if(t==='lpg') rLPG();
+  else if(t==='po') rPO();
+  else if(t==='debtor') rDebtors();
+  else if(t==='lead') rLeads();
+  else rAll();
 }
 
 // ── AUTO UPDATE CHECKER ──
@@ -5394,11 +5399,7 @@ function rLeads(){
       +'<td style="color:var(--mu);font-size:12px">'+( l.date||'')+'</td>'
       +'<td>'+sel+'</td>'
       +'<td>'+pricingBtn+'</td>'
-      +'<td style="white-space:nowrap">'
-        +'<button onclick="openAddLead(\''+l.id+'\')" class="btn btn-s btn-sm">Edit</button> '
-        +'<button onclick="deleteLead(\''+l.id+'\')" style="font-size:11px;padding:3px 8px;border-radius:6px;border:1px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.08);color:#ef4444;cursor:pointer">Del</button>'
-      +'</td>'
-      +'</tr>';
+      +'<td style="white-space:nowrap">'      +'<button onclick="openAddLead(\''+l.id+'\')" class="btn btn-s btn-sm">Edit</button> '      +'<button onclick="openOrderNote(\'lead\',\''+l.id+'\',\''+l.name+'\')" class="btn btn-s btn-sm">&#128221;'+(getOrderNoteCount('lead',l.id)>0?' ('+getOrderNoteCount('lead',l.id)+')':'')+"</button> "      +'<button onclick="deleteLead(\''+l.id+'\')" style="font-size:11px;padding:3px 8px;border-radius:6px;border:1px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.08);color:#ef4444;cursor:pointer">Del</button>'      +'</td>'      +'</tr>';
   }).join('');
 }
 
@@ -5771,6 +5772,7 @@ function rDebtors() {
     s+='<div style="display:flex;gap:3px">';
     s+='<button class="btn btn-s btn-sm" style="font-size:11px" onclick="viewDebtor(&quot;'+d.id+'&quot;)">View</button>';
     s+='<button class="btn btn-t btn-sm" onclick="openDebtorModal(&quot;'+d.id+'&quot;)">&#9999;</button>';
+    s+='<button class="btn btn-s btn-sm" onclick="openOrderNote(&quot;debtor&quot;,&quot;'+d.id+'&quot;,&quot;'+d.name+'&quot;)">📝'+(getOrderNoteCount('debtor',d.id)>0?' ('+getOrderNoteCount('debtor',d.id)+')':'')+"</button>";
     s+='<button class="btn btn-d btn-sm" onclick="delDebtor(&quot;'+d.id+'&quot;)">&#128465;</button>';
     s+='</div></div>';
     // Orders — hide paid orders when in unpaid filter mode
@@ -5944,6 +5946,7 @@ function rDebtors() {
 
 </body>
 </html>
+
 
 
 
