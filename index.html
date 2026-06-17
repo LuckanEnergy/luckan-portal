@@ -1285,13 +1285,21 @@ input:checked+.slider::before{transform:translateX(18px);}
       <div class="kpi o"><div class="kpi-v" id="rk3">R0</div><div class="kpi-l">Purchase Costs</div></div>
       <div class="kpi g"><div class="kpi-v" id="rk4">R0</div><div class="kpi-l">Net Profit</div></div>
     </div>
-    <div class="g2">
-      <div class="cd"><div class="cd-hd"><span class="cd-ttl">⛽ Fuel Breakdown</span></div><div class="cd-bd" id="fbd"></div></div>
-      <div class="cd"><div class="cd-hd"><span class="cd-ttl">🔥 LPG Breakdown</span></div><div class="cd-bd" id="lbd"></div></div>
-    </div>
     <div class="cd">
-      <div class="cd-hd"><span class="cd-ttl">📋 Orders in Period</span><span id="rpt-count" style="font-size:12px;color:var(--mu)"></span></div>
-      <div class="cd-bd" style="padding:0">
+      <div class="cd-hd" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <span class="cd-ttl">📋 Orders in Period</span>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+          <input type="text" id="rpt-srch" placeholder="Search client…" oninput="rRpt()" style="font-size:12px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd);width:140px">
+          <select id="rpt-col-type" onchange="rRpt()" style="font-size:12px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd)">
+            <option value="">All Types</option>
+            <option value="fuel">Fuel Only</option>
+            <option value="lpg">LPG Only</option>
+          </select>
+          <button class="btn btn-t btn-sm" onclick="expRpt()">⬇ Export CSV</button>
+          <span id="rpt-count" style="font-size:12px;color:var(--mu)"></span>
+        </div>
+      </div>
+      <div class="cd-bd" style="padding:0;overflow-x:auto">
         <table>
           <thead><tr><th>Order ID</th><th>Type</th><th>Date</th><th>Client</th><th>Details</th><th>Value</th><th>Status</th></tr></thead>
           <tbody id="rpt-tbody"></tbody>
@@ -1299,15 +1307,11 @@ input:checked+.slider::before{transform:translateX(18px);}
         </table>
       </div>
     </div>
-    <div class="cd" style="margin-top:4px">
-      <div class="cd-hd"><span class="cd-ttl">🏆 Top Clients</span></div>
-      <div class="cd-bd" style="padding:0"><table><thead><tr><th>Client</th><th>Orders</th><th>Total Value</th><th>Share</th></tr></thead><tbody id="rpt-clients"></tbody></table></div>
-    </div>
 
     <!-- TRANSACTION LIST -->
     <div class="cd" style="margin-top:18px">
       <div class="cd-hd" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
-        <span class="cd-ttl">📋 Transaction List — Completed Orders</span>
+        <span class="cd-ttl">🧾 Generate Sales Report — All Delivered Orders</span>
         <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
           <input type="date" id="tx-from" onchange="rTxList()" style="font-size:12px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd)">
           <input type="date" id="tx-to" onchange="rTxList()" style="font-size:12px;padding:5px 8px;border-radius:6px;border:1px solid var(--bd)">
@@ -1316,6 +1320,7 @@ input:checked+.slider::before{transform:translateX(18px);}
             <option value="fuel">Fuel</option>
             <option value="lpg">LPG</option>
           </select>
+          <button class="btn btn-p btn-sm" onclick="rTxList()">🔍 Generate</button>
           <button class="btn btn-s btn-sm" onclick="setTxP('month')">This Month</button>
           <button class="btn btn-s btn-sm" onclick="setTxP('quarter')">This Quarter</button>
           <button class="btn btn-s btn-sm" onclick="setTxP('year')">This Year</button>
@@ -3123,77 +3128,78 @@ function setRptP(p){
   document.getElementById("rpt-from").value=from;document.getElementById("rpt-to").value=to;rRpt();
 }
 function rRpt(){
-  var from=document.getElementById("rpt-from").value;
-  var to=document.getElementById("rpt-to").value;
-  var type=document.getElementById("rpt-type").value;
-  // Reports shows ONLY PAID orders from Debtors
-  var rows=[];
+  var from = document.getElementById('rpt-from').value;
+  var to   = document.getElementById('rpt-to').value;
+  var type = document.getElementById('rpt-type').value;
+  var srch = (document.getElementById('rpt-srch')||{}).value||''; srch=srch.toLowerCase();
+  var colType = (document.getElementById('rpt-col-type')||{}).value||'';
+
+  // Only PAID orders from Debtors
+  var rows = [];
   DB.forEach(function(d){
     (d.orders||[]).forEach(function(o){
-      if(o.paymentStatus!=="paid")return;
-      var isLPG=o.orderId&&o.orderId.indexOf("LE-G-")>-1;
-      if(type==="fuel"&&isLPG)return;
-      if(type==="lpg"&&!isLPG)return;
-      rows.push({id:o.orderId,type:isLPG?"lpg":"fuel",date:o.date||"",client:o.client||d.company,detail:o.description||"",value:parseFloat(o.amount)||0,status:"paid"});
+      if(o.paymentStatus!=='paid') return;
+      var isLPG = o.orderId && o.orderId.indexOf('LE-G-')>-1;
+      if(type==='fuel' && isLPG) return;
+      if(type==='lpg'  && !isLPG) return;
+      rows.push({id:o.orderId, type:isLPG?'lpg':'fuel', date:o.date||'', client:o.client||d.company, detail:o.description||'', value:parseFloat(o.amount)||0, status:'paid'});
     });
   });
-  rows=rows.filter(function(o){return(!from||!o.date||o.date>=from)&&(!to||!o.date||o.date<=to);});
-  var totalRev=rows.reduce(function(s,o){return s+(o.value||0);},0);
-  var fuelRows=rows.filter(function(o){return o.type==="fuel";});
-
-  // Purchase order costs — received POs in the same date range
-  var poRows=(PO||[]).filter(function(p){
-    if(p.status!=='received')return false;
-    if(from&&p.date&&p.date<from)return false;
-    if(to&&p.date&&p.date>to)return false;
-    if(type==='fuel'&&p.cat==='LPG')return false;
-    if(type==='lpg'&&p.cat!=='LPG')return false;
+  rows = rows.filter(function(o){
+    if(from && o.date && o.date < from) return false;
+    if(to   && o.date && o.date > to)   return false;
     return true;
   });
-  var totalCost=poRows.reduce(function(s,p){return s+(p.total||0);},0);
-  var netProfit=totalRev-totalCost;
 
-  document.getElementById("rk1").textContent=fR(totalRev);
-  document.getElementById("rk2").textContent=rows.length;
-  document.getElementById("rk3").textContent=fR(totalCost);
-  document.getElementById("rk4").style.color=netProfit>=0?'var(--tl2)':'#ef4444';
-  document.getElementById("rk4").textContent=fR(netProfit);
-  document.getElementById("rpt-count").textContent=rows.length+" order(s)";
-  // Fuel breakdown by description
-  var fp={};fuelRows.forEach(function(o){var lbl=(o.detail||"").split("—")[1]||o.detail;lbl=(lbl||"").trim();fp[lbl]=(fp[lbl]||0)+1;});
-  var fLen=fuelRows.length;
-  document.getElementById("fbd").innerHTML=Object.keys(fp).map(function(p){
-    var c=fp[p];return "<div style=\"display:flex;justify-content:space-between;align-items:center;margin-bottom:10px\"><span style=\"font-size:13px\">"+p+"</span><div style=\"display:flex;align-items:center;gap:8px\"><div class=\"pb\" style=\"width:78px\"><div class=\"pf\" style=\"width:"+(fLen?Math.round(c/fLen*100):0)+"%\"></div></div><span style=\"font-family:var(--fd);font-size:15px;color:var(--pk);width:20px\">"+c+"</span></div></div>";
-  }).join("")||"<div style=\"color:var(--mu);font-size:13px\">No paid fuel orders yet</div>";
-  var lpgRows=rows.filter(function(o){return o.type==="lpg";});
-  var ls={};lpgRows.forEach(function(o){var lbl=(o.detail||"").split("—")[1]||o.detail;lbl=(lbl||"").trim();ls[lbl]=(ls[lbl]||0)+1;});
-  var lLen=lpgRows.length;
-  document.getElementById("lbd").innerHTML=Object.keys(ls).map(function(s){
-    var c=ls[s];return "<div style=\"display:flex;justify-content:space-between;align-items:center;margin-bottom:10px\"><span style=\"font-size:13px\">"+s+"</span><div style=\"display:flex;align-items:center;gap:8px\"><div class=\"pb\" style=\"width:78px\"><div class=\"pf\" style=\"width:"+(lLen?Math.round(c/lLen*100):0)+"%;background:var(--tl)\"></div></div><span style=\"font-family:var(--fd);font-size:15px;color:var(--tl2);width:20px\">"+c+"</span></div></div>";
-  }).join("")||"<div style=\"color:var(--mu);font-size:13px\">No paid LPG orders yet</div>";
-  document.getElementById("rpt-tbody").innerHTML=rows.map(function(o){
-    return "<tr>"
-      +"<td style=\"font-size:11px;font-weight:700;color:"+(o.type==="fuel"?"var(--pk)":"var(--tl2)")+";font-family:monospace\">"+o.id+"</td>"
-      +"<td>"+(o.type==="fuel"?"⛽":"🔥")+" "+o.type+"</td>"
-      +"<td style=\"font-size:12px;color:var(--mu)\">"+o.date+"</td>"
-      +"<td style=\"font-weight:600\">"+o.client+"</td>"
-      +"<td style=\"font-size:12px;color:var(--mu)\">"+o.detail+"</td>"
-      +"<td style=\"font-weight:700\">"+fR(o.value||0)+"</td>"
-      +"<td><span class=\"chip delivered\">✅ Paid</span></td></tr>";
-  }).join("")||"<tr><td colspan=\"7\" style=\"text-align:center;color:var(--mu);padding:26px\">No paid orders yet — mark orders as paid in Debtors to see them here.</td></tr>";
-  document.getElementById("rpt-total").innerHTML=rows.length
-    ? "<td colspan=\"5\" style=\"font-size:11px;letter-spacing:1px;text-transform:uppercase\">TOTAL COLLECTED ("+rows.length+" paid orders)</td><td style=\"font-weight:800;color:var(--pk)\">"+fR(totalRev)+"</td><td></td>"
-      +"</tr><tr style=\"background:rgba(239,68,68,0.06)\"><td colspan=\"5\" style=\"font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#ef4444\">PURCHASE COSTS ("+poRows.length+" received POs)</td><td style=\"font-weight:800;color:#ef4444\">- "+fR(totalCost)+"</td><td></td>"
-      +"</tr><tr style=\"background:rgba(34,197,94,0.06)\"><td colspan=\"5\" style=\"font-size:11px;letter-spacing:1px;text-transform:uppercase;color:"+(netProfit>=0?'#22c55e':'#ef4444')+'\">'+(netProfit>=0?'NET PROFIT':'NET LOSS')+"</td><td style=\"font-weight:800;color:"+(netProfit>=0?'#22c55e':'#ef4444')+'\">'+(netProfit>=0?'':'- ')+fR(Math.abs(netProfit))+"</td><td></td>"
-    : "";
-  var cm={};rows.forEach(function(o){if(!cm[o.client])cm[o.client]={n:0,v:0};cm[o.client].n++;cm[o.client].v+=(o.value||0);});
-  var cls=Object.keys(cm).map(function(n){return{n:n,d:cm[n]};}).sort(function(a,b){return b.d.v-a.d.v;});
-  var mx=cls.length?cls[0].d.v:1;
-  document.getElementById("rpt-clients").innerHTML=cls.map(function(x){
-    return "<tr><td style=\"font-weight:600\">"+x.n+"</td><td>"+x.d.n+"</td><td style=\"font-weight:700;color:var(--pk)\">"+fR(x.d.v)+"</td><td><div class=\"pb\" style=\"width:88px\"><div class=\"pf\" style=\"width:"+Math.round(x.d.v/mx*100)+"%\"></div></div></td></tr>";
-  }).join("")||"<tr><td colspan=\"4\" style=\"color:var(--mu);padding:18px;text-align:center\">No paid orders yet</td></tr>";
+  var totalRev  = rows.reduce(function(s,o){return s+(o.value||0);},0);
+  var poRows = (PO||[]).filter(function(p){
+    if(p.status!=='received') return false;
+    if(from && p.date && p.date<from) return false;
+    if(to   && p.date && p.date>to)   return false;
+    if(type==='fuel' && p.cat==='LPG') return false;
+    if(type==='lpg'  && p.cat!=='LPG') return false;
+    return true;
+  });
+  var totalCost = poRows.reduce(function(s,p){return s+(p.total||0);},0);
+  var netProfit = totalRev - totalCost;
+
+  var setEl = function(id,v){var e=document.getElementById(id);if(e)e.textContent=v;};
+  setEl('rk1', fR(totalRev));
+  setEl('rk2', rows.length);
+  var rk3 = document.getElementById('rk3'); if(rk3) rk3.textContent = fR(totalCost);
+  var rk4 = document.getElementById('rk4');
+  if(rk4){ rk4.style.color = netProfit>=0?'var(--tl2)':'#ef4444'; rk4.textContent = fR(netProfit); }
+
+  // Apply column filters
+  var filtered = rows.filter(function(o){
+    if(srch && !o.client.toLowerCase().includes(srch) && !(o.id||'').toLowerCase().includes(srch)) return false;
+    if(colType && o.type !== colType) return false;
+    return true;
+  });
+  filtered.sort(function(a,b){ return b.date.localeCompare(a.date); });
+
+  setEl('rpt-count', filtered.length + ' order(s)');
+
+  var tbody = document.getElementById('rpt-tbody');
+  if(tbody) tbody.innerHTML = filtered.map(function(o){
+    return '<tr>'
+      +'<td style="font-size:11px;font-weight:700;color:'+(o.type==='fuel'?'var(--pk)':'var(--tl2)')+';font-family:monospace">'+o.id+'</td>'
+      +'<td>'+(o.type==='fuel'?'⛽ Fuel':'🔥 LPG')+'</td>'
+      +'<td style="font-size:12px;color:var(--mu)">'+o.date+'</td>'
+      +'<td style="font-weight:600">'+o.client+'</td>'
+      +'<td style="font-size:12px;color:var(--mu)">'+o.detail+'</td>'
+      +'<td style="font-weight:700">'+fR(o.value||0)+'</td>'
+      +'<td><span style="background:rgba(34,197,94,0.1);color:#16a34a;border:1px solid rgba(34,197,94,0.3);border-radius:6px;padding:2px 8px;font-size:11px;font-weight:600">✅ Paid</span></td>'
+      +'</tr>';
+  }).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--mu);padding:26px">No paid orders in this period.<br><small>Mark orders as paid in Fuel Debtors or LPG Debtors to see them here.</small></td></tr>';
+
+  var tfoot = document.getElementById('rpt-total');
+  if(tfoot) tfoot.innerHTML = rows.length
+    ? '<td colspan="5" style="font-size:11px;letter-spacing:1px;text-transform:uppercase">TOTAL COLLECTED ('+rows.length+' paid orders)</td><td style="font-weight:800;color:var(--pk)">'+fR(totalRev)+'</td><td></td>'
+      +'</tr><tr style="background:rgba(239,68,68,0.06)"><td colspan="5" style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#ef4444">PURCHASE COSTS ('+poRows.length+' received POs)</td><td style="font-weight:800;color:#ef4444">- '+fR(totalCost)+'</td><td></td>'
+      +'</tr><tr style="background:rgba(34,197,94,0.06)"><td colspan="5" style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:'+(netProfit>=0?'#22c55e':'#ef4444')+'">'+(netProfit>=0?'NET PROFIT':'NET LOSS')+'</td><td style="font-weight:800;color:'+(netProfit>=0?'#22c55e':'#ef4444')+'">'+(netProfit>=0?'':'- ')+fR(Math.abs(netProfit))+'</td><td></td>'
+    : '';
 }
-
 
 // ── TRANSACTION LIST (all delivered/completed orders) ──
 function setTxP(p){
