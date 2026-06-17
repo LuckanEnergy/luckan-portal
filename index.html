@@ -2441,12 +2441,16 @@ function updSt(type,id,s){
           sv();
           localStorage.setItem('le_db', JSON.stringify(DB));
           addAct(id+" delivered — moved to Debtors","✅","tl");
-          // Step 4: reload orders from Supabase so transaction log is fresh
-          if(type==="fuel"){
-            loadFO(function(){ rFuel(); rAll(); rDash(); });
-          } else {
-            loadLO(function(){ rLPG(); rAll(); rDash(); });
-          }
+          // Step 4: wait 800ms for Supabase to commit, then reload everything
+          setTimeout(function(){
+            loadDB(function(){
+              if(type==="fuel"){
+                loadFO(function(){ rFuel(); rAll(); rDash(); if(CUR_PAGE==="fuel-debtors")rFuelDebtors(); });
+              } else {
+                loadLO(function(){ rLPG(); rAll(); rDash(); if(CUR_PAGE==="lpg-debtors")rLPGDebtors(); });
+              }
+            });
+          }, 800);
         });
       });
     });
@@ -2550,7 +2554,11 @@ function saveFuel(){
         pushOrderToDebtors(o,"fuel");
         sv();closeM("mf");
         addAct((eid?"Edited":"New")+" fuel order "+o.id+" — delivered, moved to Debtors","⛽","tl");
-        loadFO(function(){ rFuel(); rDash(); });
+        setTimeout(function(){
+          loadDB(function(){
+            loadFO(function(){ rFuel(); rDash(); if(CUR_PAGE==="fuel-debtors")rFuelDebtors(); });
+          });
+        }, 800);
       });
     });
     return;
@@ -2592,7 +2600,11 @@ function saveLPG(){
         pushOrderToDebtors(o,"lpg");
         sv();closeM("ml");
         addAct((eid?"Edited":"New")+" LPG order "+o.id+" — delivered, moved to Debtors","🔥","pk");
-        loadLO(function(){ rLPG(); rDash(); });
+        setTimeout(function(){
+          loadDB(function(){
+            loadLO(function(){ rLPG(); rDash(); if(CUR_PAGE==="lpg-debtors")rLPGDebtors(); });
+          });
+        }, 800);
       });
     });
     return;
@@ -6177,6 +6189,7 @@ function rDebtors() {
 
 </body>
 </html>
+
 
 
 
