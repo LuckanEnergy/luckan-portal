@@ -543,7 +543,8 @@ input:checked+.slider::before{transform:translateX(18px);}
     </div>
     <div><span class="nl">Analytics</span>
       <div class="ni" id="nav-sales-report" onclick="goPage('sales-report',this)"><span class="ic">📈</span>Sales Report<span class="lbadge" id="lb-sales-report"></span></div>
-      <div class="ni" id="nav-debtors" onclick="goPage('debtors',this)"><span class="ic">💰</span>Debtors<span class="lbadge" id="lb-debtors"></span></div>
+      <div class="ni" id="nav-fuel-debtors" onclick="goPage('fuel-debtors',this)"><span class="ic">⛽</span>Fuel Debtors<span class="lbadge" id="lb-fuel-debtors"></span></div>
+      <div class="ni" id="nav-lpg-debtors" onclick="goPage('lpg-debtors',this)"><span class="ic">🔥</span>LPG Debtors<span class="lbadge" id="lb-lpg-debtors"></span></div>
     </div>
     <div><span class="nl">System</span>
       <div class="ni" onclick="goPage('settings',this)"><span class="ic">⚙️</span>Settings</div>
@@ -1104,53 +1105,72 @@ input:checked+.slider::before{transform:translateX(18px);}
   </div>
 
   <!-- DEBTORS -->
-  <div class="pg" id="pg-debtors">
+  <!-- FUEL DEBTORS -->
+  <div class="pg" id="pg-fuel-debtors">
     <div class="sh">
-      <div><div class="st">💰 DEB<em>TORS</em></div><div class="ss">Delivered orders land here · Mark as paid to move to Reports</div></div>
+      <div><div class="st">⛽ FUEL <em>DEBTORS</em></div><div class="ss">Fuel delivered orders · Mark as paid to move to Reports</div></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn btn-s btn-sm" onclick="syncDebtorOrders()">🔄 Sync Orders</button>
         <button class="btn btn-p" onclick="openDebtorModal()">+ Add Debtor</button>
       </div>
     </div>
-
-    <!-- KPI STRIP -->
     <div class="debtor-kpi">
-      <div class="dkpi"><div class="dkpi-v" style="color:#ef4444" id="dk1">R 0</div><div class="dkpi-l">Total Unpaid</div></div>
-      <div class="dkpi"><div class="dkpi-v" style="color:var(--pk)" id="dk2">0</div><div class="dkpi-l">Active Debtors</div></div>
-      <div class="dkpi"><div class="dkpi-v" style="color:#d97706" id="dk3">0</div><div class="dkpi-l">Overdue (30+ days)</div></div>
-      <div class="dkpi"><div class="dkpi-v" style="color:var(--tl2)" id="dk4">R 0</div><div class="dkpi-l">Collected (Paid)</div></div>
+      <div class="dkpi"><div class="dkpi-v" style="color:#ef4444" id="fdk1">R 0</div><div class="dkpi-l">Total Unpaid</div></div>
+      <div class="dkpi"><div class="dkpi-v" style="color:var(--pk)" id="fdk2">0</div><div class="dkpi-l">Active Debtors</div></div>
+      <div class="dkpi"><div class="dkpi-v" style="color:#d97706" id="fdk3">0</div><div class="dkpi-l">Overdue (30+ days)</div></div>
+      <div class="dkpi"><div class="dkpi-v" style="color:var(--tl2)" id="fdk4">R 0</div><div class="dkpi-l">Collected (Paid)</div></div>
     </div>
-
-    <!-- FILTERS -->
     <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
-      <div class="sw" style="flex:1;min-width:200px"><input type="text" id="deb-srch" placeholder="Search by client or company…" oninput="rDebtors()"></div>
-      <select id="deb-filter" onchange="rDebtors()" style="width:160px;padding:8px 11px;font-size:12px">
+      <div class="sw" style="flex:1;min-width:200px"><input type="text" id="fdeb-srch" placeholder="Search fuel debtors…" oninput="rFuelDebtors()"></div>
+      <select id="fdeb-filter" onchange="rFuelDebtors()" style="width:160px;padding:8px 11px;font-size:12px">
         <option value="unpaid" selected>Unpaid Only</option>
         <option value="all">All Debtors</option>
-        <option value="paid">Fully Paid</option></select>
-      <select id="deb-pay-filter" onchange="rDebtors()" style="width:150px;padding:8px 11px;font-size:12px">
-        <option value="">All Payment Status</option>
-        <option value="unpaid">Has Unpaid Orders</option>
         <option value="paid">Fully Paid</option>
       </select>
-      <button class="btn btn-t btn-sm" onclick="expDebtorsCSV()">⬇ Export CSV</button>
+      <button class="btn btn-t btn-sm" onclick="expDebtorsCSV('fuel')">⬇ Export CSV</button>
     </div>
-
-    <!-- DEBTOR CARDS -->
-    <div class="debtor-grid" id="debtor-grid"></div>
-
-    <!-- FULL TABLE -->
+    <div id="fuel-debtor-grid"></div>
     <div class="cd">
-      <div class="cd-hd">
-        <span class="cd-ttl">📋 All Debtor Accounts</span>
-        <span id="deb-total-label" style="font-size:12px;color:var(--mu)"></span>
-      </div>
+      <div class="cd-hd"><span class="cd-ttl">📋 Fuel Debtor Accounts</span><span id="fdeb-total-label" style="font-size:12px;color:var(--mu)"></span></div>
       <div class="cd-bd" style="padding:0">
-        <table>
-          <thead><tr><th>Client</th><th class="hide-mobile">Company</th><th class="hide-mobile">Orders</th><th>Unpaid</th><th class="hide-mobile">Paid</th><th class="hide-mobile">Oldest</th><th class="hide-mobile">Days</th><th>Risk</th><th>Actions</th></tr></thead>
-          <tbody id="debtor-table"></tbody>
-          <tfoot><tr id="debtor-totals"></tr></tfoot>
-        </table>
+        <table><thead><tr><th>Client</th><th class="hide-mobile">Company</th><th class="hide-mobile">Orders</th><th>Unpaid</th><th class="hide-mobile">Paid</th><th class="hide-mobile">Days</th><th>Risk</th><th>Actions</th></tr></thead>
+        <tbody id="fuel-debtor-table"></tbody>
+        <tfoot><tr id="fuel-debtor-totals"></tr></tfoot></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- LPG DEBTORS -->
+  <div class="pg" id="pg-lpg-debtors">
+    <div class="sh">
+      <div><div class="st">🔥 LPG <em>DEBTORS</em></div><div class="ss">LPG delivered orders · Mark as paid to move to Reports</div></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-s btn-sm" onclick="syncDebtorOrders()">🔄 Sync Orders</button>
+        <button class="btn btn-p" onclick="openDebtorModal()">+ Add Debtor</button>
+      </div>
+    </div>
+    <div class="debtor-kpi">
+      <div class="dkpi"><div class="dkpi-v" style="color:#ef4444" id="ldk1">R 0</div><div class="dkpi-l">Total Unpaid</div></div>
+      <div class="dkpi"><div class="dkpi-v" style="color:var(--tl2)" id="ldk2">0</div><div class="dkpi-l">Active Debtors</div></div>
+      <div class="dkpi"><div class="dkpi-v" style="color:#d97706" id="ldk3">0</div><div class="dkpi-l">Overdue (30+ days)</div></div>
+      <div class="dkpi"><div class="dkpi-v" style="color:var(--tl2)" id="ldk4">R 0</div><div class="dkpi-l">Collected (Paid)</div></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
+      <div class="sw" style="flex:1;min-width:200px"><input type="text" id="ldeb-srch" placeholder="Search LPG debtors…" oninput="rLPGDebtors()"></div>
+      <select id="ldeb-filter" onchange="rLPGDebtors()" style="width:160px;padding:8px 11px;font-size:12px">
+        <option value="unpaid" selected>Unpaid Only</option>
+        <option value="all">All Debtors</option>
+        <option value="paid">Fully Paid</option>
+      </select>
+      <button class="btn btn-t btn-sm" onclick="expDebtorsCSV('lpg')">⬇ Export CSV</button>
+    </div>
+    <div id="lpg-debtor-grid"></div>
+    <div class="cd">
+      <div class="cd-hd"><span class="cd-ttl">📋 LPG Debtor Accounts</span><span id="ldeb-total-label" style="font-size:12px;color:var(--mu)"></span></div>
+      <div class="cd-bd" style="padding:0">
+        <table><thead><tr><th>Client</th><th class="hide-mobile">Company</th><th class="hide-mobile">Orders</th><th>Unpaid</th><th class="hide-mobile">Paid</th><th class="hide-mobile">Days</th><th>Risk</th><th>Actions</th></tr></thead>
+        <tbody id="lpg-debtor-table"></tbody>
+        <tfoot><tr id="lpg-debtor-totals"></tr></tfoot></table>
       </div>
     </div>
   </div>
@@ -1964,7 +1984,7 @@ function setupRealtime() {
     .on('postgres_changes', {event: '*', schema: 'public', table: 'fuel_orders'}, function(){ loadFO(function(){if(CUR_PAGE==='fuel-orders'||CUR_PAGE==='all-orders'||CUR_PAGE==='dashboard'){rFuel&&rFuel();rAll&&rAll();rDash&&rDash();}}); })
     .on('postgres_changes', {event: '*', schema: 'public', table: 'lpg_orders'},  function(){ loadLO(function(){if(CUR_PAGE==='lpg-orders'||CUR_PAGE==='all-orders'||CUR_PAGE==='dashboard'){rLPG&&rLPG();rAll&&rAll();rDash&&rDash();}}); })
     .on('postgres_changes', {event: '*', schema: 'public', table: 'clients'},     function(){ loadCL(function(){if(CUR_PAGE==='clients')rClients&&rClients();}); })
-    .on('postgres_changes', {event: '*', schema: 'public', table: 'debtors'},     function(){ loadDB(function(){if(CUR_PAGE==='debtors')rDebtors&&rDebtors();}); })
+    .on('postgres_changes', {event: '*', schema: 'public', table: 'debtors'},     function(){ loadDB(function(){if(CUR_PAGE==='debtors')rDebtors&&(CUR_PAGE==='fuel-debtors'?rFuelDebtors():(CUR_PAGE==='lpg-debtors'?rLPGDebtors():rDebtors()));}); })
     .on('postgres_changes', {event: '*', schema: 'public', table: 'stock'},       function(){ loadSTOCK(function(){if(CUR_PAGE==='stock')rStock&&rStock();}); })
     .on('postgres_changes', {event: '*', schema: 'public', table: 'assets'},      function(){ loadAR(function(){if(CUR_PAGE==='assets')rAssets&&rAssets();}); })
     .subscribe(function(status){
@@ -2224,7 +2244,8 @@ function refreshPage(){
     else if(page==="assets")rAssets();
     else if(page==="clients")rClients();
     else if(page==="leads")rLeads();
-    else if(page==="debtors")rDebtors();
+    else if(page==="fuel-debtors")rFuelDebtors();
+    else if(page==="lpg-debtors")rLPGDebtors();
     else if(page==="documents")rDocs();
     else if(page==="sales-report"){rRpt();rTxList();}
   };
@@ -2234,14 +2255,15 @@ function refreshPage(){
   else if(page==="purchase-orders") loadPO(done);
   else if(page==="clients") loadCL(done);
   else if(page==="leads"){ loadLeads(); done(); }
-  else if(page==="debtors") loadDB(done);
+  else if(page==="fuel-debtors") loadDB(done);
+  else if(page==="lpg-debtors") loadDB(done);
   else if(page==="stock-fuel"||page==="stock-lpg") loadSTOCK(done);
   else if(page==="assets") loadAR(done);
   else if(page==="sales-report") loadDB(function(){ loadPO(function(){ loadFO(function(){ loadLO(done); }); }); });
   else done();
 }
 
-var navTitles={dashboard:"DASHBOARD","fuel-orders":"FUEL ORDERS","purchase-orders":"PURCHASE ORDERS","lpg-orders":"LPG ORDERS","all-orders":"ALL ORDERS",stock:"STOCK LEVELS",assets:"ASSET REGISTER",clients:"CLIENTS",leads:"SALES PIPELINE",documents:"DOCUMENTS","sales-report":"SALES REPORT",debtors:"DEBTORS",settings:"SETTINGS"};
+var navTitles={dashboard:"DASHBOARD","fuel-orders":"FUEL ORDERS","purchase-orders":"PURCHASE ORDERS","lpg-orders":"LPG ORDERS","all-orders":"ALL ORDERS",stock:"STOCK LEVELS",assets:"ASSET REGISTER",clients:"CLIENTS",leads:"SALES PIPELINE",documents:"DOCUMENTS","sales-report":"SALES REPORT","fuel-debtors":"FUEL DEBTORS","lpg-debtors":"LPG DEBTORS",settings:"SETTINGS"};
 
 function goPage(page,el){
   if(LOCKABLE.indexOf(page)>-1&&LOCKS[page]&&unlocked.indexOf(page)===-1){
@@ -4974,7 +4996,7 @@ function saveOrderNote(){
   if(t==='fuel') rFuel();
   else if(t==='lpg') rLPG();
   else if(t==='po') rPO();
-  else if(t==='debtor') rDebtors();
+  else if(t==='debtor') (CUR_PAGE==='fuel-debtors'?rFuelDebtors():(CUR_PAGE==='lpg-debtors'?rLPGDebtors():rDebtors()));
   else if(t==='lead') rLeads();
   else rAll();
 }
@@ -5306,7 +5328,7 @@ function refreshCurPage(){
   else if(CUR_PAGE==="lpg-orders")rLPG();
   else if(CUR_PAGE==="all-orders")rAll();
   else if(CUR_PAGE==="clients")rClients();
-  else if(CUR_PAGE==="debtors")rDebtors();
+  else if(CUR_PAGE==="fuel-debtors")rFuelDebtors();else if(CUR_PAGE==="lpg-debtors")rLPGDebtors();else if(CUR_PAGE==="debtors")(CUR_PAGE==='fuel-debtors'?rFuelDebtors():(CUR_PAGE==='lpg-debtors'?rLPGDebtors():rDebtors()));
   else if(CUR_PAGE==="stock")rStock();
   else if(CUR_PAGE==="assets")rAssets();
   else if(CUR_PAGE==="sales-report")rRpt();
@@ -5548,7 +5570,7 @@ function getClientOrders(companyName) {
 
 // ── Sync: for each debtor, refresh amounts from live order data (keep assignments) ──
 function syncDebtorOrders() {
-  rDebtors();
+  (CUR_PAGE==='fuel-debtors'?rFuelDebtors():(CUR_PAGE==='lpg-debtors'?rLPGDebtors():rDebtors()));
   addAct("Debtor view refreshed", "💰", "tl");
 }
 function openDebtorModal(id) {
@@ -5722,7 +5744,7 @@ function saveDebtor() {
   };
   if (eid) { var idx = DB.findIndex(function(x){ return x.id===eid; }); if (idx>-1) DB[idx]=d; }
   else DB.unshift(d);
-  sv(); closeM("m-debtor"); rDebtors();
+  sv(); closeM("m-debtor"); (CUR_PAGE==='fuel-debtors'?rFuelDebtors():(CUR_PAGE==='lpg-debtors'?rLPGDebtors():rDebtors()));
   addAct((eid?"Updated":"Added")+" debtor: "+d.company, "💰", "pk");
 }
 
@@ -5756,7 +5778,7 @@ function quickPayOrder(sel) {
   addAct(oid+(newStatus==='paid'?' paid — Sales Report':' marked unpaid'), newStatus==='paid'?'✅':'💰', newStatus==='paid'?'tl':'pk');
 
   // Refresh all affected views
-  rDebtors();
+  (CUR_PAGE==='fuel-debtors'?rFuelDebtors():(CUR_PAGE==='lpg-debtors'?rLPGDebtors():rDebtors()));
   rRpt();
   rDash();
 }
@@ -5769,7 +5791,7 @@ function toggleOrderPayment(debtorId, orderId) {
   var newStatus = o.paymentStatus === "paid" ? "unpaid" : "paid";
   if(newStatus==="paid" && !confirm(orderId+" — Mark as PAID?\nThis will move it to the Sales Report."))return;
   o.paymentStatus = newStatus;
-  sv(); rDebtors();
+  sv(); (CUR_PAGE==='fuel-debtors'?rFuelDebtors():(CUR_PAGE==='lpg-debtors'?rLPGDebtors():rDebtors()));
   addAct(orderId + " marked as " + newStatus + (newStatus==="paid"?" → moved to Reports":""), "💰", newStatus==="paid"?"tl":"pk");
 }
 
@@ -5778,7 +5800,7 @@ function delDebtor(id) {
   DB = DB.filter(function(x){ return x.id !== id; });
   delDB_supa(id);
   sv();
-  rDebtors();
+  (CUR_PAGE==='fuel-debtors'?rFuelDebtors():(CUR_PAGE==='lpg-debtors'?rLPGDebtors():rDebtors()));
   rDash();
 }
 
@@ -5809,6 +5831,136 @@ function debtorPaid(d) {
 }
 function debtorUnpaidOrders(d) {
   return (d.orders||[]).filter(function(o){ return o.paymentStatus !== "paid"; });
+}
+
+
+// ── FUEL DEBTORS ──
+function rFuelDebtors(){ rDebtorsByType('fuel'); }
+function rLPGDebtors(){ rDebtorsByType('lpg'); }
+
+function rDebtorsByType(type){
+  var isFuel = type==='fuel';
+  var srchId  = isFuel?'fdeb-srch':'ldeb-srch';
+  var filtId  = isFuel?'fdeb-filter':'ldeb-filter';
+  var gridId  = isFuel?'fuel-debtor-grid':'lpg-debtor-grid';
+  var tableId = isFuel?'fuel-debtor-table':'lpg-debtor-table';
+  var totId   = isFuel?'fuel-debtor-totals':'lpg-debtor-totals';
+  var labelId = isFuel?'fdeb-total-label':'ldeb-total-label';
+  var dk      = isFuel?['fdk1','fdk2','fdk3','fdk4']:['ldk1','ldk2','ldk3','ldk4'];
+  var badgeId = isFuel?'lb-fuel-debtors':'lb-lpg-debtors';
+
+  var q = (document.getElementById(srchId)||{}).value||''; q=q.toLowerCase();
+  var rf = (document.getElementById(filtId)||{}).value||'unpaid';
+
+  // Filter DB: only debtors who have at least one order of this type
+  var typeDB = DB.filter(function(d){
+    return (d.orders||[]).some(function(o){ return (o.type||'fuel')===type; });
+  });
+
+  var rows = typeDB.filter(function(d){
+    var mq = !q||d.name.toLowerCase().includes(q)||d.company.toLowerCase().includes(q);
+    if(!mq) return false;
+    var typeOrders = (d.orders||[]).filter(function(o){ return (o.type||'fuel')===type; });
+    var hasUnpaid = typeOrders.some(function(o){ return o.paymentStatus!=='paid'; });
+    if(rf==='unpaid') return hasUnpaid;
+    if(rf==='paid')   return !hasUnpaid && typeOrders.length>0;
+    return true;
+  });
+
+  // KPIs — scoped to this type
+  var totalOwe = typeDB.reduce(function(s,d){
+    return s+(d.orders||[]).filter(function(o){return (o.type||'fuel')===type&&o.paymentStatus!=='paid';}).reduce(function(a,o){return a+(parseFloat(o.amount)||0);},0);
+  },0);
+  var overdue = typeDB.filter(function(d){ return debtorDays(d)>=30; }).length;
+  var totalPaid = typeDB.reduce(function(s,d){
+    return s+(d.orders||[]).filter(function(o){return (o.type||'fuel')===type&&o.paymentStatus==='paid';}).reduce(function(a,o){return a+(parseFloat(o.amount)||0);},0);
+  },0);
+  var setEl=function(id,v){var e=document.getElementById(id);if(e)e.textContent=v;};
+  setEl(dk[0], fR(totalOwe));
+  setEl(dk[1], typeDB.length);
+  setEl(dk[2], overdue);
+  setEl(dk[3], fR(totalPaid));
+
+  // Badge
+  var badge=document.getElementById(badgeId);
+  if(badge){ var unpaidCount=typeDB.filter(function(d){return (d.orders||[]).some(function(o){return (o.type||'fuel')===type&&o.paymentStatus!=='paid';});}).length; badge.textContent=unpaidCount||''; }
+
+  // Render debtor cards
+  var grid=document.getElementById(gridId);
+  if(grid) grid.innerHTML='';
+
+  var sorted=rows.slice().sort(function(a,b){
+    var aU=(a.orders||[]).filter(function(o){return (o.type||'fuel')===type&&o.paymentStatus!=='paid';}).reduce(function(s,o){return s+(parseFloat(o.amount)||0);},0);
+    var bU=(b.orders||[]).filter(function(o){return (o.type||'fuel')===type&&o.paymentStatus!=='paid';}).reduce(function(s,o){return s+(parseFloat(o.amount)||0);},0);
+    return bU-aU;
+  });
+
+  var html2=sorted.map(function(d){
+    var rc=debtorRisk(d)==='high'?'#ef4444':debtorRisk(d)==='med'?'#d97706':'var(--tl2)';
+    var ini=d.name.split(' ').map(function(w){return w[0]||'';}).join('').toUpperCase().slice(0,2);
+    var typeOrders=(d.orders||[]).filter(function(o){return (o.type||'fuel')===type;});
+    var unpaidCount=typeOrders.filter(function(o){return o.paymentStatus!=='paid';}).length;
+    var typeUnpaid=typeOrders.filter(function(o){return o.paymentStatus!=='paid';}).reduce(function(s,o){return s+(parseFloat(o.amount)||0);},0);
+    var s='<div style="border:1px solid var(--bd);border-radius:8px;overflow:hidden;margin-bottom:8px">';
+    s+='<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--lt)">';
+    s+='<div style="width:34px;height:34px;border-radius:50%;background:'+rc+';color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0">'+ini+'</div>';
+    s+='<div style="flex:1"><div style="font-weight:700;font-size:13px">'+d.name+'</div><div style="font-size:11px;color:var(--mu)">'+d.company+'</div></div>';
+    s+='<div style="text-align:right;margin-right:8px"><div style="font-size:14px;font-weight:800;color:'+rc+'">'+fR(typeUnpaid)+'</div><div style="font-size:10px;color:var(--mu)">'+unpaidCount+' unpaid</div></div>';
+    s+='<div style="display:flex;gap:3px">';
+    s+='<button class="btn btn-s btn-sm" style="font-size:11px" onclick="viewDebtor(&quot;'+d.id+'&quot;)">View</button>';
+    s+='<button class="btn btn-t btn-sm" onclick="openDebtorModal(&quot;'+d.id+'&quot;)">&#9999;</button>';
+    s+='<button class="btn btn-s btn-sm" onclick="openOrderNote(&quot;debtor&quot;,&quot;'+d.id+'&quot;,&quot;'+d.name+'&quot;)">📝'+(getOrderNoteCount('debtor',d.id)>0?' ('+getOrderNoteCount('debtor',d.id)+')':'')+"</button>";
+    s+='<button class="btn btn-d btn-sm" onclick="delDebtor(&quot;'+d.id+'&quot;)">&#128465;</button>';
+    s+='</div></div>';
+    var visibleOrders=(rf==='unpaid')?typeOrders.filter(function(o){return o.paymentStatus!=='paid';}):typeOrders;
+    if(visibleOrders.length===0){
+      s+='<div style="padding:8px 12px 8px 56px;font-size:12px;color:var(--mu)">No outstanding orders</div>';
+    } else {
+      visibleOrders.forEach(function(o){
+        var paid=o.paymentStatus==='paid';
+        var oid=o.orderId||'—';
+        s+='<div style="display:flex;align-items:center;gap:8px;padding:7px 12px 7px 56px;border-top:1px solid var(--bd);background:'+(paid?'rgba(20,184,166,0.04)':'var(--wh)')+';flex-wrap:wrap">';
+        s+='<span style="font-size:11px;font-weight:700;color:'+(paid?'var(--tl2)':'var(--pk)')+';font-family:monospace;min-width:88px">'+oid+'</span>';
+        s+='<span style="font-size:11px;color:var(--mu);flex:1;min-width:80px">'+(o.description||'—')+'</span>';
+        s+='<span style="font-size:12px;font-weight:700;min-width:65px;text-align:right">'+fR(parseFloat(o.amount)||0)+'</span>';
+        s+='<select data-did="'+d.id+'" data-oid="'+oid+'" onchange="quickPayOrder(this)" ';
+        s+='style="font-size:11px;padding:4px 7px;border-radius:6px;border:1.5px solid '+(paid?'var(--tl2)':'var(--bd)')+';background:'+(paid?'rgba(20,184,166,0.08)':'var(--wh)')+';color:'+(paid?'var(--tl2)':'var(--dk)')+';font-weight:600;cursor:pointer">';
+        if(paid){
+          s+='<option value="paid" selected>&#9989; Paid</option><option value="unpaid">&#8634; Unpaid</option>';
+        } else {
+          s+='<option value="unpaid" selected>&#128179; Unpaid</option><option value="paid">&#9989; Mark Paid</option>';
+        }
+        s+='</select></div>';
+      });
+    }
+    s+='</div>';
+    return s;
+  }).join('');
+
+  if(grid) grid.innerHTML=html2||'<div style="color:var(--mu);padding:20px;text-align:center">No '+type+' debtors found</div>';
+
+  // Summary table
+  var tbody=document.getElementById(tableId);
+  if(tbody){
+    tbody.innerHTML=sorted.map(function(d){
+      var typeOrders2=(d.orders||[]).filter(function(o){return (o.type||'fuel')===type;});
+      var unpaid2=typeOrders2.filter(function(o){return o.paymentStatus!=='paid';}).reduce(function(s,o){return s+(parseFloat(o.amount)||0);},0);
+      var paid2=typeOrders2.filter(function(o){return o.paymentStatus==='paid';}).reduce(function(s,o){return s+(parseFloat(o.amount)||0);},0);
+      var rc=debtorRisk(d)==='high'?'#ef4444':debtorRisk(d)==='med'?'#d97706':'var(--tl2)';
+      return '<tr>'
+        +'<td style="font-weight:600">'+d.name+'</td>'
+        +'<td class="hide-mobile" style="color:var(--mu)">'+d.company+'</td>'
+        +'<td class="hide-mobile">'+typeOrders2.length+'</td>'
+        +'<td style="font-weight:700;color:'+rc+'">'+fR(unpaid2)+'</td>'
+        +'<td class="hide-mobile" style="color:var(--tl2)">'+fR(paid2)+'</td>'
+        +'<td class="hide-mobile" style="color:var(--mu)">'+debtorDays(d)+'d</td>'
+        +'<td><span style="color:'+rc+';font-weight:600;font-size:11px">'+debtorRisk(d).toUpperCase()+'</span></td>'
+        +'<td><button class="btn btn-s btn-sm" style="font-size:11px" onclick="viewDebtor(&quot;'+d.id+'&quot;)">View</button></td>'
+        +'</tr>';
+    }).join('');
+  }
+  var lbl=document.getElementById(labelId);
+  if(lbl) lbl.textContent=sorted.length+' debtor'+(sorted.length===1?'':'s');
 }
 
 function rDebtors() {
@@ -6019,6 +6171,7 @@ function rDebtors() {
 
 </body>
 </html>
+
 
 
 
