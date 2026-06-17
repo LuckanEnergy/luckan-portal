@@ -2437,12 +2437,11 @@ function updSt(type,id,s){
         deductStockForOrder(o, type);
         // Step 3: load fresh debtors, push order, save debtor
         loadDB(function(){
-          pushOrderToDebtors(o, type);
-          sv();
-          localStorage.setItem('le_db', JSON.stringify(DB));
-          addAct(id+" delivered — moved to Debtors","✅","tl");
-          // Step 4: wait 800ms for Supabase to commit, then reload everything
-          setTimeout(function(){
+          Promise.resolve(pushOrderToDebtors(o, type)).then(function(){
+            sv();
+            localStorage.setItem('le_db', JSON.stringify(DB));
+            addAct(id+" delivered — moved to Debtors","✅","tl");
+            // Reload DB fresh from Supabase then update UI
             loadDB(function(){
               if(type==="fuel"){
                 loadFO(function(){ rFuel(); rAll(); rDash(); if(CUR_PAGE==="fuel-debtors")rFuelDebtors(); });
@@ -2450,7 +2449,7 @@ function updSt(type,id,s){
                 loadLO(function(){ rLPG(); rAll(); rDash(); if(CUR_PAGE==="lpg-debtors")rLPGDebtors(); });
               }
             });
-          }, 800);
+          });
         });
       });
     });
@@ -2489,22 +2488,23 @@ function pushOrderToDebtors(o, type){
     client: o.client,
     type: type
   };
-  // Find existing debtor by client name or company (case-insensitive)
   var clientLower = (o.client||"").toLowerCase().trim();
   var debtor = DB.find(function(d){
     return (d.company||"").toLowerCase().trim()===clientLower ||
            (d.name||"").toLowerCase().trim()===clientLower;
   });
   if(debtor){
-    // Add order if not already there
     var exists = (debtor.orders||[]).find(function(r){ return r.orderId===o.id; });
     if(!exists){
       debtor.orders = debtor.orders||[];
       debtor.orders.unshift(orderRow);
+    } else {
+      // Update existing order row with latest data
+      var idx = debtor.orders.findIndex(function(r){ return r.orderId===o.id; });
+      if(idx>-1) debtor.orders[idx] = orderRow;
     }
-    saveDB_supa(debtor);
+    return saveDB_supa(debtor);
   } else {
-    // Auto-create a debtor account for this client
     var newDebtor = {
       id: "DB-"+String(Date.now()),
       clientId: "",
@@ -2518,7 +2518,6 @@ function pushOrderToDebtors(o, type){
       orders: [orderRow],
       created: new Date().toISOString().split("T")[0]
     };
-    // Try to match a client from CL database
     var cl = CL.find(function(c){
       return (c.company||"").toLowerCase().trim()===clientLower ||
              (c.name||"").toLowerCase().trim()===clientLower;
@@ -2531,7 +2530,7 @@ function pushOrderToDebtors(o, type){
       newDebtor.email=cl.email||"";
     }
     DB.unshift(newDebtor);
-    saveDB_supa(newDebtor);
+    return saveDB_supa(newDebtor);
   }
 }
 
@@ -2554,11 +2553,9 @@ function saveFuel(){
         pushOrderToDebtors(o,"fuel");
         sv();closeM("mf");
         addAct((eid?"Edited":"New")+" fuel order "+o.id+" — delivered, moved to Debtors","⛽","tl");
-        setTimeout(function(){
-          loadDB(function(){
+        loadDB(function(){
             loadFO(function(){ rFuel(); rDash(); if(CUR_PAGE==="fuel-debtors")rFuelDebtors(); });
-          });
-        }, 800);
+        });
       });
     });
     return;
@@ -2600,11 +2597,9 @@ function saveLPG(){
         pushOrderToDebtors(o,"lpg");
         sv();closeM("ml");
         addAct((eid?"Edited":"New")+" LPG order "+o.id+" — delivered, moved to Debtors","🔥","pk");
-        setTimeout(function(){
-          loadDB(function(){
+        loadDB(function(){
             loadLO(function(){ rLPG(); rDash(); if(CUR_PAGE==="lpg-debtors")rLPGDebtors(); });
-          });
-        }, 800);
+        });
       });
     });
     return;
