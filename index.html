@@ -5583,8 +5583,26 @@ function getClientOrders(companyName) {
 
 // ── Sync: for each debtor, refresh amounts from live order data (keep assignments) ──
 function syncDebtorOrders() {
-  (CUR_PAGE==='fuel-debtors'?rFuelDebtors():(CUR_PAGE==='lpg-debtors'?rLPGDebtors():rDebtors()));
-  addAct("Debtor view refreshed", "💰", "tl");
+  // Push ALL delivered orders that are missing from debtors
+  var delivered = FO.filter(function(o){return o.status==="delivered";}).map(function(o){return {o:o,type:"fuel"};})
+    .concat(LO.filter(function(o){return o.status==="delivered";}).map(function(o){return {o:o,type:"lpg"};}));
+
+  if(!delivered.length){ alert("No delivered orders to sync."); return; }
+
+  loadDB(function(){
+    var promises = delivered.map(function(item){
+      return Promise.resolve(pushOrderToDebtors(item.o, item.type));
+    });
+    Promise.all(promises).then(function(){
+      loadDB(function(){
+        if(CUR_PAGE==="fuel-debtors") rFuelDebtors();
+        else if(CUR_PAGE==="lpg-debtors") rLPGDebtors();
+        else rDebtors();
+        addAct("Synced "+delivered.length+" delivered orders to debtors","💰","tl");
+        alert("Sync complete: "+delivered.length+" orders checked.");
+      });
+    });
+  });
 }
 function openDebtorModal(id) {
   // Load the full pool of delivered orders
