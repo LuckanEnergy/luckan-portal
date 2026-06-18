@@ -2665,11 +2665,27 @@ function saveDoc(){
   var n=document.getElementById("dn").value.trim();if(!n){alert("Document name required.");return;}
   var f=pendFiles[0];
   var sz=f?(f.size>1024*1024?(f.size/1024/1024).toFixed(1)+" MB":(f.size/1024).toFixed(0)+" KB"):"—";
-  var d={id:"DOC-"+String(DO.length+1).padStart(3,"0"),name:n,category:document.getElementById("dc").value,type:document.getElementById("dt").value,author:document.getElementById("da").value,desc:document.getElementById("dd").value,date:new Date().toISOString().split("T")[0],folder:document.getElementById("doc-fsel").value||null,size:sz};
-  DO.unshift(d);sv();closeM("md");
-  ["dn","dd"].forEach(function(id){document.getElementById(id).value="";});
-  document.getElementById("upload-list").innerHTML="";pendFiles=[];
-  rDocs();updStats();addAct("Document uploaded: "+d.name,"📁","tl");
+  var docId="DOC-"+Date.now();
+  var d={id:docId,name:n,category:document.getElementById("dc").value,type:document.getElementById("dt").value,author:document.getElementById("da").value,desc:document.getElementById("dd").value,date:new Date().toISOString().split("T")[0],folder:document.getElementById("doc-fsel").value||null,size:sz,url:null};
+  
+  function finishSave(){
+    DO.unshift(d);sv();closeM("md");
+    ["dn","dd"].forEach(function(id2){document.getElementById(id2).value="";});
+    document.getElementById("upload-list").innerHTML="";pendFiles=[];
+    rDocs();updStats();addAct("Document uploaded: "+d.name,"📁","tl");
+  }
+
+  if(f){
+    // Upload file to Supabase Storage
+    var path = "docs/"+docId+"/"+f.name;
+    uploadToStorage(path, f, function(url, name){
+      d.url = url;
+      d.size = f.size>1024*1024?(f.size/1024/1024).toFixed(1)+" MB":(f.size/1024).toFixed(0)+" KB";
+      finishSave();
+    });
+  } else {
+    finishSave();
+  }
 }
 
 // FOLDER
@@ -3104,6 +3120,13 @@ function viewOrd(type,id){
 }
 function viewDoc(id){
   var d=DO.find(function(x){return x.id===id;});if(!d)return;
+  // If document has a file URL, open it directly in a new tab
+  var fileUrl = d.url || d.data || null;
+  if(fileUrl){
+    window.open(fileUrl, '_blank');
+    return;
+  }
+  // No file attached — show details modal
   document.getElementById("va").className="mac pk";
   document.getElementById("vt").textContent="📁 "+d.name;
   var fn=d.folder?(FL.find(function(f){return f.id===d.folder;})||{name:"?"}).name:"Root";
@@ -3114,7 +3137,8 @@ function viewDoc(id){
       +drRow("Date",d.date)+drRow("Size",d.size||"—")
       +drRow("Folder",fn)
     +"</div>"
-    +(d.desc?'<div style="margin-top:11px;padding:10px;background:var(--lt);border-radius:8px;border:1px solid var(--bd);font-size:13px;color:var(--mu)">'+d.desc+"</div>":"");
+    +(d.desc?'<div style="margin-top:11px;padding:10px;background:var(--lt);border-radius:8px;border:1px solid var(--bd);font-size:13px;color:var(--mu)">'+d.desc+"</div>":"")
+    +'<div style="margin-top:14px;color:var(--mu);font-size:12px">No file attached to this document.</div>';
   document.getElementById("mv").classList.add("open");
 }
 
