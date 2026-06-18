@@ -2409,7 +2409,7 @@ input:checked+.slider::before{transform:translateX(18px);}
             <div class="client-ac-list" id="fac"></div>
           </div>
         </div>
-        <div class="fm"><label>Fuel Product</label>
+        <div class="fm"><label>Product 1</label>
           <select id="fp">
             <option>Diesel 50ppm</option>
             <option>Diesel AGO</option>
@@ -2421,8 +2421,32 @@ input:checked+.slider::before{transform:translateX(18px);}
             <option>Waste Oil Collection</option>
           </select>
         </div>
-        <div class="fm"><label>Volume (Litres) *</label><input type="number" id="fv" placeholder="e.g. 10000" min="1"></div>
-        <div class="fm"><label>Unit Price (R/L) *</label><input type="number" id="fpr" placeholder="e.g. 22.50" step="0.01"></div>
+        <div class="fm"><label>Volume 1 (Litres) *</label><input type="number" id="fv" placeholder="e.g. 10000" min="1"></div>
+        <div class="fm"><label>Unit Price 1 (R/L) *</label><input type="number" id="fpr" placeholder="e.g. 22.50" step="0.01"></div>
+        <!-- Second product toggle -->
+        <div class="fm full" style="margin-bottom:4px">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:600;color:var(--pk)">
+            <input type="checkbox" id="f-add-prod2" onchange="toggleFuelProd2(this)">
+            + Add Second Product
+          </label>
+        </div>
+        <!-- Second product fields -->
+        <div id="f-prod2-section" style="display:none;contents:''">
+          <div class="fm"><label>Product 2</label>
+            <select id="fp2">
+              <option>Diesel 50ppm</option>
+              <option>Diesel AGO</option>
+              <option>Petrol (ULP 95)</option>
+              <option>Petrol (ULP 93)</option>
+              <option>Burner Fuel</option>
+              <option>Marine Gas Oil</option>
+              <option>Lubricants</option>
+              <option>Waste Oil Collection</option>
+            </select>
+          </div>
+          <div class="fm"><label>Volume 2 (Litres)</label><input type="number" id="fv2" placeholder="e.g. 5000" min="1"></div>
+          <div class="fm"><label>Unit Price 2 (R/L)</label><input type="number" id="fpr2" placeholder="e.g. 22.50" step="0.01"></div>
+        </div>
         <div class="fm"><label>Status</label>
           <select id="fst">
             <option value="pending">Pending</option>
@@ -3112,6 +3136,10 @@ function openM(type){
   if(type==="fuel"){
     document.getElementById("f-eid").value="";
   document.getElementById("f-id-row").style.display="none";
+  var cb=document.getElementById("f-add-prod2"); if(cb){cb.checked=false;}
+  var sec=document.getElementById("f-prod2-section"); if(sec){sec.style.display="none";}
+  var fv2=document.getElementById("fv2"); if(fv2)fv2.value="";
+  var fpr2=document.getElementById("fpr2"); if(fpr2)fpr2.value="";
     document.getElementById("mf-title").textContent="⛽ New Fuel Order";
     ["fc","fv","fpr","fl","ftr","fn"].forEach(function(id){document.getElementById(id).value="";});
     document.getElementById("fd").value=td;document.getElementById("fst").value="pending";
@@ -3272,17 +3300,33 @@ function pushOrderToDebtors(o, type){
 }
 
 // SAVE / EDIT FUEL
+
+function toggleFuelProd2(cb){
+  var sec = document.getElementById('f-prod2-section');
+  if(sec) sec.style.display = cb.checked ? 'contents' : 'none';
+  if(!cb.checked){
+    var fv2 = document.getElementById('fv2'); if(fv2) fv2.value='';
+    var fpr2 = document.getElementById('fpr2'); if(fpr2) fpr2.value='';
+  }
+}
+
 function saveFuel(){
-  var c=document.getElementById("fc").value.trim(),v=parseFloat(document.getElementById("fv").value),p=parseFloat(document.getElementById("fpr").value);
+  var c=document.getElementById("fc").value.trim();
+  var v=parseFloat(document.getElementById("fv").value);
+  var p=parseFloat(document.getElementById("fpr").value);
   if(!c||!v||!p){alert("Client, Volume and Price are required.");return;}
   var eid=document.getElementById("f-eid").value;
   var newId=(eid && document.getElementById("f-edit-id").value.trim()) ? document.getElementById("f-edit-id").value.trim() : (eid||nxtId("LE-F-"));
-  if(eid && newId!==eid){
-    // ID changed — delete old record from Supabase
-    delFO_supa(eid);
-    FO=FO.filter(function(x){return x.id!==eid;});
-  }
-  var o={id:newId||nxtId("LE-F-"),date:document.getElementById("fd").value,client:c,product:document.getElementById("fp").value,volume:v,price:p,value:v*p,location:document.getElementById("fl").value,status:document.getElementById("fst").value,truck:document.getElementById("ftr").value,ref:document.getElementById("f-ref").value.trim(),notes:document.getElementById("fn").value,invoice:fAttachData||null};
+  if(eid && newId!==eid){ delFO_supa(eid); FO=FO.filter(function(x){return x.id!==eid;}); }
+  var hasProd2=document.getElementById("f-add-prod2")&&document.getElementById("f-add-prod2").checked;
+  var v2=hasProd2?parseFloat(document.getElementById("fv2").value)||0:0;
+  var p2=hasProd2?parseFloat(document.getElementById("fpr2").value)||0:0;
+  var prod2=hasProd2?document.getElementById("fp2").value:"";
+  var prod1=document.getElementById("fp").value;
+  var totalVol=v+(hasProd2&&v2?v2:0);
+  var totalVal=v*p+(hasProd2&&v2&&p2?v2*p2:0);
+  var prodLabel=hasProd2&&prod2&&v2?prod1+" ("+v+"L) + "+prod2+" ("+v2+"L)":prod1;
+  var o={id:newId||nxtId("LE-F-"),date:document.getElementById("fd").value,client:c,product:prodLabel,volume:totalVol,price:totalVol>0?Math.round(totalVal/totalVol*100)/100:p,value:totalVal,location:document.getElementById("fl").value,status:document.getElementById("fst").value,truck:document.getElementById("ftr").value,ref:document.getElementById("f-ref").value.trim(),notes:document.getElementById("fn").value,invoice:fAttachData||null};
   if(o.status==="delivered"){
     if(eid){var i=FO.findIndex(function(x){return x.id===eid;});if(i>-1)FO[i]=o;}else FO.unshift(o);
     Promise.resolve(saveFO_supa(o)).then(function(){
