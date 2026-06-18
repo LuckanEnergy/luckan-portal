@@ -592,10 +592,10 @@ input:checked+.slider::before{transform:translateX(18px);}
     <!-- OVERVIEW PANEL -->
     <div class="dash-panel active" id="dp-overview">
       <div class="sg">
-        <div class="sc cp"><div class="sc-ic">📦</div><div class="sc-lb">Total Orders</div><div class="sc-vl" id="s0">0</div><div class="sc-sb">Active orders</div></div>
-        <div class="sc ct"><div class="sc-ic">⛽</div><div class="sc-lb">Fuel Orders</div><div class="sc-vl" id="s1">0</div><div class="sc-sb">Diesel · Paraffin · Burner</div></div>
-        <div class="sc cp2"><div class="sc-ic">🔥</div><div class="sc-lb">LPG Orders</div><div class="sc-vl" id="s2">0</div><div class="sc-sb">Cylinders &amp; bulk gas</div></div>
-        <div class="sc ct2"><div class="sc-ic">📁</div><div class="sc-lb">Documents</div><div class="sc-vl" id="s3">0</div><div class="sc-sb">Stored in portal</div></div>
+        <div class="sc cp" onclick="goPage('all-orders',document.getElementById('nav-all-orders'))" style="cursor:pointer"><div class="sc-ic">📦</div><div class="sc-lb">Total Orders</div><div class="sc-vl" id="s0">0</div><div class="sc-sb">Active orders</div></div>
+        <div class="sc ct" onclick="goPage('fuel-orders',document.getElementById('nav-fuel-orders'))" style="cursor:pointer"><div class="sc-ic">⛽</div><div class="sc-lb">Fuel Orders</div><div class="sc-vl" id="s1">0</div><div class="sc-sb">Diesel · Paraffin · Burner</div></div>
+        <div class="sc cp2" onclick="goPage('lpg-orders',document.getElementById('nav-lpg-orders'))" style="cursor:pointer"><div class="sc-ic">🔥</div><div class="sc-lb">LPG Orders</div><div class="sc-vl" id="s2">0</div><div class="sc-sb">Cylinders &amp; bulk gas</div></div>
+        <div class="sc ct2" onclick="goPage('documents',document.getElementById('nav-documents'))" style="cursor:pointer"><div class="sc-ic">📁</div><div class="sc-lb">Documents</div><div class="sc-vl" id="s3">0</div><div class="sc-sb">Stored in portal</div></div>
       </div>
       <div class="cd" style="margin-bottom:16px">
         <div class="cd-hd"><span class="cd-ttl"><em>⏳</em> Pending Orders</span><button class="btn btn-s btn-sm" onclick="goPage('all-orders',document.getElementById('nav-all-orders'))">View All</button></div>
