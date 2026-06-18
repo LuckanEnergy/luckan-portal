@@ -2085,7 +2085,9 @@ function saveSTOCK_supa() {
   if(rows.length) dbUpsert('stock',rows);
 }
 function saveAR_supa(a) {
-  dbUpsert('assets',{id:a.id,name:a.name,type:a.type,liability:a.liab||0,value:a.value||0,nav:a.nav||0,nav_pct:a.navPct||0,notes:a.notes||''});
+  return dbUpsert('assets',{id:a.id,name:a.name,type:a.type,liability:a.liab||0,value:a.value||0,nav:a.nav||0,nav_pct:a.navPct||0,notes:a.notes||''})
+    .then(function(r){ if(!r||!r[0]){console.error('saveAR_supa failed:',JSON.stringify(r));} })
+    .catch(function(e){ console.error('saveAR_supa error:',e); });
 }
 function delFO_supa(id){ dbDelete('fuel_orders',id); }
 function delLO_supa(id){ dbDelete('lpg_orders',id); }
@@ -3724,7 +3726,7 @@ function saveAsset(){
   var pct=val>0?Math.round((nav/val)*100):0;
   var eid=document.getElementById("asset-eid").value;
   var a={
-    id:eid||"A-"+String(AR.length+1).padStart(3,"0"),
+    id:eid||"A-"+Date.now(),
     name:name,
     type:document.getElementById("asset-type").value,
     liab:liab,
@@ -3735,16 +3737,19 @@ function saveAsset(){
   };
   if(eid){var idx=AR.findIndex(function(x){return x.id===eid;});if(idx>-1)AR[idx]=a;}
   else AR.unshift(a);
+  saveAR_supa(a);
   sv();closeM("m-asset");rAssets();
   addAct((eid?"Updated":"Added")+" asset: "+a.name,"🏛️","tl");
 }
 
 function delAsset(id){
   var a=AR.find(function(x){return x.id===id;});
-  if(!a||!confirm("Delete asset: "+a.name+"?"))return;
-  AR=AR.filter(function(x){return x.id!==id;});
-  delAR_supa(id);
-  sv();rAssets();
+  if(!a)return;
+  showConfirm("Delete Asset","Delete asset: "+a.name+"?","Delete",function(){
+    AR=AR.filter(function(x){return x.id!==id;});
+    delAR_supa(id);
+    sv();rAssets();
+  });
 }
 
 function assetFilter(f,el){
