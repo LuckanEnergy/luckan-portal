@@ -4914,7 +4914,8 @@ function rPO(){
 
   var tbody=document.getElementById('po-table');
   if(!tbody)return;
-  tbody.innerHTML = PO.length ? PO.map(function(p){
+  var activePO = PO.filter(function(p){ return p.status !== 'received'; });
+  tbody.innerHTML = activePO.length ? activePO.map(function(p){
     var isPending = p.status==='pending';
     var statusBadge = isPending
       ? '<span style="background:rgba(245,158,11,0.1);color:#d97706;border:1px solid rgba(245,158,11,0.3);border-radius:6px;padding:2px 8px;font-size:11px;font-weight:600">⏳ Pending</span>'
@@ -4935,7 +4936,7 @@ function rPO(){
         +'<button class="btn btn-d btn-sm" onclick="deletePO(&quot;'+p.id+'&quot;)">🗑</button>'
       +'</div></td>'
       +'</tr>';
-  }).join('') : '<tr><td colspan="9" style="text-align:center;color:var(--mu);padding:32px"><div style="font-size:32px;margin-bottom:8px">🛒</div><div>No purchase orders yet</div></td></tr>';
+  }).join('') : '<tr><td colspan="9" style="text-align:center;color:var(--mu);padding:32px"><div style="font-size:32px;margin-bottom:8px">🛒</div><div>No pending purchase orders</div></td></tr>';
 
   // Render transaction log (received POs only)
   var txbody = document.getElementById('po-txlog');
@@ -6184,6 +6185,7 @@ function rDebtors() {
 
 </body>
 </html>
+
 
 
 
