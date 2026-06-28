@@ -128,16 +128,16 @@ input:focus,select:focus,textarea:focus{border-color:var(--pk);box-shadow:0 0 0 
 textarea{resize:vertical;min-height:72px;}
 select option{background:var(--wh);}
 /* MODALS */
-.mo{position:fixed;inset:0;background:rgba(15,17,25,0.65);z-index:200;display:none;align-items:center;justify-content:center;}.mo-box{background:#ffffff;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,0.3);overflow:hidden;color:#0d1b2a;}.mo-box *{color:inherit;}
+.mo{position:fixed;inset:0;background:rgba(15,17,25,0.65);z-index:200;display:none;align-items:center;justify-content:center;}.mo-box{background:#ffffff !important;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,0.4);overflow:hidden;color:#0d1b2a !important;position:relative;z-index:201;}.mo-box *{background-color:transparent;}
 .mo.open{display:flex;}
 .mdl{background:var(--wh);border:1px solid var(--bd);border-radius:15px;width:640px;max-width:95vw;max-height:92vh;overflow-y:auto;animation:su .28s ease;box-shadow:0 24px 60px rgba(0,0,0,0.2);}
 @keyframes su{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
-.mh{padding:15px 19px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--wh);z-index:1;}
+.mh{padding:15px 19px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#ffffff !important;z-index:1;}
 .mac{width:4px;height:22px;border-radius:2px;margin-right:9px;flex-shrink:0;}
 .mac.pk{background:var(--pk);}.mac.tl{background:var(--tl);}
 .mt2{font-family:var(--fd);font-size:17px;letter-spacing:.5px;color:var(--dk);display:flex;align-items:center;gap:6px;}
 .mb{padding:16px;background:#ffffff;}.mb2{padding:19px;background:#ffffff;}
-.mf2{padding:12px 19px;border-top:1px solid var(--bd);display:flex;justify-content:flex-end;gap:8px;background:var(--lt);}
+.mf2{padding:12px 19px;border-top:1px solid #e2e8f0;display:flex;justify-content:flex-end;gap:8px;background:#f8f9fa !important;}
 .xbtn{background:none;border:none;color:#64748b;font-size:17px;cursor:pointer;padding:4px;border-radius:4px;transition:color .2s;}
 .xbtn:hover{color:var(--pk);background:var(--pkb);}
 /* SECTION HEADER */
@@ -850,16 +850,16 @@ input:focus,select:focus,textarea:focus{border-color:var(--pk);box-shadow:0 0 0 
 textarea{resize:vertical;min-height:72px;}
 select option{background:var(--wh);}
 /* MODALS */
-.mo{position:fixed;inset:0;background:rgba(15,17,25,0.65);z-index:200;display:none;align-items:center;justify-content:center;}.mo-box{background:#ffffff;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,0.3);overflow:hidden;color:#0d1b2a;}.mo-box *{color:inherit;}
+.mo{position:fixed;inset:0;background:rgba(15,17,25,0.65);z-index:200;display:none;align-items:center;justify-content:center;}.mo-box{background:#ffffff !important;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,0.4);overflow:hidden;color:#0d1b2a !important;position:relative;z-index:201;}.mo-box *{background-color:transparent;}
 .mo.open{display:flex;}
 .mdl{background:var(--wh);border:1px solid var(--bd);border-radius:15px;width:640px;max-width:95vw;max-height:92vh;overflow-y:auto;animation:su .28s ease;box-shadow:0 24px 60px rgba(0,0,0,0.2);}
 @keyframes su{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
-.mh{padding:15px 19px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--wh);z-index:1;}
+.mh{padding:15px 19px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#ffffff !important;z-index:1;}
 .mac{width:4px;height:22px;border-radius:2px;margin-right:9px;flex-shrink:0;}
 .mac.pk{background:var(--pk);}.mac.tl{background:var(--tl);}
 .mt2{font-family:var(--fd);font-size:17px;letter-spacing:.5px;color:var(--dk);display:flex;align-items:center;gap:6px;}
 .mb{padding:16px;background:#ffffff;}.mb2{padding:19px;background:#ffffff;}
-.mf2{padding:12px 19px;border-top:1px solid var(--bd);display:flex;justify-content:flex-end;gap:8px;background:var(--lt);}
+.mf2{padding:12px 19px;border-top:1px solid #e2e8f0;display:flex;justify-content:flex-end;gap:8px;background:#f8f9fa !important;}
 .xbtn{background:none;border:none;color:#64748b;font-size:17px;cursor:pointer;padding:4px;border-radius:4px;transition:color .2s;}
 .xbtn:hover{color:var(--pk);background:var(--pkb);}
 /* SECTION HEADER */
@@ -5160,19 +5160,19 @@ function viewDebtor(did) {
 
   var html2 = '<div style="padding:4px">'
     + '<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">'
-    +   '<div style="width:48px;height:48px;border-radius:50%;background:var(--pk);color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;flex-shrink:0">'
+    +   '<div style="width:48px;height:48px;border-radius:50%;background:#E8185A;color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;flex-shrink:0">'
     +     d.name.split(' ').map(function(w){return w[0]||'';}).join('').toUpperCase().slice(0,2)
     +   '</div>'
     +   '<div><div style="font-size:16px;font-weight:700">'+d.name+'</div>'
     +   '<div style="font-size:12px;color:#64748b">'+d.company+'</div></div>'
     + '</div>'
     + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">'
-    +   '<div style="background:rgba(232,24,90,0.07);border-radius:8px;padding:10px;text-align:center">'
-    +     '<div style="font-size:18px;font-weight:800;color:var(--pk)">'+fR(total)+'</div>'
+    +   '<div style="background:#fff0f4;border-radius:8px;padding:10px;text-align:center">'
+    +     '<div style="font-size:18px;font-weight:800;color:#E8185A">'+fR(total)+'</div>'
     +     '<div style="font-size:11px;color:#64748b">Outstanding</div>'
     +   '</div>'
-    +   '<div style="background:rgba(20,184,166,0.07);border-radius:8px;padding:10px;text-align:center">'
-    +     '<div style="font-size:18px;font-weight:800;color:var(--tl2)">'+orders.length+'</div>'
+    +   '<div style="background:#f0fdfb;border-radius:8px;padding:10px;text-align:center">'
+    +     '<div style="font-size:18px;font-weight:800;color:#2abcd0">'+orders.length+'</div>'
     +     '<div style="font-size:11px;color:#64748b">Total Orders</div>'
     +   '</div>'
     + '</div>';
@@ -5180,8 +5180,8 @@ function viewDebtor(did) {
   if (unpaid.length) {
     html2 += '<div style="font-size:11px;font-weight:700;color:#64748b;letter-spacing:.5px;margin-bottom:6px">UNPAID ORDERS</div>';
     unpaid.forEach(function(o){
-      html2 += '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:rgba(239,68,68,0.05);border-radius:7px;margin-bottom:6px;border:1px solid rgba(239,68,68,0.15)">'
-        + '<div><div style="font-size:12px;font-weight:700;color:var(--pk);font-family:monospace">'+(o.orderId||'—')+'</div>'
+      html2 += '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:#fff5f5;border-radius:7px;margin-bottom:6px;border:1px solid rgba(239,68,68,0.15)">'
+        + '<div><div style="font-size:12px;font-weight:700;color:#E8185A;font-family:monospace">'+(o.orderId||'—')+'</div>'
         + '<div style="font-size:11px;color:#64748b">'+(o.description||'—')+'</div></div>'
         + '<div style="font-size:14px;font-weight:700;color:#ef4444">'+fR(parseFloat(o.amount)||0)+'</div>'
         + '</div>';
@@ -5191,10 +5191,10 @@ function viewDebtor(did) {
   if (paid.length) {
     html2 += '<div style="font-size:11px;font-weight:700;color:#64748b;letter-spacing:.5px;margin:10px 0 6px">PAID ORDERS</div>';
     paid.forEach(function(o){
-      html2 += '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:rgba(20,184,166,0.05);border-radius:7px;margin-bottom:6px;border:1px solid rgba(20,184,166,0.2)">'
-        + '<div><div style="font-size:12px;font-weight:700;color:var(--tl2);font-family:monospace">'+(o.orderId||'—')+'</div>'
+      html2 += '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:#f0fdfb;border-radius:7px;margin-bottom:6px;border:1px solid rgba(20,184,166,0.2)">'
+        + '<div><div style="font-size:12px;font-weight:700;color:#2abcd0;font-family:monospace">'+(o.orderId||'—')+'</div>'
         + '<div style="font-size:11px;color:#64748b">'+(o.description||'—')+'</div></div>'
-        + '<div style="font-size:14px;font-weight:700;color:var(--tl2)">'+fR(parseFloat(o.amount)||0)+'</div>'
+        + '<div style="font-size:14px;font-weight:700;color:#2abcd0">'+fR(parseFloat(o.amount)||0)+'</div>'
         + '</div>';
     });
   }
@@ -7077,7 +7077,7 @@ function rDebtors() {
       <span class="mt2" id="gen-modal-title">Details</span>
       <button class="xbtn" onclick="closeM('gen-modal')">✕</button>
     </div>
-    <div class="mb" id="gen-modal-body" style="max-height:70vh;overflow-y:auto;background:#fff"></div>
+    <div class="mb" id="gen-modal-body" style="max-height:65vh;overflow-y:auto;background:#ffffff;color:#0d1b2a;padding:16px"></div>
     <div class="mf2">
       <button class="btn btn-s" onclick="closeM('gen-modal')">Close</button>
     </div>
@@ -7086,6 +7086,7 @@ function rDebtors() {
 
 </body>
 </html>
+
 
 
 
