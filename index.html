@@ -30,7 +30,7 @@
   --tl:#2ABCD0;--tl2:#1da0b3;
   --wh:#ffffff;--lt:#f7f8fa;--lt2:#eef0f4;
   --mu:#8a93a8;--dk:#1a1e2e;--dkr:#ffffff;
-  --tx:#1a1e2e;--bd:#e4e7ef;
+  --tx:#1a1e2e;--bd:#e4e7ef;--bg:#f7f8fa;
   --pkb:rgba(232,24,90,0.07);--tlb:rgba(42,188,208,0.08);
   --pkd:rgba(232,24,90,0.2);--tld:rgba(42,188,208,0.2);
   --sh:0 2px 16px rgba(26,30,46,0.08);--sh2:0 8px 32px rgba(26,30,46,0.12);
@@ -2291,7 +2291,7 @@ function refreshPage(){
     btn.classList.remove("spin");
     if(page==="dashboard")rDash();
     else if(page==="fuel-orders"){rFuel();rQB("fuel");}
-  if(page==="purchase-orders"){rPO();}
+    else if(page==="purchase-orders"){rPO();}
     else if(page==="lpg-orders"){rLPG();rQB("lpg");}
     else if(page==="all-orders")rAll();
     else if(page==="stock-fuel"||page==="stock-lpg"||page==="stock")rStock();
@@ -2340,18 +2340,21 @@ function activatePage(page,el){
   if(el)el.classList.add("active");
   document.getElementById("ttl").textContent=navTitles[page]||page.toUpperCase();
   if(page==="dashboard")rDash();
-  if(page==="fuel-orders"){rFuel();rQB("fuel");}
-  if(page==="purchase-orders"){rPO();}
-  if(page==="lpg-orders"){rLPG();rQB("lpg");}
-  if(page==="all-orders")rAll();
-  if(page==="stock-fuel"){rStockFuel();}
-  if(page==="stock-lpg"){rStockLPG();}
-  if(page==="assets")rAssets();
-  if(page==="clients")rClients();
-  if(page==="debtors")rDebtors();
-  if(page==="documents"){CUR_FOLD=null;rDocs();}
-  if(page==="sales-report"){initRpt();rRpt();}
-  if(page==="settings"){rLockItems();loadCFG();loadGistConfig();loadApiKeyCfg();loadGHCfgUI();}
+  else if(page==="fuel-orders"){rFuel();rQB("fuel");}
+  else if(page==="purchase-orders"){rPO();}
+  else if(page==="lpg-orders"){rLPG();rQB("lpg");}
+  else if(page==="all-orders")rAll();
+  else if(page==="stock-fuel"){rStockFuel();}
+  else if(page==="stock-lpg"){rStockLPG();}
+  else if(page==="assets")rAssets();
+  else if(page==="clients")rClients();
+  else if(page==="leads")rLeads();
+  else if(page==="fuel-debtors")rFuelDebtors();
+  else if(page==="lpg-debtors")rLPGDebtors();
+  else if(page==="debtors")rDebtors();
+  else if(page==="documents"){CUR_FOLD=null;rDocs();}
+  else if(page==="sales-report"){initRpt();rRpt();rTxList();}
+  else if(page==="settings"){rLockItems();loadCFG();loadGistConfig();loadApiKeyCfg();loadGHCfgUI();}
   document.getElementById("sb").classList.remove("open");
 }
 
@@ -5709,7 +5712,7 @@ function rDashPipeline(){
     var leads=localLeads.filter(function(l){return l.status===col.id;});
     var cards=leads.length
       ? leads.slice(0,3).map(function(l){
-          return '<div style="background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:8px 10px;margin-bottom:6px;font-size:12px">'
+          return '<div style="background:#f7f8fa;border:1px solid #e4e7ef;border-radius:8px;padding:8px 10px;margin-bottom:6px;font-size:12px">'
             +(l.pricingRequested?'<span style="background:#f59e0b;color:#fff;border-radius:3px;font-size:9px;padding:1px 4px;font-weight:700;margin-right:4px">!</span>':'')
             +'<span style="font-weight:600;color:#0d1b2a">'+l.name+'</span>'
             +'<div style="color:#64748b;font-size:11px;margin-top:2px">'+l.product+'</div>'
@@ -6047,6 +6050,26 @@ function debtorUnpaidOrders(d) {
 // ── FUEL DEBTORS ──
 function rFuelDebtors(){ rDebtorsByType('fuel'); }
 function rLPGDebtors(){ rDebtorsByType('lpg'); }
+
+function expDebtorsCSV(type){
+  var typeDB = DB.filter(function(d){
+    return (d.orders||[]).some(function(o){ return (o.type||'fuel')===type; });
+  });
+  var q=function(v){return '"'+String(v==null?'':v).replace(/"/g,'""')+'"';};
+  var headers=['Debtor','Company','Phone','Email','Order ID','Description','Amount','Date','Status'];
+  var rows=[];
+  typeDB.forEach(function(d){
+    (d.orders||[]).filter(function(o){return (o.type||'fuel')===type;}).forEach(function(o){
+      rows.push([d.name,d.company,d.phone||'',d.email||'',o.orderId,o.description,o.amount,o.date,o.paymentStatus||'unpaid']);
+    });
+  });
+  if(!rows.length){ alert('No '+type+' debtor orders to export.'); return; }
+  var csv=[headers].concat(rows).map(function(r){return r.map(q).join(',');}).join('\n');
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download='LuckanEnergy-'+type+'-debtors-'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+}
 
 function rDebtorsByType(type){
   var isFuel = type==='fuel';
@@ -6388,6 +6411,7 @@ function rDebtors() {
 </script>
 </body>
 </html>
+
 
 
 
