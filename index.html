@@ -2552,9 +2552,13 @@ function pushOrderToDebtors(o, type){
       debtor.orders = debtor.orders||[];
       debtor.orders.unshift(orderRow);
     } else {
-      // Update existing order row with latest data
+      // Update existing order row with latest data — but PRESERVE payment status
       var idx = debtor.orders.findIndex(function(r){ return r.orderId===o.id; });
-      if(idx>-1) debtor.orders[idx] = orderRow;
+      if(idx>-1){
+        orderRow.paymentStatus = debtor.orders[idx].paymentStatus || "unpaid";
+        orderRow.paidDate = debtor.orders[idx].paidDate || null;
+        debtor.orders[idx] = orderRow;
+      }
     }
     return saveDB_supa(debtor);
   } else {
@@ -6384,6 +6388,7 @@ function rDebtors() {
 </script>
 </body>
 </html>
+
 
 
 
