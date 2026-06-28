@@ -5866,6 +5866,7 @@ function expTxLog(type){
 var CURRENT_VERSION = '202506141024';
 
 function checkForUpdate(){
+  return; // disabled
   // Fetch the live page with cache-busting to check version
   fetch(window.location.href + '?v=' + Date.now(), {cache: 'no-store'})
     .then(function(r){ return r.text(); })
@@ -5880,8 +5881,10 @@ function checkForUpdate(){
 }
 
 // Check on load after 5s, then every 5 minutes
-setTimeout(checkForUpdate, 5000);
-setInterval(checkForUpdate, 5 * 60 * 1000);
+// Auto-update banner disabled — was re-triggering and blocking the menu.
+// To check for updates, just refresh the page manually.
+// setTimeout(checkForUpdate, 5000);
+// setInterval(checkForUpdate, 5 * 60 * 1000);
 
 // ── CUSTOM CONFIRM (replaces browser confirm() for mobile compatibility) ──
 function showConfirm(title, msg, okLabel, onOk){
@@ -7048,8 +7051,16 @@ function rDebtors() {
   </div>
 </div>
 
+<script>
+// Force-hide update banner (disabled feature)
+(function(){
+  var b = document.getElementById('update-banner');
+  if(b) b.style.display='none';
+})();
+</script>
 </body>
 </html>
+
 
 
 
