@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="202506141024">
+<meta name="app-version" content="202606280932">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
@@ -709,10 +709,11 @@ input:checked+.slider::before{transform:translateX(18px);}
       <div class="cd-hd" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
         <span class="cd-ttl">📋 Transaction Log — Delivered Orders</span>
         <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
-          <input type="date" id="fo-tx-from" onchange="rFuel()" style="font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--bd)">
-          <input type="date" id="fo-tx-to" onchange="rFuel()" style="font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--bd)">
-          <input type="text" id="fo-tx-srch" oninput="rFuel()" placeholder="Search client…" style="font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--bd);width:130px">
-          <button class="btn btn-t btn-sm" onclick="expTxLog('fuel')">⬇ CSV</button>
+          <label style="font-size:10px;color:#64748b;display:flex;flex-direction:column;gap:2px">From<input type="date" id="fo-tx-from" onchange="rFuel()" style="font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid #e2e8f0"></label>
+          <label style="font-size:10px;color:#64748b;display:flex;flex-direction:column;gap:2px">To<input type="date" id="fo-tx-to" onchange="rFuel()" style="font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid #e2e8f0"></label>
+          <input type="text" id="fo-tx-srch" oninput="rFuel()" placeholder="Search client…" style="font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid #e2e8f0;width:120px;align-self:flex-end">
+          <button class="btn btn-s btn-sm" onclick="document.getElementById('fo-tx-from').value='';document.getElementById('fo-tx-to').value='';document.getElementById('fo-tx-srch').value='';rFuel()" style="align-self:flex-end">Clear</button>
+          <button class="btn btn-t btn-sm" onclick="expTxLog('fuel')" style="align-self:flex-end">⬇ CSV</button>
         </div>
       </div>
       <div class="cd-bd" style="padding:0;overflow-x:auto">
@@ -727,7 +728,7 @@ input:checked+.slider::before{transform:translateX(18px);}
 <meta charset="UTF-8">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="202506141024">
+<meta name="app-version" content="202606280932">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
@@ -1431,10 +1432,11 @@ input:checked+.slider::before{transform:translateX(18px);}
       <div class="cd-hd" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
         <span class="cd-ttl">📋 Transaction Log — Delivered Orders</span>
         <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
-          <input type="date" id="lo-tx-from" onchange="rLPG()" style="font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--bd)">
-          <input type="date" id="lo-tx-to" onchange="rLPG()" style="font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--bd)">
-          <input type="text" id="lo-tx-srch" oninput="rLPG()" placeholder="Search client…" style="font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--bd);width:130px">
-          <button class="btn btn-t btn-sm" onclick="expTxLog('lpg')">⬇ CSV</button>
+          <label style="font-size:10px;color:#64748b;display:flex;flex-direction:column;gap:2px">From<input type="date" id="lo-tx-from" onchange="rLPG()" style="font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid #e2e8f0"></label>
+          <label style="font-size:10px;color:#64748b;display:flex;flex-direction:column;gap:2px">To<input type="date" id="lo-tx-to" onchange="rLPG()" style="font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid #e2e8f0"></label>
+          <input type="text" id="lo-tx-srch" oninput="rLPG()" placeholder="Search client…" style="font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid #e2e8f0;width:120px;align-self:flex-end">
+          <button class="btn btn-s btn-sm" onclick="document.getElementById('lo-tx-from').value='';document.getElementById('lo-tx-to').value='';document.getElementById('lo-tx-srch').value='';rLPG()" style="align-self:flex-end">Clear</button>
+          <button class="btn btn-t btn-sm" onclick="expTxLog('lpg')" style="align-self:flex-end">⬇ CSV</button>
         </div>
       </div>
       <div class="cd-bd" style="padding:0;overflow-x:auto">
@@ -7048,6 +7050,7 @@ function rDebtors() {
 
 </body>
 </html>
+
 
 
 
