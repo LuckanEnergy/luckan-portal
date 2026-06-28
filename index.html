@@ -128,7 +128,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--pk);box-shadow:0 0 0 
 textarea{resize:vertical;min-height:72px;}
 select option{background:var(--wh);}
 /* MODALS */
-.mo{position:fixed;inset:0;background:rgba(15,17,25,0.65);z-index:200;display:none;align-items:center;justify-content:center;}.mo-box{background:#ffffff !important;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,0.4);overflow:hidden;color:#0d1b2a !important;position:relative;z-index:201;}.mo-box *{background-color:transparent;}
+.mo{position:fixed;inset:0;background:rgba(15,17,25,0.65);z-index:200;display:none;align-items:center;justify-content:center;}.mo-box{background:#ffffff !important;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,0.4);overflow:hidden;color:#0d1b2a;position:relative;z-index:201;}
 .mo.open{display:flex;}
 .mdl{background:var(--wh);border:1px solid var(--bd);border-radius:15px;width:640px;max-width:95vw;max-height:92vh;overflow-y:auto;animation:su .28s ease;box-shadow:0 24px 60px rgba(0,0,0,0.2);}
 @keyframes su{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
@@ -850,7 +850,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--pk);box-shadow:0 0 0 
 textarea{resize:vertical;min-height:72px;}
 select option{background:var(--wh);}
 /* MODALS */
-.mo{position:fixed;inset:0;background:rgba(15,17,25,0.65);z-index:200;display:none;align-items:center;justify-content:center;}.mo-box{background:#ffffff !important;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,0.4);overflow:hidden;color:#0d1b2a !important;position:relative;z-index:201;}.mo-box *{background-color:transparent;}
+.mo{position:fixed;inset:0;background:rgba(15,17,25,0.65);z-index:200;display:none;align-items:center;justify-content:center;}.mo-box{background:#ffffff !important;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,0.4);overflow:hidden;color:#0d1b2a;position:relative;z-index:201;}
 .mo.open{display:flex;}
 .mdl{background:var(--wh);border:1px solid var(--bd);border-radius:15px;width:640px;max-width:95vw;max-height:92vh;overflow-y:auto;animation:su .28s ease;box-shadow:0 24px 60px rgba(0,0,0,0.2);}
 @keyframes su{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
@@ -1394,44 +1394,6 @@ input:checked+.slider::before{transform:translateX(18px);}
             </div>
           </div>
         </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- FUEL ORDERS -->
-  <div class="pg" id="pg-fuel-orders">
-    <div class="sh">
-      <div><div class="st">⛽ FUEL <em>ORDERS</em></div><div class="ss">Manage fuel orders · Delivered orders move to Transaction Log</div></div>
-      <button class="btn btn-p" onclick="openM('fuel')">+ New Fuel Order</button>
-    </div>
-    <!-- KPIs -->
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px">
-      <div class="kpi pk"><div class="kpi-v" id="fo-k1">0</div><div class="kpi-l">Pending</div></div>
-      <div class="kpi o"><div class="kpi-v" id="fo-k2">0</div><div class="kpi-l">Processing</div></div>
-      <div class="kpi tl"><div class="kpi-v" id="fo-k3">0</div><div class="kpi-l">Delivered</div></div>
-      <div class="kpi g"><div class="kpi-v" id="fo-k4">R 0</div><div class="kpi-l">Total Value</div></div>
-    </div>
-    <!-- Table -->
-    <div class="cd">
-      <div class="cd-hd" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
-        <span class="cd-ttl">Fuel Orders</span>
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <input type="text" placeholder="Search orders…" id="fsrch" oninput="rFuel()" style="padding:5px 10px;font-size:12px;border-radius:6px;border:1px solid var(--bd);width:180px">
-          <select style="padding:5px 8px;font-size:12px;border-radius:6px;border:1px solid var(--bd)" id="ff" onchange="rFuel()">
-            <option value="">All Statuses</option><option value="pending">Pending</option><option value="processing">Processing</option><option value="delivered">Delivered</option><option value="cancelled">Cancelled</option>
-          </select>
-        </div>
-      </div>
-      <div class="cd-bd" style="padding:0;overflow-x:auto">
-        <table><thead><tr><th>Order ID</th><th>Date</th><th>Client</th><th>Product</th><th>Volume</th><th>Value</th><th>Status</th><th>Actions</th></tr></thead><tbody id="ft"></tbody></table>
-      </div>
-    </div>
-    <!-- Transaction Log -->
-    <div class="cd" style="margin-top:18px">
-      <div class="cd-hd"><span class="cd-ttl">📋 Transaction Log — Delivered Orders</span></div>
-      <div class="cd-bd" style="padding:0;overflow-x:auto">
-        <table><thead><tr><th>Order ID</th><th>Date</th><th>Client</th><th>Product</th><th>Volume</th><th>Value</th><th>Status</th><th>Document</th><th>Actions</th></tr></thead>
-        <tbody id="fo-txlog"></tbody></table>
       </div>
     </div>
   </div>
@@ -7086,6 +7048,7 @@ function rDebtors() {
 
 </body>
 </html>
+
 
 
 
