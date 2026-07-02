@@ -514,7 +514,10 @@ body[data-role="manager"] .btn-d{display:none !important;}
     <label>Email</label>
     <input type="email" id="auth-email" placeholder="you@qwestconsult.co.za" autocomplete="username">
     <label>Password</label>
-    <input type="password" id="auth-pw" placeholder="••••••••" autocomplete="current-password">
+    <div style="position:relative">
+      <input type="password" id="auth-pw" placeholder="••••••••" autocomplete="current-password" style="padding-right:44px">
+      <button type="button" onclick="var p=document.getElementById('auth-pw');p.type=p.type==='password'?'text':'password';this.textContent=p.type==='password'?'👁':'🙈';" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:17px;cursor:pointer;padding:4px 6px">👁</button>
+    </div>
     <button id="auth-btn" onclick="doLogin()">Sign In</button>
     <div id="auth-err"></div>
   </div>
@@ -6540,6 +6543,7 @@ function rDebtors() {
 </script>
 </body>
 </html>
+
 
 
 
