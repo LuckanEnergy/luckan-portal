@@ -491,6 +491,34 @@ input:checked+.slider::before{transform:translateX(18px);}
 </style>
 </head>
 <body>
+<style>
+/* role-based UI gating */
+body[data-role="staff"] .btn-d{display:none !important;}
+body[data-role="manager"] .btn-d{display:none !important;}
+#auth-screen{position:fixed;inset:0;z-index:10000;background:#0d1b2a;display:flex;align-items:center;justify-content:center;padding:20px;}
+.auth-box{background:#ffffff;border-radius:16px;padding:34px 28px;width:100%;max-width:380px;box-shadow:0 24px 80px rgba(0,0,0,0.5);}
+.auth-box h1{font-family:"Bebas Neue",sans-serif;font-size:30px;color:#0d1b2a;letter-spacing:1px;margin-bottom:2px;}
+.auth-box h1 em{color:#E8185A;font-style:normal;}
+.auth-sub{font-size:12px;color:#64748b;margin-bottom:22px;}
+.auth-box label{display:block;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#64748b;margin:12px 0 5px;}
+.auth-box input{width:100%;padding:11px 13px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:14px;font-family:inherit;background:#f8f9fa;color:#0d1b2a;}
+.auth-box input:focus{outline:none;border-color:#E8185A;background:#fff;}
+#auth-btn{width:100%;margin-top:18px;padding:12px;background:#E8185A;color:#fff;border:none;border-radius:9px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;}
+#auth-btn:disabled{opacity:0.6;}
+#auth-err{color:#ef4444;font-size:12px;margin-top:10px;min-height:16px;font-weight:600;}
+</style>
+<div id="auth-screen">
+  <div class="auth-box">
+    <h1>LUCKAN <em>ENERGY</em></h1>
+    <div class="auth-sub">Staff Portal — sign in to continue</div>
+    <label>Email</label>
+    <input type="email" id="auth-email" placeholder="you@qwestconsult.co.za" autocomplete="username">
+    <label>Password</label>
+    <input type="password" id="auth-pw" placeholder="••••••••" autocomplete="current-password">
+    <button id="auth-btn" onclick="doLogin()">Sign In</button>
+    <div id="auth-err"></div>
+  </div>
+</div>
 <button class="mt-btn" onclick="toggleSB()">☰</button>
 
 <!-- LOCK SCREEN -->
@@ -553,7 +581,8 @@ input:checked+.slider::before{transform:translateX(18px);}
   <div class="sb-ft">
     <div class="uc">
       <div class="ua" id="ua-i">LE</div>
-      <div><div class="un" id="ua-n">Staff Member</div><div class="ur" id="ua-r">Officer</div></div>
+      <div style="flex:1"><div class="un" id="ua-n">Staff Member</div><div class="ur" id="ua-r"><span id="auth-user-label">—</span></div></div>
+      <button onclick="doLogout()" title="Sign out" style="background:none;border:1.5px solid #e2e8f0;border-radius:8px;padding:6px 9px;cursor:pointer;font-size:14px;color:#64748b">⎋</button>
     </div>
   </div>
 </aside>
@@ -1974,10 +2003,14 @@ function initSupabase() {
   setupRealtime();
 }
 
+var ACCESS_TOKEN = null;
+var USER_ROLE = null;
+var USER_NAME = null;
+function authToken(){ return ACCESS_TOKEN || SUPA_KEY; }
 function dbHeaders() {
   return {
     'apikey': SUPA_KEY,
-    'Authorization': 'Bearer ' + SUPA_KEY,
+    'Authorization': 'Bearer ' + authToken(),
     'Content-Type': 'application/json',
     'Prefer': 'return=representation'
   };
@@ -1989,7 +2022,7 @@ function dbGet(table, params) {
   if(params) url += '&' + params;
   var getHeaders = {
     'apikey': SUPA_KEY,
-    'Authorization': 'Bearer ' + SUPA_KEY,
+    'Authorization': 'Bearer ' + authToken(),
     'Content-Type': 'application/json'
   };
   return fetch(url, { headers: getHeaders }).then(function(r){
@@ -2320,6 +2353,10 @@ function refreshPage(){
 var navTitles={dashboard:"DASHBOARD","fuel-orders":"FUEL ORDERS","purchase-orders":"PURCHASE ORDERS","lpg-orders":"LPG ORDERS","all-orders":"ALL ORDERS",stock:"STOCK LEVELS",assets:"ASSET REGISTER",clients:"CLIENTS",leads:"SALES PIPELINE",documents:"DOCUMENTS","sales-report":"SALES REPORT","fuel-debtors":"FUEL DEBTORS","lpg-debtors":"LPG DEBTORS",settings:"SETTINGS"};
 
 function goPage(page,el){
+  if(typeof pageAllowed==='function' && USER_ROLE && !pageAllowed(page)){
+    alert('Your role ('+USER_ROLE+') does not have access to this section.');
+    return;
+  }
   if(LOCKABLE.indexOf(page)>-1&&LOCKS[page]&&unlocked.indexOf(page)===-1){
     pendPage=page;pendEl=el;
     document.getElementById("lock-msg").textContent='"'+LOCK_LBL[page]+'" is password protected.';
@@ -5505,7 +5542,99 @@ function startPortal() {
   }
 }
 
-startPortal();
+// ── AUTH: sign-in gate before portal starts ──
+var ROLE_BLOCKED_PAGES = {
+  staff:   ['fuel-debtors','lpg-debtors','sales-report','assets','settings'],
+  manager: ['settings']
+};
+
+function applyRoleUI(){
+  document.body.setAttribute('data-role', USER_ROLE||'');
+  var blocked = ROLE_BLOCKED_PAGES[USER_ROLE]||[];
+  blocked.forEach(function(p){
+    var nav=document.getElementById('nav-'+p);
+    if(nav) nav.style.display='none';
+  });
+  var who=document.getElementById('auth-user-label');
+  if(who) who.textContent = (USER_ROLE||'');
+  var nm=document.getElementById('ua-n');
+  if(nm && USER_NAME) nm.textContent = USER_NAME;
+  var ini=document.getElementById('ua-i');
+  if(ini && USER_NAME) ini.textContent = USER_NAME.split(' ').map(function(w){return w[0]||'';}).join('').toUpperCase().slice(0,2);
+}
+
+function pageAllowed(page){
+  var blocked = ROLE_BLOCKED_PAGES[USER_ROLE]||[];
+  return blocked.indexOf(page)===-1;
+}
+
+function showLogin(msg){
+  var ls=document.getElementById('auth-screen');
+  if(ls) ls.style.display='flex';
+  var err=document.getElementById('auth-err');
+  if(err) err.textContent = msg||'';
+}
+function hideLogin(){
+  var ls=document.getElementById('auth-screen');
+  if(ls) ls.style.display='none';
+}
+
+function doLogin(){
+  var em=document.getElementById('auth-email').value.trim().toLowerCase();
+  var pw=document.getElementById('auth-pw').value;
+  var err=document.getElementById('auth-err');
+  var btn=document.getElementById('auth-btn');
+  if(!em||!pw){ err.textContent='Email and password required.'; return; }
+  btn.disabled=true; btn.textContent='Signing in…';
+  supa.auth.signInWithPassword({email:em,password:pw}).then(function(res){
+    btn.disabled=false; btn.textContent='Sign In';
+    if(res.error){ err.textContent='Login failed: '+res.error.message; return; }
+    onSignedIn(res.data.session);
+  }).catch(function(e){
+    btn.disabled=false; btn.textContent='Sign In';
+    err.textContent='Login error: '+e;
+  });
+}
+
+function doLogout(){
+  supa.auth.signOut().finally(function(){
+    ACCESS_TOKEN=null; USER_ROLE=null;
+    localStorage.removeItem('le_last_page');
+    window.location.reload();
+  });
+}
+
+function onSignedIn(session){
+  ACCESS_TOKEN = session.access_token;
+  // fetch role
+  dbGet('user_roles','user_id=eq.'+session.user.id).then(function(rows){
+    if(rows && rows[0]){ USER_ROLE=rows[0].role; USER_NAME=rows[0].full_name; }
+    else { USER_ROLE='staff'; USER_NAME=session.user.email; }
+    hideLogin();
+    applyRoleUI();
+    startPortal();
+  });
+}
+
+function initAuth(){
+  if(!supa){ showLogin('Database not reachable. Refresh the page.'); return; }
+  supa.auth.onAuthStateChange(function(event, session){
+    if(session) ACCESS_TOKEN = session.access_token;  // keeps token fresh on refresh
+  });
+  supa.auth.getSession().then(function(res){
+    var session = res.data ? res.data.session : null;
+    if(session){ onSignedIn(session); }
+    else { showLogin(); }
+  }).catch(function(){ showLogin(); });
+}
+
+// Enter key submits login
+document.addEventListener('keydown', function(e){
+  var ls=document.getElementById('auth-screen');
+  if(e.key==='Enter' && ls && ls.style.display!=='none' && ls.style.display!==''){ doLogin(); }
+});
+
+initAuth();
 
 // Refresh current page after cloud pull
 function refreshCurPage(){
@@ -6411,6 +6540,7 @@ function rDebtors() {
 </script>
 </body>
 </html>
+
 
 
 
