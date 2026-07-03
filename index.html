@@ -5279,7 +5279,7 @@ var STORAGE_PUBLIC = SUPA_URL + '/storage/v1/object/public/' + STORAGE_BUCKET + 
 function storageHeaders(){
   return {
     'apikey': SUPA_KEY,
-    'Authorization': 'Bearer ' + SUPA_KEY
+    'Authorization': 'Bearer ' + authToken()
   };
 }
 
@@ -5287,7 +5287,7 @@ function uploadToStorage(path, file, cb){
   var xhr = new XMLHttpRequest();
   xhr.open('POST', STORAGE_URL + path, true);
   xhr.setRequestHeader('apikey', SUPA_KEY);
-  xhr.setRequestHeader('Authorization', 'Bearer ' + SUPA_KEY);
+  xhr.setRequestHeader('Authorization', 'Bearer ' + authToken());
   xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
   xhr.setRequestHeader('x-upsert', 'true');
   xhr.onload = function(){
@@ -5295,7 +5295,7 @@ function uploadToStorage(path, file, cb){
       cb(STORAGE_PUBLIC + path, file.name);
     } else {
       console.error('Storage upload failed:', xhr.status, xhr.responseText);
-      alert('Upload failed. Please ensure the portal-docs bucket exists in Supabase Storage.');
+      alert('Upload failed ('+xhr.status+'). Please make sure you are signed in, then try again.');
     }
   };
   xhr.onerror = function(){ alert('Upload error. Check your internet connection.'); };
@@ -6543,6 +6543,7 @@ function rDebtors() {
 </script>
 </body>
 </html>
+
 
 
 
