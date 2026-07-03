@@ -92,3 +92,20 @@ debtors, clients, stock, assets, sales pipeline, documents, and sales reports.
 - Pending wishlist: signed URLs for docs (bucket still "public" type), audit log +
   soft deletes, change-password UI in Settings, flip luckan-portal repo private,
   desktop side-by-side layouts, txlog card view on mobile.
+
+## Working in Claude Code (local git workflow)
+When running as Claude Code on a local clone, replace the GitHub-API deploy workflow with:
+1. Edit `index.html` directly in the working tree.
+2. **Syntax-check before every commit** (non-negotiable): extract the main `<script>`
+   block and run it through `node -e "new Function(code)"` — same binary-search
+   debugging approach on errors as described above.
+3. `git add index.html && git commit -m "<clear message>" && git push origin main`.
+   Netlify auto-deploys from main in ~15s.
+4. Bump `<meta name="app-version">` on significant changes.
+- Push auth: Waleed supplies a fine-grained PAT (Contents RW on this repo +
+  luckan-backups). Configure once via git credential helper; NEVER commit it to
+  any file in the repo.
+- Supabase work (migrations, RLS, SQL) goes through the Supabase MCP connector if
+  available, project id `ujntmxeicffigfkwunxn`. Never weaken RLS policies.
+- Test pages after deploy on Samsung Internet specifically — it is the primary
+  browser used by staff and has the strictest rendering quirks (see bug patterns).
