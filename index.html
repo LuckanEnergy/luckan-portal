@@ -5283,7 +5283,41 @@ function storageHeaders(){
   };
 }
 
+// Compress images client-side before upload (max 1600px, JPEG 80%)
+function compressImage(file, cb){
+  if(!file.type || file.type.indexOf('image/')!==0 || file.type==='image/gif'){ cb(file); return; }
+  var url = URL.createObjectURL(file);
+  var img = new Image();
+  img.onload = function(){
+    try{
+      var maxDim = 1600;
+      var w = img.width, h = img.height;
+      if(w<=maxDim && h<=maxDim && file.size < 500*1024){ URL.revokeObjectURL(url); cb(file); return; }
+      var scale = Math.min(1, maxDim/Math.max(w,h));
+      var canvas = document.createElement('canvas');
+      canvas.width = Math.round(w*scale); canvas.height = Math.round(h*scale);
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob(function(blob){
+        URL.revokeObjectURL(url);
+        if(blob && blob.size < file.size){
+          blob.name = (file.name||'photo').replace(/\.[^.]+$/,'') + '.jpg';
+          cb(blob);
+        } else { cb(file); }
+      }, 'image/jpeg', 0.8);
+    }catch(e){ URL.revokeObjectURL(url); cb(file); }
+  };
+  img.onerror = function(){ URL.revokeObjectURL(url); cb(file); };
+  img.src = url;
+}
+
 function uploadToStorage(path, file, cb){
+  compressImage(file, function(f){
+    if(f !== file && path.match(/\.[^.\/]+$/)){ path = path.replace(/\.[^.\/]+$/, '.jpg'); }
+    uploadToStorageRaw(path, f, cb);
+  });
+}
+
+function uploadToStorageRaw(path, file, cb){
   var xhr = new XMLHttpRequest();
   xhr.open('POST', STORAGE_URL + path, true);
   xhr.setRequestHeader('apikey', SUPA_KEY);
