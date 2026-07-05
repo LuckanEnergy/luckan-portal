@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="202607021903">
+<meta name="app-version" content="202607051500">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
@@ -2795,8 +2795,9 @@ function saveDoc(){
   if(f){
     // Upload file to Supabase Storage
     var path = "docs/"+docId+"/"+f.name;
-    uploadToStorage(path, f, function(url, name){
+    uploadToStorage(path, f, function(url, name, spath){
       d.url = url;
+      d.path = spath;
       d.size = f.size>1024*1024?(f.size/1024/1024).toFixed(1)+" MB":(f.size/1024).toFixed(0)+" KB";
       finishSave();
     });
@@ -2881,7 +2882,7 @@ function rFuel(){
     txbody.innerHTML=delivered.length?delivered.map(function(o){
       var doc=getOrderDoc('fo',o.id);
       var docBtn=doc
-        ?'<a href="'+(doc.url||doc.data)+'" download="'+doc.name+'" style="font-size:11px;padding:2px 8px;border-radius:5px;border:1px solid var(--tl2);color:var(--tl2);text-decoration:none;font-weight:600;white-space:nowrap">&#128196; '+doc.name+'</a>'
+        ?'<button onclick="openOrderDoc(&quot;fo&quot;,&quot;'+o.id+'&quot;)" style="font-size:11px;padding:2px 8px;border-radius:5px;border:1px solid var(--tl2);color:var(--tl2);background:transparent;cursor:pointer;font-weight:600;white-space:nowrap">&#128196; '+doc.name+'</button>'
          +' <button onclick="removeOrderDoc(&quot;fo&quot;,&quot;'+o.id+'&quot;)" style="font-size:10px;padding:1px 5px;border-radius:4px;border:1px solid rgba(239,68,68,0.3);background:transparent;color:#ef4444;cursor:pointer">&#x2715;</button>'
         :'<label style="font-size:11px;padding:2px 8px;border-radius:5px;border:1px solid var(--bd);color:#64748b;cursor:pointer;white-space:nowrap">&#128206; Attach<input type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xlsx" style="display:none" onchange="attachOrderDoc(&quot;fo&quot;,&quot;'+o.id+'&quot;,this)"></label>';
       return "<tr>"
@@ -2943,7 +2944,7 @@ function rLPG(){
     txbody.innerHTML=delivered.length?delivered.map(function(o){
       var doc=getOrderDoc('lo',o.id);
       var docBtn=doc
-        ?'<a href="'+(doc.url||doc.data)+'" download="'+doc.name+'" style="font-size:11px;padding:2px 8px;border-radius:5px;border:1px solid var(--tl2);color:var(--tl2);text-decoration:none;font-weight:600;white-space:nowrap">&#128196; '+doc.name+'</a>'
+        ?'<button onclick="openOrderDoc(&quot;lo&quot;,&quot;'+o.id+'&quot;)" style="font-size:11px;padding:2px 8px;border-radius:5px;border:1px solid var(--tl2);color:var(--tl2);background:transparent;cursor:pointer;font-weight:600;white-space:nowrap">&#128196; '+doc.name+'</button>'
          +' <button onclick="removeOrderDoc(&quot;lo&quot;,&quot;'+o.id+'&quot;)" style="font-size:10px;padding:1px 5px;border-radius:4px;border:1px solid rgba(239,68,68,0.3);background:transparent;color:#ef4444;cursor:pointer">&#x2715;</button>'
         :'<label style="font-size:11px;padding:2px 8px;border-radius:5px;border:1px solid var(--bd);color:#64748b;cursor:pointer;white-space:nowrap">&#128206; Attach<input type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xlsx" style="display:none" onchange="attachOrderDoc(&quot;lo&quot;,&quot;'+o.id+'&quot;,this)"></label>';
       return "<tr>"
@@ -3256,9 +3257,9 @@ function viewOrd(type,id){
 function viewDoc(id){
   var d=DO.find(function(x){return x.id===id;});if(!d)return;
   // If document has a file URL, open it directly in a new tab
-  var fileUrl = d.url || d.data || null;
+  var fileUrl = d.path || d.url || d.data || null;
   if(fileUrl){
-    window.open(fileUrl, '_blank');
+    openStoredFile(fileUrl);
     return;
   }
   // No file attached — show details modal
@@ -4042,12 +4043,15 @@ function fLoadAttach(data) {
 function viewInvoice(orderId) {
   var o = FO.find(function(x){ return x.id === orderId; });
   if (!o || !o.invoice) { alert('No invoice attached to this order.'); return; }
-  var w = window.open();
-  if (o.invoice.startsWith('data:image')) {
-    w.document.write('<img src="' + o.invoice + '" style="max-width:100%">');
-  } else {
-    w.document.write('<iframe src="' + o.invoice + '" style="width:100%;height:100vh;border:0"></iframe>');
-  }
+  signedFileUrl(o.invoice, function(u){
+    if(!u){ alert('Could not open invoice. Please refresh and try again.'); return; }
+    var w = window.open();
+    if (o.invoice.indexOf('data:image') === 0) {
+      w.document.write('<img src="' + u + '" style="max-width:100%">');
+    } else {
+      w.document.write('<iframe src="' + u + '" style="width:100%;height:100vh;border:0"></iframe>');
+    }
+  });
 }
 
 // ══════════════════════════════════════════════
@@ -5115,7 +5119,7 @@ function rPO(){
     txbody.innerHTML = received.length ? received.map(function(p){
       var doc = getPODoc(p.id);
       var docBtn = doc
-        ? '<a href="'+(doc.url||doc.data)+'" download="'+doc.name+'" style="font-size:11px;padding:2px 8px;border-radius:5px;border:1px solid var(--tl2);color:var(--tl2);text-decoration:none;font-weight:600;white-space:nowrap">&#128196; '+doc.name+'</a>'
+        ? '<button onclick="openPODocFile(&quot;'+p.id+'&quot;)" style="font-size:11px;padding:2px 8px;border-radius:5px;border:1px solid var(--tl2);color:var(--tl2);background:transparent;cursor:pointer;font-weight:600;white-space:nowrap">&#128196; '+doc.name+'</button>'
           +' <button onclick="removePODoc(&quot;'+p.id+'&quot;)" style="font-size:10px;padding:1px 5px;border-radius:4px;border:1px solid rgba(239,68,68,0.3);background:transparent;color:#ef4444;cursor:pointer">&#x2715;</button>'
         : '<label style="font-size:11px;padding:2px 8px;border-radius:5px;border:1px solid var(--bd);color:#64748b;cursor:pointer;white-space:nowrap">&#128206; Attach<input type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xlsx" style="display:none" onchange="attachPODoc(&quot;'+p.id+'&quot;,this)"></label>';
       return '<tr>'
@@ -5310,6 +5314,32 @@ function compressImage(file, cb){
   img.src = url;
 }
 
+// ── Private-bucket file access ──
+// Resolve a storage path, legacy public URL, or inline data: URI to a short-lived
+// signed URL so files work when the bucket is private. Backward-compatible.
+function signedFileUrl(ref, cb){
+  if(!ref){ cb(null); return; }
+  if(ref.indexOf('data:')===0){ cb(ref); return; }
+  var path = ref, pub = '/object/public/'+STORAGE_BUCKET+'/', i = ref.indexOf(pub);
+  if(i>=0){ path = ref.substring(i+pub.length); }
+  else if(ref.indexOf('http')===0){
+    var j = ref.indexOf('/'+STORAGE_BUCKET+'/');
+    if(j>=0){ path = ref.substring(j+STORAGE_BUCKET.length+2); } else { cb(ref); return; }
+  }
+  if(!supa||!supa.storage){ cb(ref); return; }
+  supa.storage.from(STORAGE_BUCKET).createSignedUrl(path, 300).then(function(res){
+    cb((res&&res.data&&res.data.signedUrl)?res.data.signedUrl:null);
+  }).catch(function(){ cb(null); });
+}
+function openStoredFile(ref){
+  signedFileUrl(ref, function(u){
+    if(u){ window.open(u,'_blank'); }
+    else { alert('Could not open file. Please refresh and try again.'); }
+  });
+}
+function openOrderDoc(prefix, orderId){ var d=getOrderDoc(prefix,orderId); if(d){ openStoredFile(d.path||d.url||d.data); } }
+function openPODocFile(poId){ var d=getPODoc(poId); if(d){ openStoredFile(d.path||d.url||d.data); } }
+
 function uploadToStorage(path, file, cb){
   compressImage(file, function(f){
     if(f !== file && path.match(/\.[^.\/]+$/)){ path = path.replace(/\.[^.\/]+$/, '.jpg'); }
@@ -5326,7 +5356,7 @@ function uploadToStorageRaw(path, file, cb){
   xhr.setRequestHeader('x-upsert', 'true');
   xhr.onload = function(){
     if(xhr.status === 200 || xhr.status === 201){
-      cb(STORAGE_PUBLIC + path, file.name);
+      cb(STORAGE_PUBLIC + path, file.name, path);
     } else {
       console.error('Storage upload failed:', xhr.status, xhr.responseText);
       alert('Upload failed ('+xhr.status+'). Please make sure you are signed in, then try again.');
@@ -5352,8 +5382,8 @@ function attachOrderDoc(prefix, orderId, input){
   if(file.size > 10*1024*1024){ alert('File too large. Max 10MB.'); return; }
   var path = prefix+'/'+orderId+'/'+Date.now()+'_'+file.name;
   input.disabled = true;
-  uploadToStorage(path, file, function(url, name){
-    localStorage.setItem('le_ordoc_'+prefix+'_'+orderId, JSON.stringify({name:name, url:url, path:path}));
+  uploadToStorage(path, file, function(url, name, spath){
+    localStorage.setItem('le_ordoc_'+prefix+'_'+orderId, JSON.stringify({name:name, url:url, path:spath||path}));
     input.disabled = false;
     if(prefix==='fo') rFuel(); else rLPG();
   });
@@ -5379,8 +5409,8 @@ function attachPODoc(poId, input){
   if(file.size > 10*1024*1024){ alert('File too large. Max 10MB.'); return; }
   var path = 'po/'+poId+'/'+Date.now()+'_'+file.name;
   input.disabled = true;
-  uploadToStorage(path, file, function(url, name){
-    localStorage.setItem('le_po_doc_'+poId, JSON.stringify({name:name, url:url, path:path}));
+  uploadToStorage(path, file, function(url, name, spath){
+    localStorage.setItem('le_po_doc_'+poId, JSON.stringify({name:name, url:url, path:spath||path}));
     input.disabled = false;
     rPO();
   });
