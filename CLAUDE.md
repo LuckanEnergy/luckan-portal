@@ -89,9 +89,15 @@ debtors, clients, stock, assets, sales pipeline, documents, and sales reports.
 
 ## Current state / pending
 - Security done: auth+RLS, storage locked, nightly backups (tables+files), token rotated.
-- Pending wishlist: signed URLs for docs (bucket still "public" type), audit log +
-  soft deletes, change-password UI in Settings, flip luckan-portal repo private,
-  desktop side-by-side layouts, txlog card view on mobile.
+- 2026-07-05 hardening: portal-docs bucket is now PRIVATE. All file access (docs,
+  order invoices, PO attachments) goes through short-lived signed URLs —
+  `signedFileUrl()`/`openStoredFile()` helpers; uploads store the storage `path`;
+  `viewDoc`/`viewInvoice` and the attachment buttons call them. Do NOT re-enable the
+  public bucket or revert to STORAGE_PUBLIC links. activity (audit) log is append-only
+  (UPDATE policy dropped). get_role() EXECUTE revoked from anon (authenticated only).
+- Pending wishlist: enable leaked-password protection (Auth setting), audit log +
+  soft deletes, change-password UI in Settings, MFA for admin, flip luckan-portal repo
+  private, desktop side-by-side layouts, txlog card view on mobile.
 
 ## Working in Claude Code (local git workflow)
 When running as Claude Code on a local clone, replace the GitHub-API deploy workflow with:
