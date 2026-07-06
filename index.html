@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="202607051500">
+<meta name="app-version" content="202607051600">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
@@ -1780,7 +1780,7 @@ body[data-role="manager"] .btn-d{display:none !important;}
         <div class="fm full"><label>Order Reference / Invoice No.</label><input type="text" id="f-ref" placeholder="e.g. INV-2026-001"></div>
         <div class="fm full"><label>Notes</label><textarea id="fn" placeholder="Additional notes…" style="min-height:60px"></textarea></div>
         <div class="fm full">
-          <label>Invoice / Photo</label>
+          <label>Slip / Meter Reading photo</label>
           <div id="f-attach-area" style="border:2px dashed var(--bd);border-radius:10px;padding:14px;text-align:center;cursor:pointer;transition:.2s;background:var(--lt)" onclick="document.getElementById('f-file-input').click()">
             <div id="f-attach-preview" style="display:none;margin-bottom:8px">
               <img id="f-attach-img" style="max-width:100%;max-height:160px;border-radius:8px;object-fit:contain" src="">
@@ -1788,7 +1788,7 @@ body[data-role="manager"] .btn-d{display:none !important;}
             </div>
             <div id="f-attach-placeholder">
               <div style="font-size:24px;margin-bottom:4px">📎</div>
-              <div style="font-size:12px;color:#64748b">Tap to attach invoice or photo</div>
+              <div style="font-size:12px;color:#64748b">Tap to attach slip or meter reading</div>
               <div style="font-size:11px;color:#64748b;margin-top:2px">JPG, PNG or PDF</div>
             </div>
           </div>
@@ -1850,6 +1850,26 @@ body[data-role="manager"] .btn-d{display:none !important;}
         <div class="fm"><label>Contact Phone</label><input type="tel" id="lp" placeholder="e.g. 071 234 5678"></div>
         <div class="fm full"><label>Order Reference / Invoice No.</label><input type="text" id="l-ref" placeholder="e.g. INV-2026-001"></div>
         <div class="fm full"><label>Notes</label><textarea id="ln" placeholder="Special instructions…" style="min-height:60px"></textarea></div>
+        <div class="fm full">
+          <label>Delivery Slip photo</label>
+          <div id="l-attach-area" style="border:2px dashed var(--bd);border-radius:10px;padding:14px;text-align:center;cursor:pointer;transition:.2s;background:var(--lt)" onclick="document.getElementById('l-file-input').click()">
+            <div id="l-attach-preview" style="display:none;margin-bottom:8px">
+              <img id="l-attach-img" style="max-width:100%;max-height:160px;border-radius:8px;object-fit:contain" src="">
+              <div id="l-attach-name" style="font-size:11px;color:#64748b;margin-top:4px"></div>
+            </div>
+            <div id="l-attach-placeholder">
+              <div style="font-size:24px;margin-bottom:4px">📎</div>
+              <div style="font-size:12px;color:#64748b">Tap to attach delivery slip</div>
+              <div style="font-size:11px;color:#64748b;margin-top:2px">JPG, PNG or PDF</div>
+            </div>
+          </div>
+          <input type="file" id="l-file-input" accept="image/*,application/pdf" capture="environment" style="display:none" onchange="lHandleAttach(this)">
+          <div style="display:flex;gap:6px;margin-top:6px">
+            <button type="button" class="btn btn-s btn-sm" style="flex:1" onclick="document.getElementById('l-file-input').removeAttribute('capture');document.getElementById('l-file-input').click()">📁 Upload File</button>
+            <button type="button" class="btn btn-s btn-sm" style="flex:1" onclick="document.getElementById('l-file-input').setAttribute('capture','environment');document.getElementById('l-file-input').click()">📷 Take Photo</button>
+            <button type="button" class="btn btn-d btn-sm" id="l-attach-clear" style="display:none" onclick="lClearAttach()">✕</button>
+          </div>
+        </div>
       </div>
     </div>
     <div class="mf2">
@@ -2482,6 +2502,7 @@ function openM(type){
     document.getElementById("ml-title").textContent="🔥 New LPG Order";
     ["lc","lq","lpr","ll","lp","ln"].forEach(function(id){document.getElementById(id).value="";});
     document.getElementById("ld").value=td;document.getElementById("lst").value="pending";
+    lClearAttach();
     document.getElementById("ml").classList.add("open");document.body.style.overflow="hidden";
   }
 }
@@ -2650,6 +2671,7 @@ function saveFuel(){
   var v=parseFloat(document.getElementById("fv").value);
   var p=parseFloat(document.getElementById("fpr").value);
   if(!c||!v||!p){alert("Client, Volume and Price are required.");return;}
+  if(fAttachBusy){alert("Slip / meter-reading photo is still uploading — please wait a moment.");return;}
   var eid=document.getElementById("f-eid").value;
   var newId=(eid && document.getElementById("f-edit-id").value.trim()) ? document.getElementById("f-edit-id").value.trim() : (eid||nxtId("LE-F-"));
   if(eid && newId!==eid){ delFO_supa(eid); FO=FO.filter(function(x){return x.id!==eid;}); }
@@ -2661,7 +2683,7 @@ function saveFuel(){
   var totalVol=v+(hasProd2&&v2?v2:0);
   var totalVal=v*p+(hasProd2&&v2&&p2?v2*p2:0);
   var prodLabel=hasProd2&&prod2&&v2?prod1+" ("+v+"L) + "+prod2+" ("+v2+"L)":prod1;
-  var o={id:newId||nxtId("LE-F-"),date:document.getElementById("fd").value,client:c,product:prodLabel,volume:totalVol,price:totalVol>0?Math.round(totalVal/totalVol*100)/100:p,value:totalVal,location:document.getElementById("fl").value,status:document.getElementById("fst").value,truck:document.getElementById("ftr").value,ref:document.getElementById("f-ref").value.trim(),notes:document.getElementById("fn").value,invoice:fAttachData||null};
+  var o={id:newId||nxtId("LE-F-"),date:document.getElementById("fd").value,client:c,product:prodLabel,volume:totalVol,price:totalVol>0?Math.round(totalVal/totalVol*100)/100:p,value:totalVal,location:document.getElementById("fl").value,status:document.getElementById("fst").value,truck:document.getElementById("ftr").value,ref:document.getElementById("f-ref").value.trim(),notes:document.getElementById("fn").value,invoice:fAttachRef||null};
   if(o.status==="delivered"){
     if(eid){var i=FO.findIndex(function(x){return x.id===eid;});if(i>-1)FO[i]=o;}else FO.unshift(o);
     Promise.resolve(saveFO_supa(o)).then(function(){
@@ -2699,13 +2721,14 @@ function editFuel(id){
 function saveLPG(){
   var c=document.getElementById("lc").value.trim(),q=parseInt(document.getElementById("lq").value),p=parseFloat(document.getElementById("lpr").value);
   if(!c||!q||!p){alert("Client, Quantity and Price are required.");return;}
+  if(lAttachBusy){alert("Delivery slip photo is still uploading — please wait a moment.");return;}
   var eid=document.getElementById("l-eid").value;
   var newLId=(eid && document.getElementById("l-edit-id").value.trim()) ? document.getElementById("l-edit-id").value.trim() : (eid||nxtId("LE-G-"));
   if(eid && newLId!==eid){
     delLO_supa(eid);
     LO=LO.filter(function(x){return x.id!==eid;});
   }
-  var o={id:newLId||nxtId("LE-G-"),date:document.getElementById("ld").value,client:c,size:document.getElementById("lsz").value,qty:q,price:p,value:q*p,location:document.getElementById("ll").value,status:document.getElementById("lst").value,phone:document.getElementById("lp").value,ref:document.getElementById("l-ref").value.trim(),notes:document.getElementById("ln").value};
+  var o={id:newLId||nxtId("LE-G-"),date:document.getElementById("ld").value,client:c,size:document.getElementById("lsz").value,qty:q,price:p,value:q*p,location:document.getElementById("ll").value,status:document.getElementById("lst").value,phone:document.getElementById("lp").value,ref:document.getElementById("l-ref").value.trim(),notes:document.getElementById("ln").value,invoice:lAttachRef||null};
   if(o.status==="delivered"){
     if(eid){var i=LO.findIndex(function(x){return x.id===eid;});if(i>-1)LO[i]=o;}else LO.unshift(o);
     Promise.resolve(saveLO_supa(o)).then(function(){
@@ -2735,6 +2758,7 @@ function editLPG(id){
   document.getElementById("lst").value=o.status;document.getElementById("lp").value=o.phone||"";document.getElementById("ln").value=o.notes||"";
   document.getElementById("l-edit-id").value=id;
   document.getElementById("l-id-row").style.display="";
+  lLoadAttach(o.invoice||null);
   document.getElementById("ml").classList.add("open");
 }
 
@@ -2926,7 +2950,7 @@ function rLPG(){
       +'<td>'+fm(o.qty)+"</td>"
       +'<td style="font-weight:700">'+fR(V(o))+"</td>"
       +"<td>"+sSel("lpg",o.id,o.status)+"</td>"
-      +'<td><div style="display:flex;gap:4px;align-items:center">'        +'<button class="btn btn-s btn-sm" onclick="viewOrd(\'lpg\',\''+o.id+'\')">View</button>'        +'<button class="btn btn-t btn-sm" onclick="editLPG(\''+o.id+'\')">✏</button>'        +'<button class="btn btn-s btn-sm" onclick="openOrderNote(&quot;lpg&quot;,&quot;'+o.id+'&quot;,&quot;'+o.client+'&quot;)">&#128221;'+(getOrderNoteCount('lpg',o.id)>0?' ('+getOrderNoteCount('lpg',o.id)+')':'')+"</button>"        +'<button class="btn btn-d btn-sm" onclick="delOrd(\'lpg\',\''+o.id+'\')">🗑</button>'      +"</div></td></tr>";
+      +'<td><div style="display:flex;gap:4px;align-items:center">'        +(o.invoice?'<button class="btn btn-t btn-sm" onclick="viewInvoice(\''+o.id+'\')" title="View slip">📎</button>':'')        +'<button class="btn btn-s btn-sm" onclick="viewOrd(\'lpg\',\''+o.id+'\')">View</button>'        +'<button class="btn btn-t btn-sm" onclick="editLPG(\''+o.id+'\')">✏</button>'        +'<button class="btn btn-s btn-sm" onclick="openOrderNote(&quot;lpg&quot;,&quot;'+o.id+'&quot;,&quot;'+o.client+'&quot;)">&#128221;'+(getOrderNoteCount('lpg',o.id)>0?' ('+getOrderNoteCount('lpg',o.id)+')':'')+"</button>"        +'<button class="btn btn-d btn-sm" onclick="delOrd(\'lpg\',\''+o.id+'\')">🗑</button>'      +"</div></td></tr>";
   }).join(""):'<tr><td colspan="8" style="text-align:center;color:#64748b;padding:28px">No orders found</td></tr>';
   // Transaction log — delivered only
   var txbody=document.getElementById("lo-txlog");
@@ -3988,61 +4012,81 @@ function dbtView(el){ viewDebtor(el.getAttribute('data-id')); }
 function dbtEdit(el){ openDebtorModal(el.getAttribute('data-id')); }
 function dbtDel(el){ delDebtor(el.getAttribute('data-id')); }
 
-// ── FUEL ORDER INVOICE ATTACHMENT ──
-var fAttachData = null; // base64 string of current attachment
+// ── ORDER SLIP / METER-READING PHOTO (fuel + lpg) ──
+// On select the file is uploaded to the private portal-docs bucket; the order stores
+// the storage path (fAttachRef / lAttachRef) and views it via signed URLs.
+var fAttachRef = null, fAttachBusy = false;
+var lAttachRef = null, lAttachBusy = false;
 
-function fHandleAttach(input) {
+function _setAttachRef(pfx, ref, busy){
+  if(pfx==='f'){ fAttachRef = ref; fAttachBusy = busy; }
+  else { lAttachRef = ref; lAttachBusy = busy; }
+}
+
+function _handleAttach(pfx, input) {
   var file = input.files[0];
   if (!file) return;
-  var reader = new FileReader();
-  reader.onload = function(e) {
-    fAttachData = e.target.result;
-    var isImg = file.type.startsWith('image/');
-    document.getElementById('f-attach-placeholder').style.display = 'none';
-    document.getElementById('f-attach-preview').style.display = 'block';
-    document.getElementById('f-attach-clear').style.display = 'inline-flex';
-    document.getElementById('f-attach-area').style.borderColor = 'var(--tl)';
-    if (isImg) {
-      document.getElementById('f-attach-img').src = e.target.result;
-      document.getElementById('f-attach-img').style.display = 'block';
-    } else {
-      document.getElementById('f-attach-img').style.display = 'none';
-    }
-    document.getElementById('f-attach-name').textContent = file.name + ' (' + (file.size/1024).toFixed(1) + ' KB)';
-  };
-  reader.readAsDataURL(file);
+  var imgEl = document.getElementById(pfx+'-attach-img');
+  var nameEl = document.getElementById(pfx+'-attach-name');
+  var area = document.getElementById(pfx+'-attach-area');
+  document.getElementById(pfx+'-attach-placeholder').style.display = 'none';
+  document.getElementById(pfx+'-attach-preview').style.display = 'block';
+  document.getElementById(pfx+'-attach-clear').style.display = 'inline-flex';
+  if (area) area.style.borderColor = 'var(--tl)';
+  if (file.type.indexOf('image/') === 0) {
+    var reader = new FileReader();
+    reader.onload = function(e) { imgEl.src = e.target.result; imgEl.style.display = 'block'; };
+    reader.readAsDataURL(file);
+  } else { imgEl.style.display = 'none'; }
+  if (nameEl) nameEl.textContent = file.name + ' — uploading…';
+  // upload to private bucket immediately
+  _setAttachRef(pfx, null, true);
+  var eidEl = document.getElementById(pfx+'-eid');
+  var oid = (eidEl && eidEl.value) ? eidEl.value : ('new-' + Date.now());
+  var path = 'orderphoto/' + (pfx==='f'?'fo':'lo') + '/' + oid + '/' + Date.now() + '_' + file.name;
+  uploadToStorage(path, file, function(url, name, spath) {
+    _setAttachRef(pfx, spath || path, false);
+    var el = document.getElementById(pfx+'-attach-name');
+    if (el) el.textContent = (name||'Photo') + ' — attached ✓';
+  });
 }
 
-function fClearAttach() {
-  fAttachData = null;
-  document.getElementById('f-file-input').value = '';
-  document.getElementById('f-attach-placeholder').style.display = 'block';
-  document.getElementById('f-attach-preview').style.display = 'none';
-  document.getElementById('f-attach-clear').style.display = 'none';
-  document.getElementById('f-attach-img').src = '';
-  document.getElementById('f-attach-area').style.borderColor = 'var(--bd)';
+function _clearAttach(pfx) {
+  _setAttachRef(pfx, null, false);
+  var fi = document.getElementById(pfx+'-file-input'); if (fi) fi.value = '';
+  document.getElementById(pfx+'-attach-placeholder').style.display = 'block';
+  document.getElementById(pfx+'-attach-preview').style.display = 'none';
+  document.getElementById(pfx+'-attach-clear').style.display = 'none';
+  var imgEl = document.getElementById(pfx+'-attach-img'); if (imgEl) imgEl.src = '';
+  var area = document.getElementById(pfx+'-attach-area'); if (area) area.style.borderColor = 'var(--bd)';
 }
 
-function fLoadAttach(data) {
-  if (!data) { fClearAttach(); return; }
-  fAttachData = data;
-  document.getElementById('f-attach-placeholder').style.display = 'none';
-  document.getElementById('f-attach-preview').style.display = 'block';
-  document.getElementById('f-attach-clear').style.display = 'inline-flex';
-  document.getElementById('f-attach-area').style.borderColor = 'var(--tl)';
-  var isImg = data.startsWith('data:image');
-  if (isImg) {
-    document.getElementById('f-attach-img').src = data;
-    document.getElementById('f-attach-img').style.display = 'block';
-  } else {
-    document.getElementById('f-attach-img').style.display = 'none';
-  }
-  document.getElementById('f-attach-name').textContent = 'Attached document';
+function _loadAttach(pfx, ref) {
+  if (!ref) { _clearAttach(pfx); return; }
+  _setAttachRef(pfx, ref, false);
+  document.getElementById(pfx+'-attach-placeholder').style.display = 'none';
+  document.getElementById(pfx+'-attach-preview').style.display = 'block';
+  document.getElementById(pfx+'-attach-clear').style.display = 'inline-flex';
+  var area = document.getElementById(pfx+'-attach-area'); if (area) area.style.borderColor = 'var(--tl)';
+  var imgEl = document.getElementById(pfx+'-attach-img');
+  var nameEl = document.getElementById(pfx+'-attach-name'); if (nameEl) nameEl.textContent = 'Attached slip / photo';
+  if (ref.indexOf('data:image') === 0) { imgEl.src = ref; imgEl.style.display = 'block'; return; }
+  if (ref.indexOf('data:') === 0) { imgEl.style.display = 'none'; return; }
+  signedFileUrl(ref, function(u) {
+    if (u) { imgEl.src = u; imgEl.style.display = 'block'; } else { imgEl.style.display = 'none'; }
+  });
 }
+
+function fHandleAttach(input){ _handleAttach('f', input); }
+function fClearAttach(){ _clearAttach('f'); }
+function fLoadAttach(data){ _loadAttach('f', data); }
+function lHandleAttach(input){ _handleAttach('l', input); }
+function lClearAttach(){ _clearAttach('l'); }
+function lLoadAttach(data){ _loadAttach('l', data); }
 
 function viewInvoice(orderId) {
-  var o = FO.find(function(x){ return x.id === orderId; });
-  if (!o || !o.invoice) { alert('No invoice attached to this order.'); return; }
+  var o = FO.find(function(x){ return x.id === orderId; }) || LO.find(function(x){ return x.id === orderId; });
+  if (!o || !o.invoice) { alert('No slip/photo attached to this order.'); return; }
   signedFileUrl(o.invoice, function(u){
     if(!u){ alert('Could not open invoice. Please refresh and try again.'); return; }
     var w = window.open();
