@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="202607061600">
+<meta name="app-version" content="202607081200">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
@@ -2184,7 +2184,7 @@ function syncCTR(orders){
 function loadFO(cb) {
   dbGet('fuel_orders','order=created_at.desc').then(function(rows){
     if(Array.isArray(rows)){
-      FO=rows.map(function(r){ return {id:r.id,client:r.client,product:r.product,volume:r.volume,price:r.price,value:r.value,status:r.status,date:r.date,notes:r.notes,truck:r.truck||'',location:r.location||'',invoice:r.invoice||null,ref:r.ref||''}; });
+      FO=rows.map(function(r){ return {id:r.id,client:r.client,product:r.product,volume:r.volume,price:r.price,value:r.value,status:r.status,date:r.date,notes:r.notes,truck:r.truck||'',location:r.location||'',invoice:r.invoice||null,ref:r.ref||'',docname:r.docname||null,docpath:r.docpath||null}; });
       localStorage.setItem('le_fo',JSON.stringify(FO));
       syncCTR(FO);
     }
@@ -2194,7 +2194,7 @@ function loadFO(cb) {
 function loadLO(cb) {
   dbGet('lpg_orders','order=created_at.desc').then(function(rows){
     if(Array.isArray(rows)){
-      LO=rows.map(function(r){ return {id:r.id,client:r.client,size:r.size,qty:r.qty,price:r.price,value:r.value,status:r.status,date:r.date,notes:r.notes,ref:r.ref||'',invoice:r.invoice||null}; });
+      LO=rows.map(function(r){ return {id:r.id,client:r.client,size:r.size,qty:r.qty,price:r.price,value:r.value,status:r.status,date:r.date,notes:r.notes,ref:r.ref||'',invoice:r.invoice||null,docname:r.docname||null,docpath:r.docpath||null}; });
       localStorage.setItem('le_lo',JSON.stringify(LO));
       syncCTR(LO);
     }
@@ -2234,14 +2234,14 @@ function loadSettings(cb) {
 
 // ── SAVE functions (write to Supabase) ──
 function saveFO_supa(o) {
-  var payload = {id:o.id,client:o.client,product:o.product,volume:o.volume,price:o.price,value:o.value,status:o.status,date:o.date,notes:o.notes||'',truck:o.truck||'',location:o.location||'',ref:o.ref||'',invoice:o.invoice||null};
+  var payload = {id:o.id,client:o.client,product:o.product,volume:o.volume,price:o.price,value:o.value,status:o.status,date:o.date,notes:o.notes||'',truck:o.truck||'',location:o.location||'',ref:o.ref||'',invoice:o.invoice||null,docname:o.docname||null,docpath:o.docpath||null};
   return dbUpsert('fuel_orders', payload).then(function(r){
     if(r && r[0] && r[0].id){ return true; }
     else { console.error('saveFO_supa failed:', JSON.stringify(r)); alert('⚠️ Order saved locally but FAILED to save to cloud. Error: '+JSON.stringify(r).slice(0,200)); return false; }
   }).catch(function(e){ console.error('saveFO_supa error:', e); alert('⚠️ Cloud save error: '+e); return false; });
 }
 function saveLO_supa(o) {
-  return dbUpsert('lpg_orders',{id:o.id,client:o.client,size:o.size,qty:o.qty,price:o.price,value:o.value,status:o.status,date:o.date,notes:o.notes||'',ref:o.ref||'',invoice:o.invoice||null}).then(function(r){
+  return dbUpsert('lpg_orders',{id:o.id,client:o.client,size:o.size,qty:o.qty,price:o.price,value:o.value,status:o.status,date:o.date,notes:o.notes||'',ref:o.ref||'',invoice:o.invoice||null,docname:o.docname||null,docpath:o.docpath||null}).then(function(r){
     if(r && r[0] && r[0].id){/* saved ok */}
     else{console.error('saveLO_supa failed:',JSON.stringify(r));}
   }).catch(function(e){console.error('saveLO_supa error:',e);});
@@ -2275,6 +2275,28 @@ function saveSettings_supa() {
 }
 
 // Save to localStorage immediately, debounce cloud push
+// ── DOCUMENTS & FOLDERS (shared via Supabase) ──
+function loadDocs(cb){
+  dbGet('documents','order=created_at.desc').then(function(rows){
+    if(Array.isArray(rows)){ DO=rows.map(function(r){return {id:r.id,name:r.name,category:r.category,type:r.type,author:r.author,desc:r.descr,date:r.date,folder:r.folder,size:r.size,url:r.url,path:r.path};}); localStorage.setItem('le_do',JSON.stringify(DO)); }
+    if(cb)cb();
+  }).catch(function(e){console.error('loadDocs',e);if(cb)cb();});
+}
+function loadFolders(cb){
+  dbGet('folders','order=created_at.asc').then(function(rows){
+    if(Array.isArray(rows)){ FL=rows.map(function(r){return {id:r.id,name:r.name,parent:r.parent,date:r.date};}); localStorage.setItem('le_fl',JSON.stringify(FL)); }
+    if(cb)cb();
+  }).catch(function(e){console.error('loadFolders',e);if(cb)cb();});
+}
+function saveDoc_supa(d){
+  return dbUpsert('documents',{id:d.id,name:d.name,category:d.category||'',type:d.type||'',author:d.author||'',descr:d.desc||'',date:d.date||'',folder:d.folder||null,size:d.size||'',url:d.url||null,path:d.path||null}).then(function(r){
+    if(!(r&&r[0]&&r[0].id)){ console.error('saveDoc_supa failed',JSON.stringify(r)); }
+  }).catch(function(e){console.error('saveDoc_supa',e);});
+}
+function saveFolder_supa(f){ return dbUpsert('folders',{id:f.id,name:f.name,parent:f.parent||null,date:f.date||''}).catch(function(e){console.error('saveFolder_supa',e);}); }
+function delDoc_supa(id){ return dbDelete('documents',id); }
+function delFolder_supa(id){ return dbDelete('folders',id); }
+
 function sv() {
   // Always save locally first (instant)
   localStorage.setItem("le_cl",JSON.stringify(CL));
@@ -2438,6 +2460,7 @@ function refreshPage(){
   else if(page==="clients") loadCL(done);
   else if(page==="leads"){ loadLeads(); done(); }
   else if(page==="quotes"){ loadQuotes(done); }
+  else if(page==="documents"){ loadFolders(function(){ loadDocs(done); }); }
   else if(page==="fuel-debtors") loadDB(done);
   else if(page==="lpg-debtors") loadDB(done);
   else if(page==="stock-fuel"||page==="stock-lpg") loadSTOCK(done);
@@ -2486,7 +2509,7 @@ function activatePage(page,el){
   else if(page==="fuel-debtors")rFuelDebtors();
   else if(page==="lpg-debtors")rLPGDebtors();
   else if(page==="debtors")rDebtors();
-  else if(page==="documents"){CUR_FOLD=null;rDocs();}
+  else if(page==="documents"){CUR_FOLD=null;loadFolders(function(){loadDocs(rDocs);});}
   else if(page==="sales-report"){initRpt();rRpt();rTxList();}
   else if(page==="settings"){rLockItems();loadCFG();loadGistConfig();loadApiKeyCfg();loadGHCfgUI();}
   document.getElementById("sb").classList.remove("open");
@@ -2884,7 +2907,7 @@ function saveDoc(){
   var d={id:docId,name:n,category:document.getElementById("dc").value,type:document.getElementById("dt").value,author:document.getElementById("da").value,desc:document.getElementById("dd").value,date:new Date().toISOString().split("T")[0],folder:document.getElementById("doc-fsel").value||null,size:sz,url:null};
   
   function finishSave(){
-    DO.unshift(d);sv();closeM("md");
+    DO.unshift(d);sv();saveDoc_supa(d);closeM("md");
     ["dn","dd"].forEach(function(id2){document.getElementById(id2).value="";});
     document.getElementById("upload-list").innerHTML="";pendFiles=[];
     rDocs();updStats();addAct("Document uploaded: "+d.name,"📁","tl");
@@ -2908,7 +2931,7 @@ function saveDoc(){
 function saveFolder(){
   var n=document.getElementById("fold-name").value.trim();if(!n){alert("Folder name required.");return;}
   var f={id:"FL-"+Date.now(),name:n,parent:document.getElementById("fold-parent").value||null,date:new Date().toISOString().split("T")[0]};
-  FL.push(f);sv();closeM("mfold");document.getElementById("fold-name").value="";rDocs();addAct("Folder created: "+f.name,"📂","tl");
+  FL.push(f);sv();saveFolder_supa(f);closeM("mfold");document.getElementById("fold-name").value="";rDocs();addAct("Folder created: "+f.name,"📂","tl");
 }
 
 // CLEAR / DELETE
@@ -2927,8 +2950,8 @@ function delOrd(type,id){
   sv();rFuel();rLPG();rAll();rDash();
 });
 }
-function delDoc(id){showConfirm("Delete Document","Delete this document?","Delete",function(){DO=DO.filter(function(d){return d.id!==id;});sv();rDocs();updStats();});}
-function delFolder(id){showConfirm("Delete Folder","Delete folder? Files move to Root.","Delete",function(){DO.forEach(function(d){if(d.folder===id)d.folder=null;});FL=FL.filter(function(f){return f.id!==id;});sv();rDocs();});}
+function delDoc(id){showConfirm("Delete Document","Delete this document?","Delete",function(){var dd=DO.find(function(d){return d.id===id;});if(dd&&dd.path)deleteFromStorage(dd.path);DO=DO.filter(function(d){return d.id!==id;});sv();delDoc_supa(id);rDocs();updStats();});}
+function delFolder(id){showConfirm("Delete Folder","Delete folder? Files move to Root.","Delete",function(){DO.forEach(function(d){if(d.folder===id){d.folder=null;saveDoc_supa(d);}});FL=FL.filter(function(f){return f.id!==id;});sv();delFolder_supa(id);rDocs();});}
 
 // RENDER FUEL (active only)
 function rFuel(){
@@ -5058,7 +5081,7 @@ function nxtPOId(){
 }
 
 function savePO_supa(p){
-  dbUpsert('purchase_orders',{id:p.id,date:p.date,supplier:p.supplier,cat:p.cat,product:p.product,qty:p.qty,cost:p.cost,total:p.total,ref:p.ref||'',notes:p.notes||'',status:p.status});
+  dbUpsert('purchase_orders',{id:p.id,date:p.date,supplier:p.supplier,cat:p.cat,product:p.product,qty:p.qty,cost:p.cost,total:p.total,ref:p.ref||'',notes:p.notes||'',status:p.status,docname:p.docname||null,docpath:p.docpath||null});
 }
 
 function delPO_supa(id){
@@ -5068,7 +5091,7 @@ function delPO_supa(id){
 function loadPO(cb){
   dbGet('purchase_orders','order=created_at.desc').then(function(rows){
     if(Array.isArray(rows)){
-      PO=rows.map(function(r){return {id:r.id,date:r.date,supplier:r.supplier,cat:r.cat,product:r.product,qty:parseFloat(r.qty)||0,cost:parseFloat(r.cost)||0,total:parseFloat(r.total)||0,ref:r.ref||'',notes:r.notes||'',status:r.status||'pending'};});
+      PO=rows.map(function(r){return {id:r.id,date:r.date,supplier:r.supplier,cat:r.cat,product:r.product,qty:parseFloat(r.qty)||0,cost:parseFloat(r.cost)||0,total:parseFloat(r.total)||0,ref:r.ref||'',notes:r.notes||'',status:r.status||'pending',docname:r.docname||null,docpath:r.docpath||null};});
       localStorage.setItem('le_po',JSON.stringify(PO));
       syncCTR(PO);
     }
@@ -5491,44 +5514,55 @@ function deleteFromStorage(path){
 
 // ── ORDER DOC ATTACHMENTS (Fuel & LPG transaction logs) ──
 function getOrderDoc(prefix, orderId){
-  try{ return JSON.parse(localStorage.getItem('le_ordoc_'+prefix+'_'+orderId)||'null'); }catch(e){ return null; }
+  var arr=(prefix==='fo')?FO:LO;
+  var o=arr.find(function(x){return x.id===orderId;});
+  return (o && o.docpath) ? {name:o.docname||'Document', path:o.docpath} : null;
 }
 
 function attachOrderDoc(prefix, orderId, input){
   var file = input.files[0];
   if(!file) return;
   if(file.size > 10*1024*1024){ alert('File too large. Max 10MB.'); return; }
+  var arr=(prefix==='fo')?FO:LO;
+  var o=arr.find(function(x){return x.id===orderId;});
+  if(!o){ input.value=''; return; }
   var path = prefix+'/'+orderId+'/'+Date.now()+'_'+file.name;
   input.disabled = true;
   uploadToStorage(path, file, function(url, name, spath){
-    localStorage.setItem('le_ordoc_'+prefix+'_'+orderId, JSON.stringify({name:name, url:url, path:spath||path}));
+    o.docname=name; o.docpath=spath||path;
+    Promise.resolve((prefix==='fo')?saveFO_supa(o):saveLO_supa(o)).then(function(){ if(prefix==='fo') rFuel(); else rLPG(); });
     input.disabled = false;
-    if(prefix==='fo') rFuel(); else rLPG();
   });
 }
 
 function removeOrderDoc(prefix, orderId){
   showConfirm('Remove Document', 'Remove the attached document?', 'Remove', function(){
-    var doc = getOrderDoc(prefix, orderId);
-    if(doc && doc.path) deleteFromStorage(doc.path);
-    localStorage.removeItem('le_ordoc_'+prefix+'_'+orderId);
-    if(prefix==='fo') rFuel(); else rLPG();
+    var arr=(prefix==='fo')?FO:LO;
+    var o=arr.find(function(x){return x.id===orderId;});
+    if(!o) return;
+    if(o.docpath) deleteFromStorage(o.docpath);
+    o.docname=null; o.docpath=null;
+    Promise.resolve((prefix==='fo')?saveFO_supa(o):saveLO_supa(o)).then(function(){ if(prefix==='fo') rFuel(); else rLPG(); });
   });
 }
 
 // ── PO DOCUMENT ATTACHMENTS ──
 function getPODoc(poId){
-  try{ return JSON.parse(localStorage.getItem('le_po_doc_'+poId)||'null'); }catch(e){ return null; }
+  var p=PO.find(function(x){return x.id===poId;});
+  return (p && p.docpath) ? {name:p.docname||'Document', path:p.docpath} : null;
 }
 
 function attachPODoc(poId, input){
   var file = input.files[0];
   if(!file) return;
   if(file.size > 10*1024*1024){ alert('File too large. Max 10MB.'); return; }
+  var p=PO.find(function(x){return x.id===poId;});
+  if(!p){ input.value=''; return; }
   var path = 'po/'+poId+'/'+Date.now()+'_'+file.name;
   input.disabled = true;
   uploadToStorage(path, file, function(url, name, spath){
-    localStorage.setItem('le_po_doc_'+poId, JSON.stringify({name:name, url:url, path:spath||path}));
+    p.docname=name; p.docpath=spath||path;
+    savePO_supa(p);
     input.disabled = false;
     rPO();
   });
@@ -5536,9 +5570,11 @@ function attachPODoc(poId, input){
 
 function removePODoc(poId){
   showConfirm('Remove Document', 'Remove the attached document?', 'Remove', function(){
-    var doc = getPODoc(poId);
-    if(doc && doc.path) deleteFromStorage(doc.path);
-    localStorage.removeItem('le_po_doc_'+poId);
+    var p=PO.find(function(x){return x.id===poId;});
+    if(!p) return;
+    if(p.docpath) deleteFromStorage(p.docpath);
+    p.docname=null; p.docpath=null;
+    savePO_supa(p);
     rPO();
   });
 }
@@ -5702,6 +5738,7 @@ function startPortal() {
                 loadSTOCK(function(){
                   loadAR(function(){
                     loadPO(function(){
+                    loadFolders(function(){}); loadDocs(function(){});
                     rDash();
                     setSyncStatus('synced','Live ✓');
                     // Restore last visited page
