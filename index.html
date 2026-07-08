@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="202607061000">
+<meta name="app-version" content="202607061200">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
@@ -568,6 +568,7 @@ body[data-role="manager"] .btn-d{display:none !important;}
     <div><span class="nl">Clients</span>
       <div class="ni" id="nav-clients" onclick="goPage('clients',this)"><span class="ic">👥</span>Clients<span class="lbadge" id="lb-clients"></span></div>
       <div class="ni" id="nav-leads" onclick="goPage('leads',this)"><span class="ic">🎯</span>Sales Pipeline<span class="lbadge" id="lb-leads"></span></div>
+      <div class="ni" id="nav-quotes" onclick="goPage('quotes',this)"><span class="ic">📄</span>Quotes</div>
     </div>
     <div><span class="nl">Documentation</span>
       <div class="ni" id="nav-documents" onclick="goPage('documents',this)"><span class="ic">📁</span>Documents<span class="lbadge" id="lb-documents"></span></div>
@@ -956,6 +957,38 @@ body[data-role="manager"] .btn-d{display:none !important;}
   </div>
 
   <!-- SALES PIPELINE -->
+  <div class="pg" id="pg-quotes">
+    <div class="sh">
+      <div><div class="st">📄 QUO<em>TATIONS</em></div><div class="ss">Create quotes for prospective clients · Mark a quote Successful to add them to Clients</div></div>
+      <button class="btn btn-p" onclick="newQuote()">+ New Quote</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:14px 0 18px">
+      <div class="sc"><div class="sc-lb">Total Quotes</div><div class="sc-vl" id="q-stat-total">0</div></div>
+      <div class="sc"><div class="sc-lb">Draft</div><div class="sc-vl" style="color:#64748b" id="q-stat-draft">0</div></div>
+      <div class="sc"><div class="sc-lb">Sent</div><div class="sc-vl" style="color:#2abcd0" id="q-stat-sent">0</div></div>
+      <div class="sc" style="border-top:3px solid #22c55e"><div class="sc-lb">Successful</div><div class="sc-vl" style="color:#16a34a" id="q-stat-success">0</div></div>
+      <div class="sc" style="border-top:3px solid #ef4444"><div class="sc-lb">Unsuccessful</div><div class="sc-vl" style="color:#ef4444" id="q-stat-unsuccess">0</div></div>
+    </div>
+    <div style="margin-bottom:12px"><input type="text" id="q-search" oninput="rQuotes()" placeholder="Search quotes by company, contact or ref…" style="width:100%;padding:10px 12px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px"></div>
+    <div class="cd">
+      <div class="cd-hd"><span class="cd-ttl">📄 All Quotes</span></div>
+      <div class="cd-bd" style="padding:0;overflow-x:auto">
+        <table>
+          <thead><tr>
+            <th style="text-align:left;padding:10px 12px">Ref No</th>
+            <th style="text-align:left;padding:10px 12px">Company</th>
+            <th style="text-align:left;padding:10px 12px">Date</th>
+            <th style="text-align:left;padding:10px 12px">Valid Until</th>
+            <th style="text-align:center;padding:10px 12px">Items</th>
+            <th style="text-align:left;padding:10px 12px">Status</th>
+            <th style="text-align:left;padding:10px 12px">Actions</th>
+          </tr></thead>
+          <tbody id="q-list"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
   <div class="pg" id="pg-leads">
     <div class="ph">
       <div>
@@ -1879,6 +1912,43 @@ body[data-role="manager"] .btn-d{display:none !important;}
   </div>
 </div>
 
+<!-- QUOTE MODAL -->
+<div class="mo" id="mq">
+  <div class="mo-box" style="max-width:680px;width:96%">
+    <div class="mh">
+      <div style="display:flex;align-items:center"><div class="mac tl"></div><span class="mt2" id="mq-title">📄 New Quotation</span></div>
+      <button class="xbtn" onclick="closeM('mq')">✕</button>
+    </div>
+    <div style="padding:16px;overflow-y:auto;max-height:72vh">
+      <input type="hidden" id="q-eid">
+      <div class="fg">
+        <div class="fm"><label>Company / Prospect *</label><input type="text" id="q-company" placeholder="e.g. DC Meat Wholesalers"></div>
+        <div class="fm"><label>Attention (Contact)</label><input type="text" id="q-att" placeholder="e.g. Yvonne"></div>
+        <div class="fm"><label>Email</label><input type="email" id="q-email" placeholder="e.g. inventory@dcmeat.co.za"></div>
+        <div class="fm"><label>Phone</label><input type="tel" id="q-phone" placeholder="e.g. 021 555 1234"></div>
+        <div class="fm"><label>Quote Date</label><input type="date" id="q-date"></div>
+        <div class="fm"><label>Valid Until</label><input type="date" id="q-valid"></div>
+        <div class="fm"><label>Status</label><select id="q-status"><option value="Draft">Draft</option><option value="Sent">Sent</option><option value="Successful">Successful</option><option value="Unsuccessful">Unsuccessful</option></select></div>
+        <div class="fm full"><label>Cover Message</label><textarea id="q-intro" style="min-height:90px"></textarea></div>
+        <div class="fm full">
+          <label>Pricing</label>
+          <div style="display:grid;grid-template-columns:1fr 1.4fr 0.9fr 0.9fr auto;gap:6px;margin-bottom:4px;font-size:11px;color:#64748b;font-weight:600">
+            <div>Product</div><div>Delivery Location</div><div>Monthly Volume</div><div>Price / Litre</div><div></div>
+          </div>
+          <div id="q-items"></div>
+          <button type="button" class="btn btn-s btn-sm" onclick="addQuoteRow()" style="margin-top:4px">+ Add Row</button>
+        </div>
+        <div class="fm full"><label>Terms &amp; Conditions (one per line)</label><textarea id="q-terms" style="min-height:100px"></textarea></div>
+        <div class="fm full"><label>Internal Notes (not shown on the quote)</label><textarea id="q-notes" style="min-height:50px"></textarea></div>
+      </div>
+    </div>
+    <div class="mf2">
+      <button class="btn btn-s" onclick="closeM('mq')">Cancel</button>
+      <button class="btn btn-p" onclick="saveQuoteForm()">Save Quote</button>
+    </div>
+  </div>
+</div>
+
 <!-- DOC MODAL (quick metadata after drag/drop) -->
 <div class="mo" id="md">
   <div class="mdl" style="max-width:480px">
@@ -2354,6 +2424,7 @@ function refreshPage(){
     else if(page==="assets")rAssets();
     else if(page==="clients")rClients();
     else if(page==="leads")rLeads();
+    else if(page==="quotes")rQuotes();
     else if(page==="fuel-debtors")rFuelDebtors();
     else if(page==="lpg-debtors")rLPGDebtors();
     else if(page==="documents")rDocs();
@@ -2365,6 +2436,7 @@ function refreshPage(){
   else if(page==="purchase-orders") loadPO(done);
   else if(page==="clients") loadCL(done);
   else if(page==="leads"){ loadLeads(); done(); }
+  else if(page==="quotes"){ loadQuotes(done); }
   else if(page==="fuel-debtors") loadDB(done);
   else if(page==="lpg-debtors") loadDB(done);
   else if(page==="stock-fuel"||page==="stock-lpg") loadSTOCK(done);
@@ -2373,7 +2445,7 @@ function refreshPage(){
   else done();
 }
 
-var navTitles={dashboard:"DASHBOARD","fuel-orders":"FUEL ORDERS","purchase-orders":"PURCHASE ORDERS","lpg-orders":"LPG ORDERS","all-orders":"ALL ORDERS",stock:"STOCK LEVELS",assets:"ASSET REGISTER",clients:"CLIENTS",leads:"SALES PIPELINE",documents:"DOCUMENTS","sales-report":"SALES REPORT","fuel-debtors":"FUEL DEBTORS","lpg-debtors":"LPG DEBTORS",settings:"SETTINGS"};
+var navTitles={dashboard:"DASHBOARD","fuel-orders":"FUEL ORDERS","purchase-orders":"PURCHASE ORDERS","lpg-orders":"LPG ORDERS","all-orders":"ALL ORDERS",stock:"STOCK LEVELS",assets:"ASSET REGISTER",clients:"CLIENTS",leads:"SALES PIPELINE",documents:"DOCUMENTS","sales-report":"SALES REPORT","fuel-debtors":"FUEL DEBTORS","lpg-debtors":"LPG DEBTORS",settings:"SETTINGS",quotes:"QUOTATIONS"};
 
 function goPage(page,el){
   if(typeof pageAllowed==='function' && USER_ROLE && !pageAllowed(page)){
@@ -2409,6 +2481,7 @@ function activatePage(page,el){
   else if(page==="assets")rAssets();
   else if(page==="clients")rClients();
   else if(page==="leads")rLeads();
+  else if(page==="quotes")loadQuotes(rQuotes);
   else if(page==="fuel-debtors")rFuelDebtors();
   else if(page==="lpg-debtors")rLPGDebtors();
   else if(page==="debtors")rDebtors();
@@ -5655,7 +5728,7 @@ function startPortal() {
 
 // ── AUTH: sign-in gate before portal starts ──
 var ROLE_BLOCKED_PAGES = {
-  staff:   ['fuel-debtors','lpg-debtors','sales-report','assets','settings'],
+  staff:   ['fuel-debtors','lpg-debtors','sales-report','assets','settings','quotes'],
   manager: ['settings']
 };
 
@@ -5782,6 +5855,186 @@ setTimeout(function(){
 // ══════════════════════════════════════════
 // LEADS / SALES PIPELINE MODULE
 // ══════════════════════════════════════════
+// ══════════ QUOTATIONS ══════════
+var QUOTES = [];
+var DEFAULT_QUOTE_INTRO = "Thank you for your enquiry and for considering Luckan Energy as your wholesale fuel supplier. We appreciate the opportunity to quote on your requirements, and are pleased to confirm our per-litre pricing set out below, based on the volumes and delivery locations noted in your request. We pride ourselves on competitive rates, reliable delivery, and quality-assured product.";
+var DEFAULT_QUOTE_TERMS = "Prices are subject to fluctuation in line with the Department of Mineral Resources and Energy (DMRE) basic fuel price adjustments.\nQuoted rates are based on the monthly volumes indicated and are valid for the period stated above.\nDelivery is included to the specified sites unless otherwise stated. Payment terms to be agreed upon order confirmation.\nAll product is supplied in accordance with applicable South African fuel quality and safety standards.";
+
+function qesc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function qnum(n){ n=String(n==null?'':n).replace(/[^\d.]/g,''); if(!n) return ''; var p=n.split('.'); p[0]=p[0].replace(/\B(?=(\d{3})+(?!\d))/g,' '); return p.join('.'); }
+function qset(id,v){ var e=document.getElementById(id); if(e) e.textContent=v; }
+function fmtQDate(s){ if(!s) return ''; var d=new Date(String(s).slice(0,10)+'T00:00:00'); if(isNaN(d.getTime())) return s; var m=['January','February','March','April','May','June','July','August','September','October','November','December']; return ('0'+d.getDate()).slice(-2)+' '+m[d.getMonth()]+' '+d.getFullYear(); }
+
+function loadQuotes(cb){
+  dbGet('quotes','order=created_at.desc').then(function(rows){
+    if(Array.isArray(rows)){ QUOTES=rows.map(function(r){ return {id:r.id,company:r.company,att:r.att,email:r.email,phone:r.phone,date:r.date,valid_until:r.valid_until,intro:r.intro,terms:r.terms,items:r.items||[],status:r.status||'Draft',notes:r.notes}; }); }
+    if(cb)cb();
+  }).catch(function(e){ console.error('loadQuotes',e); if(cb)cb(); });
+}
+function saveQuote_supa(q){
+  var payload={id:q.id,company:q.company||'',att:q.att||'',email:q.email||'',phone:q.phone||'',date:q.date||'',valid_until:q.valid_until||'',intro:q.intro||'',terms:q.terms||'',items:q.items||[],status:q.status||'Draft',notes:q.notes||''};
+  return dbUpsert('quotes',payload).then(function(r){
+    if(r&&r[0]&&r[0].id){ return true; }
+    console.error('saveQuote_supa failed:',JSON.stringify(r)); alert('Quote saved on screen but FAILED to save to cloud: '+JSON.stringify(r).slice(0,180)); return false;
+  }).catch(function(e){ console.error('saveQuote_supa error:',e); alert('Cloud save error: '+e); return false; });
+}
+function delQuote_supa(id){ return dbDelete('quotes',id); }
+
+function rQuotes(){
+  var body=document.getElementById('q-list'); if(!body) return;
+  var s=((document.getElementById('q-search')||{}).value||'').toLowerCase();
+  function c(st){ return QUOTES.filter(function(q){return (q.status||'Draft')===st;}).length; }
+  qset('q-stat-total',QUOTES.length); qset('q-stat-draft',c('Draft')); qset('q-stat-sent',c('Sent')); qset('q-stat-success',c('Successful')); qset('q-stat-unsuccess',c('Unsuccessful'));
+  var list=QUOTES.filter(function(q){ return !s || (q.company||'').toLowerCase().indexOf(s)>-1 || (q.id||'').toLowerCase().indexOf(s)>-1 || (q.att||'').toLowerCase().indexOf(s)>-1; });
+  if(!list.length){ body.innerHTML='<tr><td colspan="7" style="text-align:center;color:#64748b;padding:24px">No quotes yet. Click "+ New Quote" to create one.</td></tr>'; return; }
+  body.innerHTML=list.map(function(q){
+    var st=q.status||'Draft';
+    var col={Draft:'#64748b',Sent:'#2abcd0',Successful:'#16a34a',Unsuccessful:'#ef4444'}[st]||'#64748b';
+    var opts=['Draft','Sent','Successful','Unsuccessful'].map(function(o){return '<option value="'+o+'"'+(o===st?' selected':'')+'>'+o+'</option>';}).join('');
+    return '<tr>'
+      +'<td style="padding:9px 12px;font-weight:700;color:#E8185A;font-family:monospace;white-space:nowrap">'+qesc(q.id)+'</td>'
+      +'<td style="padding:9px 12px;font-weight:600">'+qesc(q.company||'')+(q.att?'<div style="font-size:11px;color:#64748b;font-weight:400">ATT: '+qesc(q.att)+'</div>':'')+'</td>'
+      +'<td style="padding:9px 12px;color:#64748b;font-size:12px;white-space:nowrap">'+fmtQDate(q.date)+'</td>'
+      +'<td style="padding:9px 12px;color:#64748b;font-size:12px;white-space:nowrap">'+fmtQDate(q.valid_until)+'</td>'
+      +'<td style="padding:9px 12px;text-align:center">'+((q.items||[]).length)+'</td>'
+      +'<td style="padding:9px 12px"><select onchange="updateQuoteStatus(&quot;'+q.id+'&quot;,this.value)" style="border:1px solid #e2e8f0;border-radius:6px;padding:4px 6px;font-size:12px;font-weight:700;color:'+col+'">'+opts+'</select></td>'
+      +'<td style="padding:9px 12px;white-space:nowrap">'
+        +'<button class="btn btn-t btn-sm" onclick="quotePDF(&quot;'+q.id+'&quot;)" title="Download PDF">📄 PDF</button> '
+        +'<button class="btn btn-s btn-sm" onclick="editQuote(&quot;'+q.id+'&quot;)" title="Edit">✏️</button> '
+        +'<button class="btn btn-d btn-sm" onclick="deleteQuote(&quot;'+q.id+'&quot;)" title="Delete">🗑️</button>'
+      +'</td>'
+    +'</tr>';
+  }).join('');
+}
+
+function addQuoteRow(it){
+  it=it||{};
+  var wrap=document.getElementById('q-items'); if(!wrap) return;
+  var div=document.createElement('div');
+  div.className='q-row';
+  div.style.cssText='display:grid;grid-template-columns:1fr 1.4fr 0.9fr 0.9fr auto;gap:6px;margin-bottom:6px;align-items:center';
+  div.innerHTML='<input class="q-prod" placeholder="Diesel" value="'+qesc(it.product||'')+'">'
+    +'<input class="q-loc" placeholder="Delivery location" value="'+qesc(it.location||'')+'">'
+    +'<input class="q-vol" placeholder="19650" value="'+qesc(it.volume||'')+'">'
+    +'<input class="q-price" placeholder="23.80" value="'+qesc(it.price||'')+'">'
+    +'<button type="button" class="btn btn-s btn-sm" onclick="this.closest(&quot;.q-row&quot;).remove()">&#10005;</button>';
+  wrap.appendChild(div);
+}
+
+function newQuote(){
+  document.getElementById('q-eid').value='';
+  document.getElementById('mq-title').textContent='📄 New Quotation';
+  ['q-company','q-att','q-email','q-phone','q-notes'].forEach(function(id){document.getElementById(id).value='';});
+  var td=new Date().toISOString().slice(0,10);
+  document.getElementById('q-date').value=td;
+  var v=new Date(); v.setDate(v.getDate()+21); document.getElementById('q-valid').value=v.toISOString().slice(0,10);
+  document.getElementById('q-intro').value=DEFAULT_QUOTE_INTRO;
+  document.getElementById('q-terms').value=DEFAULT_QUOTE_TERMS;
+  document.getElementById('q-status').value='Draft';
+  document.getElementById('q-items').innerHTML=''; addQuoteRow();
+  document.getElementById('mq').classList.add('open'); document.body.style.overflow='hidden';
+}
+function editQuote(id){
+  var q=QUOTES.find(function(x){return x.id===id;}); if(!q) return;
+  document.getElementById('q-eid').value=id;
+  document.getElementById('mq-title').textContent='Edit Quotation - '+id;
+  document.getElementById('q-company').value=q.company||'';
+  document.getElementById('q-att').value=q.att||'';
+  document.getElementById('q-email').value=q.email||'';
+  document.getElementById('q-phone').value=q.phone||'';
+  document.getElementById('q-date').value=(q.date||'').slice(0,10);
+  document.getElementById('q-valid').value=(q.valid_until||'').slice(0,10);
+  document.getElementById('q-intro').value=q.intro||DEFAULT_QUOTE_INTRO;
+  document.getElementById('q-terms').value=q.terms||DEFAULT_QUOTE_TERMS;
+  document.getElementById('q-status').value=q.status||'Draft';
+  document.getElementById('q-notes').value=q.notes||'';
+  document.getElementById('q-items').innerHTML='';
+  var items=(q.items&&q.items.length)?q.items:[{}]; items.forEach(function(it){ addQuoteRow(it); });
+  document.getElementById('mq').classList.add('open'); document.body.style.overflow='hidden';
+}
+function saveQuoteForm(){
+  var company=document.getElementById('q-company').value.trim();
+  if(!company){ alert('Company / prospect name is required.'); return; }
+  var eid=document.getElementById('q-eid').value;
+  var items=[];
+  document.querySelectorAll('#q-items .q-row').forEach(function(r){
+    var p=r.querySelector('.q-prod').value.trim(), l=r.querySelector('.q-loc').value.trim(), v=r.querySelector('.q-vol').value.trim(), pr=r.querySelector('.q-price').value.trim();
+    if(p||l||v||pr) items.push({product:p,location:l,volume:v,price:pr});
+  });
+  var q={ id: eid||nxtId('LE-Q-'), company:company, att:document.getElementById('q-att').value.trim(), email:document.getElementById('q-email').value.trim(), phone:document.getElementById('q-phone').value.trim(), date:document.getElementById('q-date').value, valid_until:document.getElementById('q-valid').value, intro:document.getElementById('q-intro').value, terms:document.getElementById('q-terms').value, items:items, status:document.getElementById('q-status').value, notes:document.getElementById('q-notes').value };
+  if(eid){ var i=QUOTES.findIndex(function(x){return x.id===eid;}); if(i>-1)QUOTES[i]=q; } else { QUOTES.unshift(q); }
+  Promise.resolve(saveQuote_supa(q)).then(function(){ rQuotes(); });
+  addAct((eid?'Edited':'New')+' quote '+q.id+' - '+q.company,'📄','tl');
+  closeM('mq'); rQuotes();
+}
+function updateQuoteStatus(id,status){
+  var q=QUOTES.find(function(x){return x.id===id;}); if(!q) return;
+  q.status=status;
+  Promise.resolve(saveQuote_supa(q)).then(function(){ rQuotes(); });
+  addAct('Quote '+id+' - '+status,'📄','tl');
+  if(status==='Successful'){
+    showConfirm('Add to Clients?','Load "'+(q.company||'this prospect')+'" into your Clients list?','Add Client',function(){ convertQuoteToClient(q); });
+  }
+}
+function convertQuoteToClient(q){
+  var exists=CL.find(function(c){ return q.company && (c.company||'').toLowerCase()===(q.company||'').toLowerCase(); });
+  if(exists){ alert('A client "'+q.company+'" already exists in your Clients list.'); return; }
+  var c={ id:'CL-'+Date.now(), name:q.att||q.company, company:q.company, phone:q.phone||'', email:q.email||'', type:'both', tier:'1', loc:'', notes:'Converted from quote '+q.id, pricing:{} };
+  CL.unshift(c); saveCL_supa(c);
+  addAct('Client added from quote '+q.id+' - '+q.company,'👥','tl');
+  alert('"'+q.company+'" has been added to your Clients.');
+}
+function deleteQuote(id){
+  showConfirm('Delete Quote','Delete quote '+id+'? This cannot be undone.','Delete',function(){
+    QUOTES=QUOTES.filter(function(x){return x.id!==id;});
+    delQuote_supa(id); rQuotes(); addAct('Quote deleted: '+id,'🗑️','pk');
+  });
+}
+function quotePDF(id){
+  var q=QUOTES.find(function(x){return x.id===id;}); if(!q) return;
+  var w=window.open('','_blank');
+  if(!w){ alert('Please allow pop-ups for this site to download the quote PDF.'); return; }
+  w.document.open(); w.document.write(quoteHTML(q)); w.document.close();
+}
+function quoteHTML(q){
+  var logoEl=document.querySelector('#sb .sb-logo img'); var logo=logoEl?logoEl.src:'';
+  var rows=(q.items||[]).map(function(it){
+    var vol=qnum(it.volume); var vd=vol?vol+' L':'';
+    var pr=String(it.price==null?'':it.price).replace(/[^\d.]/g,''); var pd=pr?('R '+parseFloat(pr).toFixed(2)+' / L'):'';
+    return '<tr>'
+      +'<td style="padding:11px 12px;border-bottom:1px solid #eef1f4;color:#E8185A;font-weight:600">'+qesc(it.product||'')+'</td>'
+      +'<td style="padding:11px 12px;border-bottom:1px solid #eef1f4">'+qesc(it.location||'').replace(/\n/g,'<br>')+'</td>'
+      +'<td style="padding:11px 12px;border-bottom:1px solid #eef1f4">'+qesc(vd)+'</td>'
+      +'<td style="padding:11px 12px;border-bottom:1px solid #eef1f4;background:#fdeef3;color:#E8185A;font-weight:600">'+qesc(pd)+'</td>'
+    +'</tr>';
+  }).join('');
+  var terms=(q.terms||'').split('\n').filter(function(t){return t.trim();}).map(function(t){return '<li style="margin-bottom:6px">'+qesc(t.trim())+'</li>';}).join('');
+  var lbl='color:#2abcd0;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;font-weight:700;border-bottom:1px solid #e2e8f0;padding-bottom:5px;margin-bottom:10px';
+  return '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Quotation '+qesc(q.id)+' '+qesc(q.company||'')+'</title>'
+    +'<style>@page{size:A4;margin:14mm}*{box-sizing:border-box}body{font-family:Arial,Helvetica,sans-serif;color:#0d1b2a;font-size:13px;line-height:1.5;margin:0}a{color:#E8185A}table{width:100%;border-collapse:collapse}@media print{.noprint{display:none}}</style></head><body>'
+    +'<div class="noprint" style="text-align:right;margin-bottom:10px"><button onclick="window.print()" style="background:#E8185A;color:#fff;border:0;padding:8px 16px;border-radius:6px;font-weight:600;cursor:pointer">Download / Print PDF</button></div>'
+    +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin-bottom:26px">'
+      +(logo?'<img src="'+logo+'" style="height:54px">':'<div style="font-weight:800;font-size:20px;color:#E8185A">LUCKAN ENERGY</div>')
+      +'<div style="border-left:2px solid #E8185A;padding-left:14px;font-size:11px;color:#5b6472;line-height:1.6"><div style="font-weight:700;color:#0d1b2a;font-size:12px">LUCKAN ENERGY</div>A subsidiary of Qwest Consultants (Pty) Ltd<br>10 Belfast Road, Wynberg<br>Cape Town, South Africa<br>Wholesale Suppliers of Diesel, Petrol, Paraffin &amp; LPG</div>'
+    +'</div>'
+    +'<div style="'+lbl+';font-size:15px;letter-spacing:2px">Quotation</div>'
+    +'<div style="display:flex;gap:30px;margin-bottom:22px">'
+      +'<div style="flex:1"><div style="'+lbl+'">Prepared For</div><div style="font-weight:600">'+qesc(q.company||'')+'</div>'+(q.att?'<div style="margin-top:4px">ATT: '+qesc(q.att)+'</div>':'')+(q.email?'<div style="margin-top:4px"><a href="mailto:'+qesc(q.email)+'">'+qesc(q.email)+'</a></div>':'')+(q.phone?'<div style="margin-top:4px">'+qesc(q.phone)+'</div>':'')+'</div>'
+      +'<div style="flex:1"><div style="'+lbl+'">Quotation Details</div><div><strong>Ref No:</strong> '+qesc(q.id)+'</div><div style="margin-top:6px"><strong>Date:</strong> '+qesc(fmtQDate(q.date))+'</div><div style="margin-top:6px"><strong>Valid Until:</strong> '+qesc(fmtQDate(q.valid_until))+'</div></div>'
+    +'</div>'
+    +'<div style="margin-bottom:8px">Good day,</div>'
+    +'<div style="white-space:pre-line;margin-bottom:22px">'+qesc(q.intro||'')+'</div>'
+    +'<div style="'+lbl+'">Pricing</div>'
+    +'<table style="margin-bottom:24px"><thead><tr style="background:#2abcd0;color:#fff"><th style="text-align:left;padding:10px 12px;font-size:12px">Product</th><th style="text-align:left;padding:10px 12px;font-size:12px">Delivery Location</th><th style="text-align:left;padding:10px 12px;font-size:12px">Monthly Volume</th><th style="text-align:left;padding:10px 12px;font-size:12px">Price per Litre</th></tr></thead><tbody>'+(rows||'<tr><td colspan="4" style="padding:12px;color:#64748b">No pricing lines added.</td></tr>')+'</tbody></table>'
+    +(terms?'<div style="'+lbl+'">Terms &amp; Conditions</div><ul style="margin:0 0 22px;padding-left:18px">'+terms+'</ul>':'')
+    +'<div style="margin-bottom:22px">Should you wish to proceed or have any questions, please do not hesitate to contact us. We look forward to building a lasting supply partnership with you.</div>'
+    +'<div style="margin-bottom:4px">Kind regards,</div>'
+    +'<div style="margin-top:14px"><div style="color:#2abcd0;font-weight:700">Waleed Luckan</div><div style="font-size:12px">Director &nbsp;|&nbsp; Luckan Energy (Pty) Ltd</div><div style="font-size:12px;color:#64748b"><a href="mailto:waleed@qwestconsult.co.za">waleed@qwestconsult.co.za</a> &nbsp;|&nbsp; 082 784 9305</div></div>'
+    +'<div style="margin-top:34px;border-top:1px solid #e2e8f0;padding-top:8px;text-align:center;font-size:10px;color:#94a3b8">Luckan Energy (Pty) Ltd &middot; A subsidiary of Qwest Consultants (Pty) Ltd &middot; 10 Belfast Road, Wynberg, Cape Town</div>'
+    +'<scr'+'ipt>window.onload=function(){setTimeout(function(){try{window.print()}catch(e){}},400)}</scr'+'ipt>'
+    +'</body></html>';
+}
+
 var LEADS = [];
 var LEAD_FILTER = 'all';
 var LEAD_COLS = [
