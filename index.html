@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="202607081200">
+<meta name="app-version" content="202607081400">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
@@ -6203,7 +6203,29 @@ function saveLead(){
 
 function moveLeadStatus(id, val){
   var l=LEADS.find(function(x){return x.id===id;});
-  if(l){l.status=val;saveLeads();rLeads();rDashPipeline();}
+  if(l){
+    var wasQuoted=(l.status==='quoted');
+    l.status=val;saveLeads();rLeads();rDashPipeline();
+    if(val==='quoted' && !wasQuoted) quoteFromLead(l);
+  }
+}
+
+// When a lead is moved to "Quoted", open the Quotes tab with a new quote pre-filled from the lead.
+function quoteFromLead(l){
+  if(typeof pageAllowed==='function' && !pageAllowed('quotes')){
+    alert('Lead marked as Quoted. Creating the quotation is limited to admin and manager roles — please ask one of them to generate it.');
+    return;
+  }
+  goPage('quotes', document.getElementById('nav-quotes'));
+  newQuote();
+  document.getElementById('q-company').value = l.name||'';
+  document.getElementById('q-phone').value = l.phone||'';
+  document.getElementById('q-notes').value = 'Created from Sales Pipeline lead '+l.id;
+  var row=document.querySelector('#q-items .q-row');
+  if(row){
+    if(l.product) row.querySelector('.q-prod').value = l.product;
+    if(l.volume)  row.querySelector('.q-vol').value = l.volume;
+  }
 }
 
 function deleteLead(id){
