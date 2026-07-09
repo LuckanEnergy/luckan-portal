@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="202607082300">
+<meta name="app-version" content="202607090900">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
@@ -6069,21 +6069,48 @@ function deleteQuote(id){
     delQuote_supa(id); rQuotes(); addAct('Quote deleted: '+id,'🗑️','pk');
   });
 }
+// Generic portal mailer — sends via the Supabase send-mail Edge Function (SMTP).
+// opts: {to, subject, text, html, cc, bcc, replyTo, attachments:[{filename,content(base64),contentType}]}
+function sendMail(opts){
+  return fetch(SUPA_URL+'/functions/v1/send-mail',{
+    method:'POST',
+    headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+authToken(),'Content-Type':'application/json'},
+    body:JSON.stringify(opts)
+  }).then(function(r){
+    return r.json().catch(function(){return {};}).then(function(j){
+      return {ok:r.ok && j && j.ok===true, status:r.status, error:(j&&j.error)||('HTTP '+r.status)};
+    });
+  }).catch(function(e){ return {ok:false, error:String(e)}; });
+}
+
 function emailQuote(id){
   var q=QUOTES.find(function(x){return x.id===id;}); if(!q) return;
   if(!q.email){ alert("This quote has no email address. Edit the quote and add the client's email first."); return; }
-  // Download the PDF so it's ready to attach
-  quotePDF(id);
-  // Mark as Sent if still a draft
-  if((q.status||'Draft')==='Draft'){ q.status='Sent'; Promise.resolve(saveQuote_supa(q)).then(function(){ rQuotes(); }); }
   var subject='Quotation '+q.id+' from Luckan Energy';
   var body='Good day'+(q.att?' '+q.att:'')+',\n\n'
     +'Thank you for your interest in Luckan Energy. Please find attached our quotation ('+q.id+')'
     +(q.valid_until?(', valid until '+fmtQDate(q.valid_until)):'')+'.\n\n'
     +'Should you have any questions or wish to proceed, please do not hesitate to contact us.\n\n'
     +'Kind regards,\nWaleed Luckan\nDirector | Luckan Energy (Pty) Ltd\nwaleed@qwestconsult.co.za | 082 784 9305';
-  window.location.href='mailto:'+encodeURIComponent(q.email)+'?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
-  setTimeout(function(){ alert('The quote PDF has downloaded and your email draft has opened. Attach the PDF from your Downloads folder, then send.'); }, 700);
+  var htmlBody=body.replace(/\n/g,'<br>');
+  // Build the PDF as a base64 attachment
+  var att=[];
+  var JS=(window.jspdf&&window.jspdf.jsPDF)||null;
+  if(JS){ try{ var d=quoteDoc(q,JS); var uri=d.output('datauristring'); att=[{filename:'Quotation_'+q.id+'.pdf', content:uri.substring(uri.indexOf(',')+1), contentType:'application/pdf'}]; }catch(e){ console.error('quote pdf',e); } }
+  setSyncStatus('syncing','Sending email…');
+  sendMail({to:q.email, subject:subject, text:body, html:htmlBody, attachments:att}).then(function(res){
+    setSyncStatus('synced','Live ✓');
+    if(res.ok){
+      if((q.status||'Draft')==='Draft'){ q.status='Sent'; Promise.resolve(saveQuote_supa(q)).then(function(){ rQuotes(); }); }
+      addAct('Quote '+q.id+' emailed to '+q.email,'✉️','tl');
+      alert('Quotation emailed to '+q.email+'.');
+    } else {
+      // Fallback: open the desktop mail app with the message + download the PDF to attach
+      quotePDF(id);
+      window.location.href='mailto:'+encodeURIComponent(q.email)+'?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
+      alert('Automatic email is not available yet ('+(res.error||'')+').\n\nI opened your email app with the message ready and downloaded the PDF for you to attach.');
+    }
+  });
 }
 function quotePDF(id){
   var q=QUOTES.find(function(x){return x.id===id;}); if(!q) return;
