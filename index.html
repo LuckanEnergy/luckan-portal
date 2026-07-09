@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="202607081600">
+<meta name="app-version" content="202607081800">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
@@ -5917,6 +5917,13 @@ function saveQuote_supa(q){
   }).catch(function(e){ console.error('saveQuote_supa error:',e); alert('Cloud save error: '+e); return false; });
 }
 function delQuote_supa(id){ return dbDelete('quotes',id); }
+// Collision-proof quote id: one past the highest existing quote number (and ahead of CTR).
+function nextQuoteId(){
+  var max=0;
+  QUOTES.forEach(function(q){ var n=parseInt(String(q.id||'').replace(/\D/g,''),10); if(!isNaN(n)&&n>max)max=n; });
+  if(typeof CTR==='number' && CTR>max) max=CTR;
+  return 'LE-Q-'+(max+1);
+}
 
 function rQuotes(){
   var body=document.getElementById('q-list'); if(!body) return;
@@ -6000,7 +6007,7 @@ function saveQuoteForm(){
     var p=r.querySelector('.q-prod').value.trim(), l=r.querySelector('.q-loc').value.trim(), v=r.querySelector('.q-vol').value.trim(), pr=r.querySelector('.q-price').value.trim();
     if(p||l||v||pr) items.push({product:p,location:l,volume:v,price:pr});
   });
-  var q={ id: eid||nxtId('LE-Q-'), company:company, att:document.getElementById('q-att').value.trim(), email:document.getElementById('q-email').value.trim(), phone:document.getElementById('q-phone').value.trim(), date:document.getElementById('q-date').value, valid_until:document.getElementById('q-valid').value, intro:document.getElementById('q-intro').value, terms:document.getElementById('q-terms').value, items:items, status:document.getElementById('q-status').value, notes:document.getElementById('q-notes').value };
+  var q={ id: eid||nextQuoteId(), company:company, att:document.getElementById('q-att').value.trim(), email:document.getElementById('q-email').value.trim(), phone:document.getElementById('q-phone').value.trim(), date:document.getElementById('q-date').value, valid_until:document.getElementById('q-valid').value, intro:document.getElementById('q-intro').value, terms:document.getElementById('q-terms').value, items:items, status:document.getElementById('q-status').value, notes:document.getElementById('q-notes').value };
   if(eid){ var i=QUOTES.findIndex(function(x){return x.id===eid;}); if(i>-1)QUOTES[i]=q; } else { QUOTES.unshift(q); }
   Promise.resolve(saveQuote_supa(q)).then(function(){ rQuotes(); });
   addAct((eid?'Edited':'New')+' quote '+q.id+' - '+q.company,'📄','tl');
