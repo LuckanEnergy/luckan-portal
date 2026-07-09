@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="202607082000">
+<meta name="app-version" content="202607082200">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
@@ -734,7 +734,7 @@ body[data-role="manager"] .btn-d{display:none !important;}
         </div>
       </div>
       <div class="cd-bd" style="padding:0;overflow-x:auto">
-        <table><thead><tr><th>Order ID</th><th>Date</th><th>Client</th><th>Product</th><th>Volume</th><th>Value</th><th>Status</th><th>Actions</th></tr></thead><tbody id="ft"></tbody></table>
+        <table><thead><tr><th onclick="ordSortSet('fuelActive','id',rFuel)" style="cursor:pointer;white-space:nowrap">Order ID <span class="sar" id="sar-fuelActive-id" style="font-size:9px;color:#94a3b8">&#8645;</span></th><th onclick="ordSortSet('fuelActive','date',rFuel)" style="cursor:pointer;white-space:nowrap">Date <span class="sar" id="sar-fuelActive-date" style="font-size:9px;color:#94a3b8">&#8645;</span></th><th onclick="ordSortSet('fuelActive','client',rFuel)" style="cursor:pointer">Client <span class="sar" id="sar-fuelActive-client" style="font-size:9px;color:#94a3b8">&#8645;</span></th><th onclick="ordSortSet('fuelActive','product',rFuel)" style="cursor:pointer">Product <span class="sar" id="sar-fuelActive-product" style="font-size:9px;color:#94a3b8">&#8645;</span></th><th onclick="ordSortSet('fuelActive','volume',rFuel)" style="cursor:pointer;white-space:nowrap">Volume <span class="sar" id="sar-fuelActive-volume" style="font-size:9px;color:#94a3b8">&#8645;</span></th><th onclick="ordSortSet('fuelActive','value',rFuel)" style="cursor:pointer;white-space:nowrap">Value <span class="sar" id="sar-fuelActive-value" style="font-size:9px;color:#94a3b8">&#8645;</span></th><th>Status</th><th>Actions</th></tr></thead><tbody id="ft"></tbody></table>
       </div>
     </div>
     <!-- Transaction Log -->
@@ -750,7 +750,7 @@ body[data-role="manager"] .btn-d{display:none !important;}
         </div>
       </div>
       <div class="cd-bd" style="padding:0;overflow-x:auto">
-        <table><thead><tr><th>Order ID</th><th>Date</th><th>Client</th><th>Product</th><th>Volume</th><th>Value</th><th>Status</th><th>Document</th><th>Actions</th></tr></thead>
+        <table><thead><tr><th onclick="ordSortSet('fuelTx','id',rFuel)" style="cursor:pointer;white-space:nowrap">Order ID <span class="sar" id="sar-fuelTx-id" style="font-size:9px;color:#94a3b8">&#8645;</span></th><th onclick="ordSortSet('fuelTx','date',rFuel)" style="cursor:pointer;white-space:nowrap">Date <span class="sar" id="sar-fuelTx-date" style="font-size:9px;color:#94a3b8">&#8645;</span></th><th onclick="ordSortSet('fuelTx','client',rFuel)" style="cursor:pointer">Client <span class="sar" id="sar-fuelTx-client" style="font-size:9px;color:#94a3b8">&#8645;</span></th><th onclick="ordSortSet('fuelTx','product',rFuel)" style="cursor:pointer">Product <span class="sar" id="sar-fuelTx-product" style="font-size:9px;color:#94a3b8">&#8645;</span></th><th onclick="ordSortSet('fuelTx','volume',rFuel)" style="cursor:pointer;white-space:nowrap">Volume <span class="sar" id="sar-fuelTx-volume" style="font-size:9px;color:#94a3b8">&#8645;</span></th><th onclick="ordSortSet('fuelTx','value',rFuel)" style="cursor:pointer;white-space:nowrap">Value <span class="sar" id="sar-fuelTx-value" style="font-size:9px;color:#94a3b8">&#8645;</span></th><th>Status</th><th>Document</th><th>Actions</th></tr></thead>
         <tbody id="fo-txlog"></tbody></table>
       </div>
     </div>
@@ -781,7 +781,7 @@ body[data-role="manager"] .btn-d{display:none !important;}
         </div>
       </div>
       <div class="cd-bd" style="padding:0;overflow-x:auto">
-        <table><thead><tr><th>Order ID</th><th>Date</th><th>Client</th><th>Cylinder</th><th>Qty</th><th>Value</th><th>Status</th><th>Actions</th></tr></thead><tbody id="lt"></tbody></table>
+        <table><thead><tr><th onclick="ordSortSet('lpgActive','id',rLPG)" style="cursor:pointer;white-space:nowrap">Order ID <span class="sar" id="sar-lpgActive-id" style="font-size:9px;color:#94a3b8">&#8645;</span></th><th onclick="ordSortSet('lpgActive','date',rLPG)" style="cursor:pointer;white-space:nowrap">Date <span class="sar" id="sar-lpgActive-date" style="font-size:9px;color:#94a3b8">&#8645;</span></th><th onclick="ordSortSet('lpgActive','client',rLPG)" style="cursor:pointer">Client <span class="sar" id="sar-lpgActive-client" style="font-size:9px;color:#94a3b8">&#8645;</span></th><th onclick="ordSortSet('lpgActive','product',rLPG)" style="cursor:pointer">Cylinder <span class="sar" id="sar-lpgActive-product" style="font-size:9px;color:#94a3b8">&#8645;</span></th><th onclick="ordSortSet('lpgActive','volume',rLPG)" style="cursor:pointer;white-space:nowrap">Qty <span class="sar" id="sar-lpgActive-volume" style="font-size:9px;color:#94a3b8">&#8645;</span></th><th onclick="ordSortSet('lpgActive','value',rLPG)" style="cursor:pointer;white-space:nowrap">Value <span class="sar" id="sar-lpgActive-value" style="font-size:9px;color:#94a3b8">&#8645;</span></th><th>Status</th><th>Actions</th></tr></thead><tbody id="lt"></tbody></table>
       </div>
     </div>
     <!-- Transaction Log -->
@@ -797,7 +797,7 @@ body[data-role="manager"] .btn-d{display:none !important;}
         </div>
       </div>
       <div class="cd-bd" style="padding:0;overflow-x:auto">
-        <table><thead><tr><th>Order ID</th><th>Date</th><th>Client</th><th>Cylinder</th><th>Qty</th><th>Value</th><th>Status</th><th>Document</th><th>Actions</th></tr></thead>
+        <table><thead><tr><th onclick="ordSortSet('lpgTx','id',rLPG)" style="cursor:pointer;white-space:nowrap">Order ID <span class="sar" id="sar-lpgTx-id" style="font-size:9px;color:#94a3b8">&#8645;</span></th><th onclick="ordSortSet('lpgTx','date',rLPG)" style="cursor:pointer;white-space:nowrap">Date <span class="sar" id="sar-lpgTx-date" style="font-size:9px;color:#94a3b8">&#8645;</span></th><th onclick="ordSortSet('lpgTx','client',rLPG)" style="cursor:pointer">Client <span class="sar" id="sar-lpgTx-client" style="font-size:9px;color:#94a3b8">&#8645;</span></th><th onclick="ordSortSet('lpgTx','product',rLPG)" style="cursor:pointer">Cylinder <span class="sar" id="sar-lpgTx-product" style="font-size:9px;color:#94a3b8">&#8645;</span></th><th onclick="ordSortSet('lpgTx','volume',rLPG)" style="cursor:pointer;white-space:nowrap">Qty <span class="sar" id="sar-lpgTx-volume" style="font-size:9px;color:#94a3b8">&#8645;</span></th><th onclick="ordSortSet('lpgTx','value',rLPG)" style="cursor:pointer;white-space:nowrap">Value <span class="sar" id="sar-lpgTx-value" style="font-size:9px;color:#94a3b8">&#8645;</span></th><th>Status</th><th>Document</th><th>Actions</th></tr></thead>
         <tbody id="lo-txlog"></tbody></table>
       </div>
     </div>
@@ -2953,6 +2953,35 @@ function delDoc(id){showConfirm("Delete Document","Delete this document?","Delet
 function delFolder(id){showConfirm("Delete Folder","Delete folder? Files move to Root.","Delete",function(){DO.forEach(function(d){if(d.folder===id){d.folder=null;saveDoc_supa(d);}});FL=FL.filter(function(f){return f.id!==id;});sv();delFolder_supa(id);rDocs();});}
 
 // RENDER FUEL (active only)
+// ── Sortable order tables (click a column header to sort) ──
+var ORD_SORT={};
+function ordSortSet(key,col,render){
+  var s=ORD_SORT[key];
+  if(s&&s.col===col){ s.dir=(s.dir==='asc'?'desc':'asc'); }
+  else { ORD_SORT[key]={col:col,dir:'asc'}; }
+  if(typeof render==='function') render();
+  paintArrows(key);
+}
+function paintArrows(key){
+  var els=document.querySelectorAll('[id^="sar-'+key+'-"]');
+  Array.prototype.forEach.call(els,function(el){ el.textContent=String.fromCharCode(0x21C5); });
+  var s=ORD_SORT[key]; if(!s) return;
+  var a=document.getElementById('sar-'+key+'-'+s.col);
+  if(a) a.textContent=String.fromCharCode(s.dir==='asc'?0x25B2:0x25BC);
+}
+function ordSortApply(key, arr){
+  var s=ORD_SORT[key]||{col:'date',dir:'desc'};
+  var col=s.col, m=(s.dir==='asc'?1:-1);
+  function val(o){
+    if(col==='id') return String(o.id||'');
+    if(col==='client') return String(o.client||'').toLowerCase();
+    if(col==='product') return String(o.product||o.size||'').toLowerCase();
+    if(col==='volume') return parseFloat(o.volume!=null?o.volume:o.qty)||0;
+    if(col==='value') return (typeof V==='function'?V(o):(o.value||0));
+    return String(o.date||'');
+  }
+  return arr.slice().sort(function(a,b){ var av=val(a),bv=val(b); if(av<bv)return -1*m; if(av>bv)return 1*m; return 0; });
+}
 function rFuel(){
   var q=(document.getElementById("fsrch")||{}).value||"";q=q.toLowerCase();
   var f=(document.getElementById("ff")||{}).value||"";
@@ -2969,6 +2998,7 @@ function rFuel(){
   }).filter(function(o){
     return !q||o.id.toLowerCase().includes(q)||o.client.toLowerCase().includes(q)||(o.product||"").toLowerCase().includes(q);
   });
+  rows=ordSortApply('fuelActive',rows);
   document.getElementById("ft").innerHTML=rows.length?rows.map(function(o){
     return "<tr>"
       +'<td style="font-size:12px;font-weight:700;color:var(--pk);font-family:monospace">'+o.id+"</td>"
@@ -2998,7 +3028,8 @@ function rFuel(){
       if(foTo && o.date && o.date>foTo) return false;
       if(foSrch && !(o.client||'').toLowerCase().includes(foSrch) && !(o.id||'').toLowerCase().includes(foSrch)) return false;
       return true;
-    }).sort(function(a,b){return b.date.localeCompare(a.date);});
+    });
+    delivered=ordSortApply('fuelTx',delivered);
     txbody.innerHTML=delivered.length?delivered.map(function(o){
       var doc=getOrderDoc('fo',o.id);
       var docBtn=doc
@@ -3037,6 +3068,7 @@ function rLPG(){
   }).filter(function(o){
     return !q||o.id.toLowerCase().includes(q)||o.client.toLowerCase().includes(q)||(o.size||"").toLowerCase().includes(q);
   });
+  rows=ordSortApply('lpgActive',rows);
   document.getElementById("lt").innerHTML=rows.length?rows.map(function(o){
     return "<tr>"
       +'<td style="font-size:12px;font-weight:700;color:var(--tl2);font-family:monospace">'+o.id+"</td>"
@@ -3060,7 +3092,8 @@ function rLPG(){
       if(loTo && o.date && o.date>loTo) return false;
       if(loSrch && !(o.client||'').toLowerCase().includes(loSrch) && !(o.id||'').toLowerCase().includes(loSrch)) return false;
       return true;
-    }).sort(function(a,b){return b.date.localeCompare(a.date);});
+    });
+    delivered=ordSortApply('lpgTx',delivered);
     txbody.innerHTML=delivered.length?delivered.map(function(o){
       var doc=getOrderDoc('lo',o.id);
       var docBtn=doc
