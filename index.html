@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="202607082200">
+<meta name="app-version" content="202607082300">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
@@ -3145,9 +3145,10 @@ function allTab(f,el){ALF=f;document.querySelectorAll("#pg-all-orders .tab").for
 
 // QUICK BAR (active only)
 function rQB(type){
+  var _qb=document.getElementById(type[0]+"qb"); if(!_qb) return;
   var arr=(type==="fuel"?FO:LO).filter(function(o){return o.status!=="delivered";});
   var r=arr.reduce(function(s,o){return s+V(o);},0);
-  document.getElementById(type[0]+"qb").innerHTML=
+  _qb.innerHTML=
     '<div class="qs"><div class="qv">'+arr.length+'</div><div class="ql">Active</div></div>'
     +'<div class="qs qp"><div class="qv">'+arr.filter(function(o){return o.status==="pending";}).length+'</div><div class="ql">Pending</div></div>'
     +'<div class="qs"><div class="qv" style="color:#d97706">'+arr.filter(function(o){return o.status==="processing";}).length+'</div><div class="ql">Processing</div></div>'
