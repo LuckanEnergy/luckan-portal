@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="202607091700">
+<meta name="app-version" content="202607091900">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
@@ -97,8 +97,8 @@ nav{padding:10px 0;flex:1;overflow-y:auto;}
 .g3{display:grid;grid-template-columns:2fr 1fr;gap:16px;}
 /* TABLES */
 table{width:100%;border-collapse:collapse;}
-th{text-align:left;font-size:10px;letter-spacing:1.5px;color:#64748b;text-transform:uppercase;font-weight:600;padding:8px 12px;border-bottom:2px solid var(--bd);background:var(--lt);}
-td{padding:9px 12px;font-size:13px;border-bottom:1px solid var(--bd);color:#0d1b2a;vertical-align:middle;}
+th{text-align:left;font-size:10px;letter-spacing:1.5px;color:#64748b;text-transform:uppercase;font-weight:600;padding:7px 9px;border-bottom:2px solid var(--bd);background:var(--lt);}
+td{padding:8px 9px;font-size:13px;border-bottom:1px solid var(--bd);color:#0d1b2a;vertical-align:middle;}
 tr:last-child td{border-bottom:none;}
 tr:hover td{background:rgba(232,24,90,0.018);}
 tfoot tr td{border-top:2px solid var(--pk);font-weight:700;background:var(--pkb);color:var(--pk);}
@@ -120,7 +120,7 @@ tfoot tr td{border-top:2px solid var(--pk);font-weight:700;background:var(--pkb)
 .btn-d{background:rgba(239,68,68,0.07);color:#ef4444;border:1px solid rgba(239,68,68,0.18);}
 .btn-d:hover{background:rgba(239,68,68,0.14);}
 .btn-warn{background:rgba(245,158,11,0.1);color:#d97706;border:1px solid rgba(245,158,11,0.25);}
-.btn-sm{padding:5px 10px;font-size:11px;}
+.btn-sm{padding:4px 8px;font-size:11px;}
 /* FORMS */
 .fg{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 .fm{margin-bottom:11px;}.fm.full{grid-column:1/-1;}
@@ -965,7 +965,7 @@ body[data-role="manager"] .btn-d{display:none !important;}
       <div><div class="st">📄 QUO<em>TATIONS</em></div><div class="ss">Create quotes for prospective clients · Mark a quote Successful to add them to Clients</div></div>
       <button class="btn btn-p" onclick="newQuote()">+ New Quote</button>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:14px 0 18px">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(116px,1fr));gap:12px;margin:14px 0 18px">
       <div class="sc"><div class="sc-lb">Total Quotes</div><div class="sc-vl" id="q-stat-total">0</div></div>
       <div class="sc"><div class="sc-lb">Draft</div><div class="sc-vl" style="color:#64748b" id="q-stat-draft">0</div></div>
       <div class="sc"><div class="sc-lb">Sent</div><div class="sc-vl" style="color:#2abcd0" id="q-stat-sent">0</div></div>
@@ -1113,8 +1113,8 @@ body[data-role="manager"] .btn-d{display:none !important;}
       <div class="cd-hd" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
         <span class="cd-ttl">📋 Transaction Log</span>
         <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
-          <input type="date" id="po-tx-from" onchange="rPO()" style="font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--bd)">
-          <input type="date" id="po-tx-to" onchange="rPO()" style="font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--bd)">
+          <label style="font-size:10px;color:#64748b;display:flex;flex-direction:column;gap:2px">From<input type="date" id="po-tx-from" onchange="rPO()" style="font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--bd)"></label>
+          <label style="font-size:10px;color:#64748b;display:flex;flex-direction:column;gap:2px">To<input type="date" id="po-tx-to" onchange="rPO()" style="font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--bd)"></label>
           <input type="text" id="po-tx-srch" oninput="rPO()" placeholder="Search supplier…" style="font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid var(--bd);width:130px">
           <button class="btn btn-t btn-sm" onclick="expTxLog('po')">⬇ CSV</button>
           <button class="btn btn-p btn-sm" onclick="txLogPDF('po')">⬇ PDF</button>
