@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="202607091300">
+<meta name="app-version" content="202607091500">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
@@ -5368,12 +5368,16 @@ function saveOrderNote(){
 
 
 // ── TRANSACTION LOG CSV EXPORT ──
+// PDF-safe number formatters (plain ASCII spaces so jsPDF's built-in font renders cleanly)
+function pdfNum(n){ n=Number(n||0); return n.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,' '); }
+function pdfMoney(n){ n=Number(n||0); var p=n.toFixed(2).split('.'); p[0]=p[0].replace(/\B(?=(\d{3})+(?!\d))/g,' '); return 'R '+p[0]+','+p[1]; }
+
 // Gather transaction-log rows (respecting the on-screen date/search filters + current sort)
 function txLogData(type){
   var map={
-    fuel:{arr:FO,pfx:'fo',status:'delivered',title:'Fuel Transaction Log',headers:['Order ID','Date','Client','Product','Volume','Value'],key:'fuelTx',row:function(o){return [o.id,o.date,o.client,o.product,fm(o.volume)+' L',fR(V(o))];}},
-    lpg:{arr:LO,pfx:'lo',status:'delivered',title:'LPG Transaction Log',headers:['Order ID','Date','Client','Cylinder','Qty','Value'],key:'lpgTx',row:function(o){return [o.id,o.date,o.client,o.size,fm(o.qty),fR(V(o))];}},
-    po:{arr:PO,pfx:'po',status:'received',title:'Purchase Order Log',headers:['PO Number','Date','Supplier','Product','Qty','Total'],key:null,row:function(p){return [p.id,p.date,p.supplier,p.product,fm(p.qty),fR(p.total)];}}
+    fuel:{arr:FO,pfx:'fo',status:'delivered',title:'Fuel Transaction Log',headers:['Order ID','Date','Client','Product','Volume','Value'],key:'fuelTx',row:function(o){return [o.id,o.date,o.client,o.product,pdfNum(o.volume)+' L',pdfMoney(V(o))];}},
+    lpg:{arr:LO,pfx:'lo',status:'delivered',title:'LPG Transaction Log',headers:['Order ID','Date','Client','Cylinder','Qty','Value'],key:'lpgTx',row:function(o){return [o.id,o.date,o.client,o.size,pdfNum(o.qty),pdfMoney(V(o))];}},
+    po:{arr:PO,pfx:'po',status:'received',title:'Purchase Order Log',headers:['PO Number','Date','Supplier','Product','Qty','Total'],key:null,row:function(p){return [p.id,p.date,p.supplier,p.product,pdfNum(p.qty),pdfMoney(p.total)];}}
   };
   var d=map[type]; if(!d) return null;
   var from=(document.getElementById(d.pfx+'-tx-from')||{}).value||'';
@@ -5415,15 +5419,15 @@ function txLogPDF(type){
   y+=9;
   doc.autoTable({
     head:[d.headers], body:d.rows, startY:y,
-    styles:{fontSize:8.5,cellPadding:2.2,textColor:dark,lineColor:[238,241,244],lineWidth:0.1},
+    styles:{fontSize:8.5,cellPadding:2.2,textColor:dark,lineColor:[238,241,244],lineWidth:0.1,overflow:'linebreak'},
     headStyles:{fillColor:teal,textColor:[255,255,255],fontStyle:'bold'},
     alternateRowStyles:{fillColor:[248,250,252]},
-    columnStyles:{0:{textColor:pink,fontStyle:'bold'},5:{halign:'right',fontStyle:'bold'}},
+    columnStyles:{0:{cellWidth:25,textColor:pink,fontStyle:'bold'},1:{cellWidth:22},2:{cellWidth:38},3:{cellWidth:41},4:{cellWidth:23,halign:'right'},5:{cellWidth:33,halign:'right',fontStyle:'bold'}},
     margin:{left:M,right:M}
   });
   var endY=(doc.lastAutoTable&&doc.lastAutoTable.finalY)||y;
   doc.setFont('helvetica','bold');doc.setFontSize(11);doc.setTextColor(pink[0],pink[1],pink[2]);
-  doc.text('Total: '+fR(d.total),R,endY+8,{align:'right'});
+  doc.text('Total: '+pdfMoney(d.total),R,endY+8,{align:'right'});
   var pages=doc.internal.getNumberOfPages();
   for(var p=1;p<=pages;p++){doc.setPage(p);doc.setFontSize(7.5);doc.setTextColor(light[0],light[1],light[2]);doc.text('Luckan Energy (Pty) Ltd  |  A subsidiary of Qwest Consultants (Pty) Ltd  |  10 Belfast Road, Wynberg, Cape Town',105,290,{align:'center'});doc.text('Page '+p+' of '+pages,R,290,{align:'right'});}
   doc.save('LuckanEnergy-'+d.title.replace(/[^a-z0-9]+/gi,'_')+'-'+new Date().toISOString().slice(0,10)+'.pdf');
