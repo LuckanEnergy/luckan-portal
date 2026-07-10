@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="202607091500">
+<meta name="app-version" content="202607091700">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="mobile-web-app-capable" content="yes">
@@ -2889,14 +2889,19 @@ function handleFiles(files){
     document.getElementById("da").value=CFG.name||"Staff";
     document.getElementById("md").classList.add("open");
   }else{
-    // Save all files with defaults
+    // Save all files: upload each to storage + persist to Supabase so they sync across users
+    var n=pendFiles.length;
     pendFiles.forEach(function(f){
       var ext=f.name.split(".").pop().toLowerCase();
       var typeMap={pdf:"pdf",doc:"docx",docx:"docx",xls:"xlsx",xlsx:"xlsx",png:"img",jpg:"img",jpeg:"img",gif:"img",webp:"img"};
-      var d={id:"DOC-"+String(DO.length+1).padStart(3,"0"),name:f.name.replace(/\.[^.]+$/,""),category:"Other",type:typeMap[ext]||"pdf",author:CFG.name||"Staff",desc:"",date:new Date().toISOString().split("T")[0],folder:CUR_FOLD||null,size:f.size>1024*1024?(f.size/1024/1024).toFixed(1)+" MB":(f.size/1024).toFixed(0)+" KB"};
-      DO.unshift(d);
+      var docId="DOC-"+Date.now()+"-"+Math.floor(Math.random()*100000);
+      var path="docs/"+docId+"/"+f.name;
+      uploadToStorage(path, f, function(url, name, spath){
+        var d={id:docId,name:f.name.replace(/\.[^.]+$/,""),category:"Other",type:typeMap[ext]||"pdf",author:CFG.name||"Staff",desc:"",date:new Date().toISOString().split("T")[0],folder:CUR_FOLD||null,size:f.size>1024*1024?(f.size/1024/1024).toFixed(1)+" MB":(f.size/1024).toFixed(0)+" KB",url:url,path:spath||path};
+        DO.unshift(d); sv(); saveDoc_supa(d); rDocs(); updStats();
+      });
     });
-    sv();document.getElementById("upload-list").innerHTML="";pendFiles=[];rDocs();updStats();addAct("Uploaded "+pendFiles.length+" documents","📁","tl");
+    document.getElementById("upload-list").innerHTML="";pendFiles=[];addAct("Uploaded "+n+" documents","📁","tl");
   }
 }
 function removeUploadItem(i){pendFiles.splice(i,1);if(!pendFiles.length)document.getElementById("upload-list").innerHTML="";}
@@ -3371,7 +3376,7 @@ function rDocs(){
       +'<span class="dtt '+d.type+'">'+d.type.toUpperCase()+"</span>"
       +'<div class="di">'+( ic[d.type]||"📎")+"</div>"
       +'<div class="dn">'+d.name+"</div>"
-      +'<div class="dm">'+d.category+" · "+d.author+"</div>"
+      +'<div class="dm">'+d.category+(d.author?" · "+d.author:"")+"</div>"
       +'<div class="dm" style="margin-top:2px">📅 '+d.date+(d.size?" · "+d.size:"")+"</div>"
       +(d.desc?'<div style="font-size:11px;color:#64748b;margin-top:5px;line-height:1.4">'+d.desc+"</div>":"")
       +'<div style="display:flex;gap:5px;margin-top:11px">'
@@ -3427,7 +3432,7 @@ function viewDoc(id){
   document.getElementById("vb").innerHTML=
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
       +drRow("ID",d.id)+drRow("Category",d.category)
-      +drRow("Type",d.type.toUpperCase())+drRow("Author",d.author)
+      +drRow("Type",(d.type||"").toUpperCase())+drRow("Author",d.author||"—")
       +drRow("Date",d.date)+drRow("Size",d.size||"—")
       +drRow("Folder",fn)
     +"</div>"
